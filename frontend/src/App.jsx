@@ -9,7 +9,6 @@ import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
-import { EmailVerification } from './pages/auth/EmailVerification';
 
 // The 9 Specified Core Platform Modules
 import { Dashboard } from './pages/dashboard/Dashboard';
@@ -43,31 +42,38 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-email" element={<EmailVerification />} />
 
           {/* Protected Application Workspace */}
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
-              {/* The 9 Core Modules */}
+              {/* Accessible by All 4 Roles (with role-scoped data) */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/leads" element={<LeadsPage />} />
               <Route path="/sales" element={<SalesPage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/automation" element={<AutomationPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-
-              {/* Super Admin & SaaS Administration */}
-              <Route path="/admin" element={<AdminDashboard />} />
-
-              {/* Secondary Tools & Operations */}
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/invoices" element={<InvoicesPage />} />
+              <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/support" element={<SupportPage />} />
-              <Route path="/users" element={<UsersPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+
+              {/* Management & Analytical Roles (Super Admin, Business Admin, Sales Manager) */}
+              <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'BUSINESS_ADMIN', 'SALES_MANAGER']} />}>
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+              </Route>
+
+              {/* Administrative Roles (Super Admin & Business Admin) */}
+              <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'BUSINESS_ADMIN']} />}>
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/invoices" element={<InvoicesPage />} />
+              </Route>
+
+              {/* Super Admin Exclusive */}
+              <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+              </Route>
             </Route>
           </Route>
 

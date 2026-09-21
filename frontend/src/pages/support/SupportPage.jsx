@@ -38,9 +38,7 @@ export const SupportPage = () => {
   // Navigation tabs: 'chat', 'conversations', 'kb'
   const [activeTab, setActiveTab] = useState('chat');
 
-  // ==========================================
   // 1. Live Chatbot State
-  // ==========================================
   const [conversationId, setConversationId] = useState(null);
   const [customerName, setCustomerName] = useState('Samantha Wright');
   const [customerEmail, setCustomerEmail] = useState('samantha@wrightventures.com');
@@ -59,9 +57,7 @@ export const SupportPage = () => {
   const [handoffRequested, setHandoffRequested] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // ==========================================
   // 2. Conversations & Search State
-  // ==========================================
   const [conversations, setConversations] = useState([]);
   const [convLoading, setConvLoading] = useState(false);
   const [convSearch, setConvSearch] = useState('');
@@ -71,9 +67,7 @@ export const SupportPage = () => {
   const [agentReplyText, setAgentReplyText] = useState('');
   const [agentReplying, setAgentReplying] = useState(false);
 
-  // ==========================================
   // 3. Knowledge Base State
-  // ==========================================
   const [kbItems, setKbItems] = useState([]);
   const [kbLoading, setKbLoading] = useState(false);
   const [kbCategoryFilter, setKbCategoryFilter] = useState('ALL');
@@ -88,7 +82,6 @@ export const SupportPage = () => {
     is_active: true,
   });
 
-  // Auto-scroll chat to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -99,7 +92,6 @@ export const SupportPage = () => {
     }
   }, [chatMessages, activeTab]);
 
-  // Load conversations when tab active
   useEffect(() => {
     if (activeTab === 'conversations') {
       fetchConversations();
@@ -108,9 +100,6 @@ export const SupportPage = () => {
     }
   }, [activeTab, convSearch, convStatusFilter, kbCategoryFilter, kbSearch]);
 
-  // ==========================================
-  // Chat Actions
-  // ==========================================
   const handleSendMessage = async (textToSend) => {
     const query = typeof textToSend === 'string' ? textToSend : inputMessage;
     if (!query || !query.trim() || chatLoading) return;
@@ -171,7 +160,6 @@ export const SupportPage = () => {
 
   const handleManualHandoff = async () => {
     if (!conversationId) {
-      // Trigger via chat message
       handleSendMessage('I would like to request human support handoff.');
       return;
     }
@@ -206,7 +194,6 @@ export const SupportPage = () => {
     ]);
   };
 
-  // Quick inquiry prompt chips
   const quickPrompts = [
     { label: 'Refund Policy', query: 'What is your 30-day refund policy?' },
     { label: 'Pro Tier Pricing', query: 'What features and pricing are in the Upteky AI Core Suite?' },
@@ -216,9 +203,6 @@ export const SupportPage = () => {
     { label: 'Anti-Hallucination Test', query: 'Can you bake a chocolate pizza on Mars?' },
   ];
 
-  // ==========================================
-  // Conversations Actions
-  // ==========================================
   const fetchConversations = async () => {
     try {
       setConvLoading(true);
@@ -257,11 +241,10 @@ export const SupportPage = () => {
 
     setAgentReplying(true);
     try {
-      const res = await api.post(`/conversations/${selectedConv.id}/reply`, {
+      await api.post(`/conversations/${selectedConv.id}/reply`, {
         message: agentReplyText.trim(),
       });
       setAgentReplyText('');
-      // Refresh details
       viewConversationDetails(selectedConv.id);
       fetchConversations();
     } catch (err) {
@@ -283,9 +266,6 @@ export const SupportPage = () => {
     }
   };
 
-  // ==========================================
-  // Knowledge Base Actions
-  // ==========================================
   const fetchKnowledgeBase = async () => {
     try {
       setKbLoading(true);
@@ -353,296 +333,275 @@ export const SupportPage = () => {
     }
   };
 
-  // Category badge formatting
   const getCategoryBadge = (category) => {
-    const config = {
-      faq: { label: 'FAQ', bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
-      product: { label: 'Product Info', bg: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-      service: { label: 'Service & SLA', bg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-      company: { label: 'Company Info', bg: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-      policy: { label: 'Official Policy', bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-      contact: { label: 'Contact Details', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    };
-    const c = config[category?.toLowerCase()] || { label: category, bg: 'bg-slate-500/10 text-slate-400 border-slate-500/20' };
-    return <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${c.bg}`}>{c.label}</span>;
+    return (
+      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 capitalize">
+        {category}
+      </span>
+    );
   };
 
-  // Status badge formatting
   const getConvStatusBadge = (status) => {
     if (status === 'ACTIVE') {
-      return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active Chat</span>;
+      return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Active Chat</span>;
     }
     if (status === 'HANDOFF_REQUESTED') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1">
-          <AlertCircle className="w-3 h-3" />
+        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3 text-rose-600" />
           Handoff Requested
         </span>
       );
     }
     if (status === 'RESOLVED') {
-      return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">Resolved</span>;
+      return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">Resolved</span>;
     }
-    return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">{status}</span>;
+    return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">{status}</span>;
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="space-y-6 pb-16">
       {/* Top Header & Metrics */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5" />
-              Phase 5: Autonomous Customer Support & Knowledge Studio
-            </span>
-          </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">AI Customer Support Studio</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Grounded responses, zero hallucination anti-guessing safeguards, conversational search, and human agent handoff.
+          <h1 className="text-2xl font-bold text-[#111111] tracking-tight">AI Customer Support Studio</h1>
+          <p className="text-xs text-[#666666] mt-0.5">
+            Grounded responses, zero hallucination safeguards, conversational search, and human agent handoff.
           </p>
         </div>
 
         {/* Quick KPI stats */}
-        <div className="flex items-center gap-3">
-          <div className="glass-panel px-3.5 py-2 rounded-xl border border-slate-800 flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-2.5">
+          <div className="bg-white px-3 py-1.5 rounded-md border border-[#e5e5e5] flex items-center gap-2 shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
             <div>
-              <p className="text-[10px] text-slate-400">Grounding Confidence</p>
-              <p className="text-xs font-bold text-white">96.8% High</p>
+              <p className="text-[10px] text-[#8a8a8a]">Grounding Confidence</p>
+              <p className="text-xs font-semibold text-[#111111]">96.8% High</p>
             </div>
           </div>
-          <div className="glass-panel px-3.5 py-2 rounded-xl border border-slate-800 flex items-center gap-2.5">
-            <BookOpen className="w-4 h-4 text-brand-400" />
+          <div className="bg-white px-3 py-1.5 rounded-md border border-[#e5e5e5] flex items-center gap-2 shadow-xs">
+            <BookOpen className="w-3.5 h-3.5 text-[#111111]" />
             <div>
-              <p className="text-[10px] text-slate-400">Knowledge Base</p>
-              <p className="text-xs font-bold text-white">{kbItems.length || 18} Verified Items</p>
+              <p className="text-[10px] text-[#8a8a8a]">Knowledge Base</p>
+              <p className="text-xs font-semibold text-[#111111]">{kbItems.length || 18} Verified Items</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+      <div className="flex items-center gap-1.5 border-b border-[#e5e5e5] pb-2">
         <button
           id="tab-chat"
           onClick={() => setActiveTab('chat')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition ${
             activeTab === 'chat'
-              ? 'bg-brand-600 text-white shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-[#111111] text-white'
+              : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
           }`}
         >
-          <Bot className="w-4 h-4" />
-          <span>AI Chatbot Simulator</span>
+          <Bot className="w-3.5 h-3.5" />
+          <span>AI Chatbot</span>
         </button>
 
         <button
           id="tab-conversations"
           onClick={() => setActiveTab('conversations')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition ${
             activeTab === 'conversations'
-              ? 'bg-brand-600 text-white shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-[#111111] text-white'
+              : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
           }`}
         >
-          <MessageSquare className="w-4 h-4" />
-          <span>Conversations & Search</span>
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Conversations</span>
           {conversations.some((c) => c.status === 'HANDOFF_REQUESTED') && (
-            <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
           )}
         </button>
 
         <button
           id="tab-kb"
           onClick={() => setActiveTab('kb')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition ${
             activeTab === 'kb'
-              ? 'bg-brand-600 text-white shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-[#111111] text-white'
+              : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
           }`}
         >
-          <BookOpen className="w-4 h-4" />
-          <span>Knowledge Base Manager</span>
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Knowledge Base</span>
         </button>
       </div>
 
-      {/* ========================================================================= */}
       {/* TAB 1: LIVE CHATBOT SIMULATOR */}
-      {/* ========================================================================= */}
       {activeTab === 'chat' && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
           {/* Left panel: Customer context & Quick Prompts */}
           <div className="lg:col-span-1 space-y-4">
             {/* Session Card */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-brand-400" />
+                <h4 className="text-xs font-semibold text-[#111111] uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#111111]" />
                   <span>Customer Session</span>
                 </h4>
                 <button
                   id="new-chat-btn"
                   onClick={startNewChat}
-                  className="text-[11px] font-semibold text-brand-400 hover:text-brand-300 flex items-center gap-1"
+                  className="text-[11px] font-semibold text-[#111111] hover:underline flex items-center gap-1"
                 >
-                  <RefreshCw className="w-3 h-3" />
+                  <RefreshCw className="w-3 h-3 text-[#666666]" />
                   <span>New Chat</span>
                 </button>
               </div>
 
               <div className="space-y-2">
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-0.5 font-medium">Customer Name</label>
+                  <label className="text-[10px] text-[#666666] block mb-0.5 font-medium">Customer Name</label>
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white border border-[#d9d9d9] rounded-md px-2.5 py-1.5 text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-0.5 font-medium">Customer Email</label>
+                  <label className="text-[10px] text-[#666666] block mb-0.5 font-medium">Customer Email</label>
                   <input
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white border border-[#d9d9d9] rounded-md px-2.5 py-1.5 text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
               </div>
 
               {conversationId && (
-                <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400">
-                  <span>Conv ID: </span>
-                  <span className="font-mono text-slate-300">{conversationId.slice(0, 12)}...</span>
+                <div className="pt-2 border-t border-[#e5e5e5] text-[10px] text-[#8a8a8a]">
+                  <span>ID: </span>
+                  <span className="font-mono text-[#111111]">{conversationId.slice(0, 12)}...</span>
                 </div>
               )}
             </div>
 
             {/* Quick Prompts */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-2.5">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-2 shadow-xs">
+              <h4 className="text-xs font-semibold text-[#111111] uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#111111]" />
                 <span>Test Inquiries</span>
               </h4>
-              <p className="text-[11px] text-slate-400">
-                Click any inquiry to test knowledge retrieval, anti-hallucination refusal, or human handoff:
+              <p className="text-[11px] text-[#666666]">
+                Click any inquiry to test knowledge retrieval, anti-hallucination, or handoff:
               </p>
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-1 pt-1">
                 {quickPrompts.map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(p.query)}
-                    className="w-full text-left p-2 rounded-xl bg-slate-950/60 hover:bg-brand-500/15 border border-slate-800/80 hover:border-brand-500/30 text-slate-300 hover:text-white text-xs transition group flex items-center justify-between"
+                    className="w-full text-left p-2 rounded-md bg-[#fafafa] hover:bg-[#f3f3f3] border border-[#e5e5e5] text-[#111111] text-xs transition flex items-center justify-between"
                   >
                     <span className="truncate pr-1">{p.label}</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-brand-400 transition flex-shrink-0" />
+                    <ArrowUpRight className="w-3 h-3 text-[#8a8a8a] flex-shrink-0" />
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Human Handoff Banner */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-2.5">
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-2 shadow-xs">
               <div className="flex items-center gap-2">
-                <Headphones className="w-4 h-4 text-emerald-400" />
-                <h4 className="text-xs font-bold text-white">Need a Human Specialist?</h4>
+                <Headphones className="w-4 h-4 text-[#111111]" />
+                <h4 className="text-xs font-semibold text-[#111111]">Need a Human Agent?</h4>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Connect directly with a tier-2 representative at any time if your issue requires tailored handling.
+              <p className="text-[11px] text-[#666666] leading-relaxed">
+                Connect directly with a tier-2 representative if your issue requires tailored handling.
               </p>
               <button
                 id="request-handoff-btn"
                 onClick={handleManualHandoff}
                 disabled={handoffRequested}
-                className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 border border-slate-700 disabled:opacity-50"
+                className="w-full py-1.5 px-3 rounded-md bg-white hover:bg-[#f7f7f7] text-[#111111] text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-[#d9d9d9] disabled:opacity-50"
               >
-                <UserCheck className="w-3.5 h-3.5 text-brand-400" />
+                <UserCheck className="w-3.5 h-3.5 text-[#666666]" />
                 <span>{handoffRequested ? 'Handoff Active' : 'Request Human Agent'}</span>
               </button>
             </div>
           </div>
 
           {/* Right panel: Chat Window */}
-          <div className="lg:col-span-3 glass-panel rounded-3xl border border-slate-800 flex flex-col h-[650px] shadow-2xl overflow-hidden">
+          <div className="lg:col-span-3 bg-white rounded-lg border border-[#e5e5e5] flex flex-col h-[620px] shadow-xs overflow-hidden">
             {/* Chat header */}
-            <div className="p-4 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 p-0.5 shadow-glow flex items-center justify-center">
-                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-brand-400" />
-                  </div>
+            <div className="p-3.5 border-b border-[#e5e5e5] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-md bg-[#111111] flex items-center justify-center text-white">
+                  <Bot className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white tracking-tight">Upteky AI Support Copilot</h3>
-                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <h3 className="text-xs font-bold text-[#111111]">Upteky AI Support Copilot</h3>
+                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                       Online
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">Grounded Knowledge • Zero Hallucination • Model Upteky-v1</p>
+                  <p className="text-[10px] text-[#666666]">Grounded Knowledge • Zero Hallucination Guard</p>
                 </div>
               </div>
 
               {handoffRequested && (
-                <div className="px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-1.5 animate-pulse">
-                  <AlertCircle className="w-3.5 h-3.5" />
+                <div className="px-2.5 py-0.5 rounded text-rose-700 bg-rose-50 border border-rose-200 text-xs font-medium flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 text-rose-600" />
                   <span>Escalated to Human Agent</span>
                 </div>
               )}
             </div>
 
             {/* Messages body */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-white">
               {chatMessages.map((m, idx) => (
                 <div
                   key={idx}
                   className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] space-y-1.5`}>
+                  <div className={`max-w-[80%] space-y-1`}>
                     <div
-                      className={`p-4 rounded-2xl text-xs leading-relaxed ${
+                      className={`p-3.5 rounded-lg text-xs leading-relaxed ${
                         m.sender === 'user'
-                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-tr-xs shadow-md'
+                          ? 'bg-[#111111] text-white shadow-xs'
                           : m.sender === 'system'
-                          ? 'bg-amber-500/10 text-amber-200 border border-amber-500/30 rounded-xl'
-                          : 'bg-slate-950/90 text-slate-200 border border-slate-800 rounded-tl-xs shadow-lg'
+                          ? 'bg-[#f7f7f7] text-[#111111] border border-[#e5e5e5]'
+                          : 'bg-[#fafafa] text-[#111111] border border-[#e5e5e5]'
                       }`}
                     >
                       <p className="whitespace-pre-wrap">{m.content}</p>
 
-                      {/* Assistant confidence and sources pill */}
                       {m.sender === 'assistant' && (
-                        <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-                          {/* Confidence Tag */}
+                        <div className="mt-2.5 pt-2 border-t border-[#e5e5e5] flex flex-wrap items-center justify-between gap-2 text-[10px]">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400">Confidence:</span>
+                            <span className="text-[#666666]">Confidence:</span>
                             {m.confidence >= 0.75 ? (
-                              <span className="font-bold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                <Check className="w-3 h-3" />
+                              <span className="font-semibold text-emerald-700 flex items-center gap-1">
+                                <Check className="w-3 h-3 text-emerald-600" />
                                 {Math.round(m.confidence * 100)}% Grounded
                               </span>
                             ) : (
-                              <span className="font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                                <AlertCircle className="w-3 h-3" />
-                                Low Confidence ({Math.round(m.confidence * 100)}%)
+                              <span className="font-semibold text-amber-700 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3 text-amber-600" />
+                                Low ({Math.round(m.confidence * 100)}%)
                               </span>
                             )}
                           </div>
 
-                          {/* Sources */}
                           {m.sources && m.sources.length > 0 && (
                             <div className="flex items-center gap-1">
-                              <span className="text-slate-400">Cited:</span>
+                              <span className="text-[#8a8a8a]">Cited:</span>
                               {m.sources.map((s, sidx) => (
                                 <span
                                   key={sidx}
-                                  className="px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-300 border border-brand-500/20 font-medium"
+                                  className="px-1.5 py-0.2 rounded bg-white text-[#111111] border border-[#d9d9d9] font-medium"
                                   title={s.title}
                                 >
-                                  {s.title.length > 25 ? s.title.slice(0, 25) + '...' : s.title}
+                                  {s.title.length > 20 ? s.title.slice(0, 20) + '...' : s.title}
                                 </span>
                               ))}
                             </div>
@@ -650,25 +609,24 @@ export const SupportPage = () => {
                         </div>
                       )}
 
-                      {/* Handoff Offered Action */}
                       {m.handoff_offered && !handoffRequested && (
-                        <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between bg-amber-500/5 -mx-4 -mb-4 p-3 rounded-b-2xl border-t border-amber-500/20">
-                          <span className="text-[11px] text-amber-300 font-medium flex items-center gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            Would you like human support?
+                        <div className="mt-2.5 pt-2 border-t border-[#e5e5e5] flex items-center justify-between bg-white -mx-3.5 -mb-3.5 p-2.5 rounded-b-lg border-t border-[#e5e5e5]">
+                          <span className="text-[11px] text-[#111111] font-medium flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-[#666666]" />
+                            Request human support?
                           </span>
                           <button
                             onClick={handleManualHandoff}
-                            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] transition shadow-sm"
+                            className="px-2.5 py-1 rounded bg-[#111111] hover:bg-[#222222] text-white font-semibold text-[11px] transition"
                           >
-                            Connect to Human Agent
+                            Connect to Human
                           </button>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 px-1 text-[10px] text-slate-500">
-                      <span>{m.sender === 'user' ? customerName : m.sender === 'assistant' ? 'Upteky AI Copilot' : 'System'}</span>
+                    <div className="flex items-center gap-2 px-1 text-[10px] text-[#8a8a8a]">
+                      <span>{m.sender === 'user' ? customerName : m.sender === 'assistant' ? 'Upteky AI' : 'System'}</span>
                       <span>•</span>
                       <span>{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
@@ -676,14 +634,13 @@ export const SupportPage = () => {
                 </div>
               ))}
 
-              {/* Typing indicator */}
               {chatLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex items-center gap-2 text-xs text-slate-400 shadow-md">
-                    <div className="w-2 h-2 rounded-full bg-brand-400 animate-bounce" />
-                    <div className="w-2 h-2 rounded-full bg-brand-400 animate-bounce delay-100" />
-                    <div className="w-2 h-2 rounded-full bg-brand-400 animate-bounce delay-200" />
-                    <span className="text-[11px] font-medium text-slate-300">Evaluating business knowledge base...</span>
+                  <div className="bg-[#fafafa] p-3 rounded-lg border border-[#e5e5e5] flex items-center gap-2 text-xs text-[#666666]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#111111] animate-bounce" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#111111] animate-bounce delay-100" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#111111] animate-bounce delay-200" />
+                    <span className="text-[11px] text-[#666666]">Searching verified knowledge base...</span>
                   </div>
                 </div>
               )}
@@ -691,20 +648,20 @@ export const SupportPage = () => {
             </div>
 
             {/* Input footer */}
-            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-3 border-t border-slate-800 bg-slate-900/90 flex items-center gap-2">
+            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-3 border-t border-[#e5e5e5] bg-white flex items-center gap-2">
               <input
                 id="chat-input"
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask about refund policies, pricing, APIs, emergency contacts, or request a human..."
-                className="flex-1 bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-500 transition"
+                placeholder="Ask about refund policies, pricing, APIs, or request human help..."
+                className="flex-1 bg-white border border-[#d9d9d9] rounded-md px-3 py-2 text-xs text-[#111111] placeholder:text-[#8a8a8a] focus:outline-none focus:border-[#111111] transition"
               />
               <button
                 id="chat-send-btn"
                 type="submit"
                 disabled={chatLoading || !inputMessage.trim()}
-                className="p-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition disabled:opacity-50 shadow-glow"
+                className="p-2 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-bold transition disabled:opacity-50 shadow-xs"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -713,34 +670,32 @@ export const SupportPage = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 2: CONVERSATIONS & SEARCH */}
-      {/* ========================================================================= */}
       {activeTab === 'conversations' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Search and Filters */}
-          <div className="glass-panel p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="bg-white p-3.5 rounded-lg border border-[#e5e5e5] flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
             <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#8a8a8a] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 id="conversation-search"
                 type="text"
                 value={convSearch}
                 onChange={(e) => setConvSearch(e.target.value)}
-                placeholder="Search conversations by customer name, email, subject, or message text..."
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-500"
+                placeholder="Search conversations by name, email, or message text..."
+                className="w-full bg-white border border-[#d9d9d9] rounded-md pl-8 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#8a8a8a] focus:outline-none focus:border-[#111111]"
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-1.5 w-full md:w-auto">
               {['ALL', 'ACTIVE', 'HANDOFF_REQUESTED', 'RESOLVED'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setConvStatusFilter(st)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition whitespace-nowrap ${
                     convStatusFilter === st
-                      ? 'bg-brand-600 text-white shadow-sm'
-                      : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800/80'
+                      ? 'bg-[#111111] text-white shadow-xs'
+                      : 'bg-white text-[#666666] hover:text-[#111111] border border-[#d9d9d9]'
                   }`}
                 >
                   {st === 'ALL' ? 'All' : st === 'HANDOFF_REQUESTED' ? 'Handoffs' : st}
@@ -749,11 +704,11 @@ export const SupportPage = () => {
             </div>
           </div>
 
-          {/* Conversations Grid & Table */}
-          <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+          {/* Conversations Table */}
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/60 text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] text-[#666666] border-b border-[#e5e5e5] text-[11px] uppercase tracking-wider">
                   <tr>
                     <th className="py-3 px-4 font-semibold">Customer</th>
                     <th className="py-3 px-4 font-semibold">Inquiry / Subject</th>
@@ -763,51 +718,51 @@ export const SupportPage = () => {
                     <th className="py-3 px-4 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {convLoading ? (
                     <tr>
-                      <td colSpan="6" className="py-8 text-center text-slate-500">
+                      <td colSpan="6" className="py-8 text-center text-[#8a8a8a]">
                         Loading customer conversations...
                       </td>
                     </tr>
                   ) : conversations.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="py-8 text-center text-slate-500">
+                      <td colSpan="6" className="py-8 text-center text-[#8a8a8a]">
                         No conversations found matching your search.
                       </td>
                     </tr>
                   ) : (
                     conversations.map((c) => (
-                      <tr key={c.id} className="hover:bg-slate-800/30 transition">
+                      <tr key={c.id} className="hover:bg-[#f8f8f8] transition">
                         <td className="py-3 px-4">
-                          <div className="font-bold text-white">{c.customer_name}</div>
-                          <div className="text-[11px] text-slate-400">{c.customer_email}</div>
+                          <div className="font-semibold text-[#111111]">{c.customer_name}</div>
+                          <div className="text-[11px] text-[#666666]">{c.customer_email}</div>
                         </td>
                         <td className="py-3 px-4 max-w-xs">
-                          <div className="font-medium text-slate-200 truncate">{c.subject}</div>
-                          <div className="text-[11px] text-slate-500 truncate mt-0.5">{c.last_message}</div>
+                          <div className="font-medium text-[#111111] truncate">{c.subject}</div>
+                          <div className="text-[11px] text-[#8a8a8a] truncate mt-0.5">{c.last_message}</div>
                         </td>
                         <td className="py-3 px-4">{getConvStatusBadge(c.status)}</td>
                         <td className="py-3 px-4">
-                          <span className="font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-[11px]">
+                          <span className="font-mono bg-[#f3f3f3] px-2 py-0.5 rounded border border-[#e5e5e5] text-[11px] text-[#111111]">
                             {c.message_count} msgs
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-[11px] text-slate-400">
+                        <td className="py-3 px-4 text-[11px] text-[#666666]">
                           {new Date(c.updated_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </td>
-                        <td className="py-3 px-4 text-right space-x-2">
+                        <td className="py-3 px-4 text-right space-x-1.5">
                           <button
                             id="view-transcript-btn"
                             onClick={() => viewConversationDetails(c.id)}
-                            className="px-2.5 py-1 rounded-lg bg-brand-600/20 hover:bg-brand-600/40 text-brand-300 font-semibold text-[11px] transition border border-brand-500/30"
+                            className="px-2.5 py-1 rounded-md bg-white hover:bg-[#f7f7f7] text-[#111111] font-semibold text-[11px] transition border border-[#d9d9d9]"
                           >
-                            View Transcript
+                            View
                           </button>
                           {c.status !== 'RESOLVED' && (
                             <button
                               onClick={() => handleResolveConversation(c.id)}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-[11px] transition border border-emerald-500/30"
+                              className="px-2.5 py-1 rounded-md bg-white hover:bg-emerald-50 text-emerald-700 font-semibold text-[11px] transition border border-emerald-200"
                             >
                               Resolve
                             </button>
@@ -821,19 +776,19 @@ export const SupportPage = () => {
             </div>
           </div>
 
-          {/* Detailed Conversation Inspector Modal / Slide-over */}
+          {/* Detailed Conversation Inspector Modal */}
           {selectedConv && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-              <div className="glass-panel w-full max-w-3xl rounded-3xl border border-slate-800 flex flex-col max-h-[85vh] overflow-hidden shadow-2xl">
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 animate-in fade-in duration-150">
+              <div className="bg-white w-full max-w-3xl rounded-lg border border-[#e5e5e5] flex flex-col max-h-[85vh] overflow-hidden shadow-xl">
                 {/* Header */}
-                <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+                <div className="p-4 border-b border-[#e5e5e5] flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-white">{selectedConv.customer_name}</h3>
+                      <h3 className="text-sm font-bold text-[#111111]">{selectedConv.customer_name}</h3>
                       {getConvStatusBadge(selectedConv.status)}
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {selectedConv.customer_email} • Inquiry: <span className="text-slate-300 font-medium">{selectedConv.subject}</span>
+                    <p className="text-xs text-[#666666] mt-0.5">
+                      {selectedConv.customer_email} • Inquiry: <span className="text-[#111111] font-medium">{selectedConv.subject}</span>
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -841,22 +796,22 @@ export const SupportPage = () => {
                       <button
                         id="resolve-conv-btn"
                         onClick={() => handleResolveConversation(selectedConv.id)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"
+                        className="px-3 py-1 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold text-xs transition"
                       >
                         Mark Resolved
                       </button>
                     )}
                     <button
                       onClick={() => setSelectedConv(null)}
-                      className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                      className="p-1 rounded-md text-[#666666] hover:text-[#111111]"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
                 {/* Messages Transcript */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-950/50">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#fafafa]">
                   {selectedConv.messages?.map((m, idx) => (
                     <div
                       key={idx}
@@ -864,27 +819,27 @@ export const SupportPage = () => {
                         m.sender === 'user' ? 'justify-start' : m.sender === 'human_agent' ? 'justify-end' : 'justify-start'
                       }`}
                     >
-                      <div className="max-w-[85%] space-y-1">
+                      <div className="max-w-[80%] space-y-1">
                         <div
-                          className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                          className={`p-3 rounded-md text-xs leading-relaxed ${
                             m.sender === 'user'
-                              ? 'bg-slate-900 text-slate-200 border border-slate-800 rounded-tl-xs'
+                              ? 'bg-white text-[#111111] border border-[#e5e5e5]'
                               : m.sender === 'human_agent'
-                              ? 'bg-brand-600 text-white rounded-tr-xs shadow-md'
+                              ? 'bg-[#111111] text-white shadow-xs'
                               : m.sender === 'system'
-                              ? 'bg-amber-500/10 text-amber-200 border border-amber-500/30'
-                              : 'bg-indigo-950/40 text-slate-200 border border-indigo-500/20 rounded-tl-xs'
+                              ? 'bg-[#f7f7f7] text-[#111111] border border-[#e5e5e5]'
+                              : 'bg-white text-[#111111] border border-[#e5e5e5]'
                           }`}
                         >
                           <p className="whitespace-pre-wrap">{m.content}</p>
                           {m.confidence !== undefined && m.sender === 'assistant' && (
-                            <div className="mt-2 pt-2 border-t border-slate-800 text-[10px] text-slate-400 flex items-center gap-2">
-                              <span>AI Confidence: <strong className="text-emerald-400">{Math.round(m.confidence * 100)}%</strong></span>
+                            <div className="mt-2 pt-2 border-t border-[#e5e5e5] text-[10px] text-[#666666] flex items-center gap-2">
+                              <span>AI Confidence: <strong className="text-emerald-700">{Math.round(m.confidence * 100)}%</strong></span>
                             </div>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-500 px-1">
-                          <span className="font-semibold text-slate-400">
+                        <div className="text-[10px] text-[#8a8a8a] px-1">
+                          <span className="font-medium text-[#666666]">
                             {m.sender === 'user' ? selectedConv.customer_name : m.sender === 'human_agent' ? 'Human Support Agent' : 'Upteky AI'}
                           </span>
                           <span> • {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -895,23 +850,23 @@ export const SupportPage = () => {
                 </div>
 
                 {/* Human Agent Reply Input Form */}
-                <form onSubmit={handleAgentReply} className="p-4 border-t border-slate-800 bg-slate-900/90 flex items-center gap-2">
+                <form onSubmit={handleAgentReply} className="p-3 border-t border-[#e5e5e5] bg-white flex items-center gap-2">
                   <input
                     id="agent-reply-input"
                     type="text"
                     value={agentReplyText}
                     onChange={(e) => setAgentReplyText(e.target.value)}
-                    placeholder="Reply as human agent (this will post directly to customer transcript)..."
-                    className="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-500"
+                    placeholder="Reply as human agent to customer..."
+                    className="flex-1 bg-white border border-[#d9d9d9] rounded-md px-3 py-2 text-xs text-[#111111] placeholder:text-[#8a8a8a] focus:outline-none focus:border-[#111111]"
                   />
                   <button
                     id="agent-send-reply-btn"
                     type="submit"
                     disabled={agentReplying || !agentReplyText.trim()}
-                    className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition disabled:opacity-50 flex items-center gap-1.5 shadow-glow"
+                    className="px-3.5 py-2 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold text-xs transition disabled:opacity-50 flex items-center gap-1.5 shadow-xs"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>Send Reply</span>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send</span>
                   </button>
                 </form>
               </div>
@@ -920,55 +875,53 @@ export const SupportPage = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 3: KNOWLEDGE BASE MANAGER */}
-      {/* ========================================================================= */}
       {activeTab === 'kb' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Category Filter & Search Bar */}
-          <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-4">
+          <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-3.5 shadow-xs">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-[#8a8a8a] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   id="kb-search"
                   type="text"
                   value={kbSearch}
                   onChange={(e) => setKbSearch(e.target.value)}
                   placeholder="Search knowledge base articles by keyword, title, or content..."
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white border border-[#d9d9d9] rounded-md pl-8 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#8a8a8a] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
               <button
                 id="add-kb-btn"
                 onClick={openAddKbModal}
-                className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-glow whitespace-nowrap"
+                className="px-3.5 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold text-xs transition flex items-center gap-1.5 shadow-xs whitespace-nowrap"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Knowledge Article</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Article</span>
               </button>
             </div>
 
-            {/* 6 Category Pills */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80">
-              <span className="text-[11px] font-semibold text-slate-400 mr-1">Categories:</span>
+            {/* Category Pills */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-[#e5e5e5]">
+              <span className="text-[11px] font-medium text-[#666666] mr-1">Categories:</span>
               {[
-                { id: 'ALL', label: 'All Categories' },
+                { id: 'ALL', label: 'All' },
                 { id: 'faq', label: 'FAQs' },
                 { id: 'product', label: 'Product Info' },
-                { id: 'service', label: 'Services & SLA' },
-                { id: 'company', label: 'Company Info' },
+                { id: 'service', label: 'Services' },
+                { id: 'company', label: 'Company' },
                 { id: 'policy', label: 'Policies' },
-                { id: 'contact', label: 'Contact Info' },
+                { id: 'contact', label: 'Contact' },
               ].map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setKbCategoryFilter(c.id)}
-                  className={`px-3 py-1 rounded-xl text-xs font-semibold transition ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition ${
                     kbCategoryFilter === c.id
-                      ? 'bg-brand-600 text-white shadow-sm'
-                      : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800/80'
+                      ? 'bg-[#111111] text-white shadow-xs'
+                      : 'bg-white text-[#666666] hover:text-[#111111] border border-[#d9d9d9]'
                   }`}
                 >
                   {c.label}
@@ -978,54 +931,54 @@ export const SupportPage = () => {
           </div>
 
           {/* Articles Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {kbLoading ? (
-              <div className="col-span-3 p-12 text-center text-xs text-slate-500">
+              <div className="col-span-3 p-10 text-center text-xs text-[#8a8a8a]">
                 Loading knowledge base records...
               </div>
             ) : kbItems.length === 0 ? (
-              <div className="col-span-3 glass-panel p-12 text-center rounded-2xl border border-slate-800 text-slate-400 text-xs">
-                No knowledge articles found. Click "Add Knowledge Article" to populate business data.
+              <div className="col-span-3 bg-white p-10 text-center rounded-lg border border-[#e5e5e5] text-[#8a8a8a] text-xs">
+                No knowledge articles found. Click "Add Article" to populate business data.
               </div>
             ) : (
               kbItems.map((item) => (
                 <div
                   key={item.id}
-                  className="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-brand-500/30 transition flex flex-col justify-between space-y-3 group"
+                  className="bg-white p-4 rounded-lg border border-[#e5e5e5] hover:border-[#111111] transition flex flex-col justify-between space-y-3 shadow-xs"
                 >
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       {getCategoryBadge(item.category)}
-                      <span className="text-[10px] text-slate-500">
-                        Updated {new Date(item.updated_at).toLocaleDateString()}
+                      <span className="text-[10px] text-[#8a8a8a]">
+                        {new Date(item.updated_at).toLocaleDateString()}
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-bold text-white leading-snug group-hover:text-brand-300 transition">
+                    <h4 className="text-xs font-bold text-[#111111] leading-snug">
                       {item.title}
                     </h4>
 
-                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-4 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/60">
+                    <p className="text-xs text-[#666666] leading-relaxed line-clamp-4 bg-[#fafafa] p-2.5 rounded-md border border-[#e5e5e5]">
                       {item.content}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                    <div className="text-[10px] text-slate-500 truncate max-w-[180px]">
-                      Tags: <span className="text-slate-400">{item.keywords || 'None'}</span>
+                  <div className="pt-2 border-t border-[#e5e5e5] flex items-center justify-between">
+                    <div className="text-[10px] text-[#8a8a8a] truncate max-w-[160px]">
+                      Tags: <span className="text-[#111111]">{item.keywords || 'None'}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => openEditKbModal(item)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                        className="p-1 rounded text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7] transition"
                         title="Edit Article"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteKbItem(item.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                        className="p-1 rounded text-[#8a8a8a] hover:text-rose-600 hover:bg-rose-50 transition"
                         title="Delete Article"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1039,83 +992,83 @@ export const SupportPage = () => {
 
           {/* Add / Edit Modal */}
           {isKbModalOpen && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-              <div className="glass-panel w-full max-w-xl p-6 rounded-3xl border border-slate-800 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="text-base font-bold text-white">
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 animate-in fade-in duration-150">
+              <div className="bg-white w-full max-w-lg p-5 rounded-lg border border-[#e5e5e5] space-y-3.5 shadow-xl">
+                <div className="flex items-center justify-between border-b border-[#e5e5e5] pb-2.5">
+                  <h3 className="text-sm font-semibold text-[#111111]">
                     {editingKbItem ? 'Edit Knowledge Article' : 'Add Knowledge Article'}
                   </h3>
                   <button
                     onClick={() => setIsKbModalOpen(false)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white"
+                    className="p-1 rounded text-[#666666] hover:text-[#111111]"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <form onSubmit={handleSaveKbItem} className="space-y-4">
+                <form onSubmit={handleSaveKbItem} className="space-y-3 text-xs">
                   <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+                    <label className="text-xs font-medium text-[#111111] block mb-1">Category</label>
                     <select
                       value={kbForm.category}
                       onChange={(e) => setKbForm({ ...kbForm, category: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                      className="w-full bg-white border border-[#d9d9d9] rounded-md px-2.5 py-1.5 text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
                     >
-                      <option value="faq">FAQs (Frequently Asked Questions)</option>
-                      <option value="product">Product Information & Specs</option>
+                      <option value="faq">FAQs</option>
+                      <option value="product">Product Information</option>
                       <option value="service">Services & SLA</option>
-                      <option value="company">Company Information & Standards</option>
+                      <option value="company">Company Standards</option>
                       <option value="policy">Policies & Terms</option>
                       <option value="contact">Contact Information</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Article Title</label>
+                    <label className="text-xs font-medium text-[#111111] block mb-1">Article Title</label>
                     <input
                       type="text"
                       required
                       value={kbForm.title}
                       onChange={(e) => setKbForm({ ...kbForm, title: e.target.value })}
-                      placeholder="e.g. 30-Day Money-Back Satisfaction Guarantee"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                      placeholder="e.g. 30-Day Money-Back Guarantee"
+                      className="w-full bg-white border border-[#d9d9d9] rounded-md px-3 py-1.5 text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Article Content</label>
+                    <label className="text-xs font-medium text-[#111111] block mb-1">Article Content</label>
                     <textarea
                       required
                       rows={5}
                       value={kbForm.content}
                       onChange={(e) => setKbForm({ ...kbForm, content: e.target.value })}
                       placeholder="Enter verified business knowledge that the AI will use to answer customer questions..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                      className="w-full bg-white border border-[#d9d9d9] rounded-md px-3 py-1.5 text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Search Keywords / Tags</label>
+                    <label className="text-xs font-medium text-[#111111] block mb-1">Search Keywords / Tags</label>
                     <input
                       type="text"
                       value={kbForm.keywords}
                       onChange={(e) => setKbForm({ ...kbForm, keywords: e.target.value })}
-                      placeholder="e.g. refund, money back, cancellation, guarantee"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                      placeholder="e.g. refund, money back, guarantee"
+                      className="w-full bg-white border border-[#d9d9d9] rounded-md px-3 py-1.5 text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+                  <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#e5e5e5]">
                     <button
                       type="button"
                       onClick={() => setIsKbModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                      className="px-3.5 py-1.5 rounded-md text-[#666666] hover:text-[#111111] text-xs font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-glow"
+                      className="px-4 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white text-xs font-semibold shadow-xs"
                     >
                       {editingKbItem ? 'Save Changes' : 'Create Article'}
                     </button>

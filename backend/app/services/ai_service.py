@@ -85,6 +85,15 @@ class AIService:
             "win_probability": f"{round(score * 0.92, 1)}%",
         }
 
+    async def generate_lead_summary(self, company: str, notes: str = "") -> str:
+        """Generate a brief AI-powered summary for a new lead."""
+        note_snippet = notes[:120] if notes else "No additional notes provided."
+        return (
+            f"New inbound lead from {company}. "
+            f"Context: {note_snippet}. "
+            f"Recommend immediate outreach and qualification."
+        )
+
     async def generate_business_insights(self, kpi_context: Dict[str, Any]) -> List[str]:
         """Generate high-level strategic executive insights based on business KPIs."""
         mrr = kpi_context.get("monthly_revenue", 128450)

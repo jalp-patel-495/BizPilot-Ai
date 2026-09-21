@@ -1,7 +1,16 @@
+import sys
+from pathlib import Path
+
+# Ensure backend root is in sys.path for direct script execution
+_backend_dir = str(Path(__file__).resolve().parent.parent.parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 import logging
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal, engine, Base
+
 import app.db.base  # Ensures all models are loaded
 from app.core.security import get_password_hash
 from app.core.rbac import UserRole
@@ -164,9 +173,11 @@ def init_db(db: Session) -> None:
             db.add(user)
     db.commit()
 
-    # Retrieve sales manager for lead assignment
+    # Retrieve sales manager and employee for lead assignment
     sales_rep = db.query(User).filter(User.email == "salesmanager@upteky.ai").first()
     rep_id = sales_rep.id if sales_rep else None
+    employee_rep = db.query(User).filter(User.email == "employee@upteky.ai").first()
+    emp_id = employee_rep.id if employee_rep else rep_id
 
     # 3. Seed Sample Leads
     if db.query(Lead).count() == 0:
@@ -216,7 +227,7 @@ def init_db(db: Session) -> None:
             ),
             Lead(
                 organization_id=org.id,
-                assigned_to=rep_id,
+                assigned_to=emp_id,
                 contact_name="Lucas Gomez",
                 email="lgomez@omnistore.net",
                 phone="+1 (305) 771-4200",
@@ -230,7 +241,7 @@ def init_db(db: Session) -> None:
             ),
             Lead(
                 organization_id=org.id,
-                assigned_to=rep_id,
+                assigned_to=emp_id,
                 contact_name="Emily Watson",
                 email="emily@vertexai.co",
                 phone="+1 (206) 881-2299",
@@ -1105,7 +1116,7 @@ def init_db(db: Session) -> None:
         db.commit()
 
     # 18. Seed Multi-Month Historical Sales Data for ML Forecasting
-    if db.query(Sale).count() == 0:
+    if db.query(Sale).count() < 15:
         logger.info("Seeding multi-month historical sales transactions for ML training...")
         customers = db.query(Customer).filter(Customer.organization_id == org.id).all()
         cust_map = {c.company: c.id for c in customers}

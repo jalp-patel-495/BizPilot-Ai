@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate, Link } from 'react-router-dom';
+import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -12,11 +12,16 @@ import {
   Settings,
   ReceiptText,
   User,
-  Sparkles,
-  ChevronRight,
   ShieldCheck,
   LogOut,
   X,
+  Sparkles,
+  Building2,
+  CreditCard,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { RoleBadge } from '../common/Badge';
@@ -24,6 +29,7 @@ import { RoleBadge } from '../common/Badge';
 export const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -31,153 +37,172 @@ export const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     if (onCloseMobile) onCloseMobile();
   };
 
-  // The 9 Specified Core Platform Modules
-  const coreModules = [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Customers', path: '/customers', icon: Users },
-    { label: 'Leads', path: '/leads', icon: Target },
-    { label: 'Sales', path: '/sales', icon: ShoppingBag },
-    { label: 'Products', path: '/products', icon: Layers },
-    { label: 'Reports', path: '/reports', icon: BarChart3 },
-    { label: 'AI Assistant', path: '/ai-assistant', icon: Bot },
-    { label: 'Automation', path: '/automation', icon: Zap },
-    { label: 'Settings', path: '/settings', icon: Settings },
-  ];
+  const ROLE_NAVIGATIONS = {
+    SUPER_ADMIN: {
+      section: 'System Administration',
+      items: [
+        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { label: 'Organizations', path: '/admin?tab=businesses', icon: Building2 },
+        { label: 'Users', path: '/admin?tab=users', icon: Users },
+        { label: 'Subscriptions', path: '/admin?tab=subscriptions', icon: CreditCard },
+        { label: 'System Analytics', path: '/admin?tab=system_usage', icon: BarChart3 },
+        { label: 'Audit Logs', path: '/admin?tab=audit_logs', icon: ShieldCheck },
+        { label: 'System Settings', path: '/admin?tab=plans', icon: Settings },
+        { label: 'Profile', path: '/profile', icon: User },
+      ],
+    },
+    BUSINESS_ADMIN: {
+      section: 'Business Operations',
+      items: [
+        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { label: 'Customers', path: '/customers', icon: Users },
+        { label: 'Leads', path: '/leads', icon: Target },
+        { label: 'Sales', path: '/sales', icon: ShoppingBag },
+        { label: 'Invoices', path: '/invoices', icon: ReceiptText },
+        { label: 'Employees', path: '/users', icon: User },
+        { label: 'Reports', path: '/reports', icon: BarChart3 },
+        { label: 'Analytics', path: '/analytics', icon: TrendingUp },
+        { label: 'Organization Settings', path: '/settings', icon: Settings },
+        { label: 'Profile', path: '/profile', icon: User },
+      ],
+    },
+    SALES_MANAGER: {
+      section: 'Sales Operations',
+      items: [
+        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { label: 'Leads', path: '/leads', icon: Target },
+        { label: 'Sales Pipeline', path: '/leads?view=kanban', icon: Layers },
+        { label: 'Customers', path: '/customers', icon: Users },
+        { label: 'Team Performance', path: '/users', icon: Users },
+        { label: 'Follow-ups', path: '/automation', icon: Clock },
+        { label: 'Reports', path: '/reports', icon: BarChart3 },
+        { label: 'Profile', path: '/profile', icon: User },
+      ],
+    },
+    EMPLOYEE: {
+      section: 'My Operational Workspace',
+      items: [
+        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { label: 'My Leads', path: '/leads', icon: Target },
+        { label: 'My Customers', path: '/customers', icon: Users },
+        { label: 'My Tasks', path: '/automation', icon: CheckCircle2 },
+        { label: 'My Sales', path: '/sales', icon: ShoppingBag },
+        { label: 'Support', path: '/support', icon: Bot },
+        { label: 'Notifications', path: '/automation?tab=assistant', icon: Bell },
+        { label: 'Profile', path: '/profile', icon: User },
+      ],
+    },
+  };
 
-  // Secondary Tools
-  const secondaryTools = [
-    { label: 'Super Admin', path: '/admin', icon: ShieldCheck, roles: ['SUPER_ADMIN'], badge: 'SAAS' },
-    { label: 'AI Sales Analytics', path: '/analytics', icon: BarChart3 },
-    { label: 'Smart Invoices', path: '/invoices', icon: ReceiptText },
-    { label: 'Support Copilot', path: '/support', icon: ShieldCheck },
-    { label: 'Team & RBAC', path: '/users', icon: User, roles: ['SUPER_ADMIN', 'BUSINESS_ADMIN'] },
-  ].filter((item) => !item.roles || item.roles.includes(user?.role) || user?.role === 'SUPER_ADMIN');
+  // Least-privilege default: an unknown/missing role should never see the
+  // Business Admin navigation menu — fall back to the Employee menu instead.
+  const currentRoleNav = ROLE_NAVIGATIONS[user?.role] || ROLE_NAVIGATIONS.EMPLOYEE;
+
+  const isItemActive = (itemPath) => {
+    const currentFull = location.pathname + location.search;
+    if (itemPath === '/dashboard') {
+      return location.pathname === '/dashboard';
+    }
+    if (itemPath.includes('?')) {
+      return currentFull === itemPath;
+    }
+    return location.pathname === itemPath && (!location.search || location.search === '');
+  };
 
   return (
     <aside
-      className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 flex-shrink-0 bg-slate-900/95 lg:bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between backdrop-blur-xl transition-transform duration-300 ${
+      className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 flex-shrink-0 bg-white border-r border-[#E5E5E5] flex flex-col justify-between transition-transform duration-200 ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}
     >
       <div className="flex-1 overflow-y-auto">
         {/* Brand Header */}
-        <div className="h-18 px-6 flex items-center justify-between border-b border-slate-800/80 sticky top-0 bg-slate-900/95 backdrop-blur-md z-10">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-cyan-400 p-0.5 shadow-glow flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-brand-400" />
-              </div>
+        <div className="h-16 px-5 flex items-center justify-between border-b border-[#E5E5E5] sticky top-0 bg-white z-10">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-md bg-[#111111] text-white flex items-center justify-center font-bold">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-white text-base tracking-tight">Upteky AI</h1>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                <span className="font-semibold text-[#111111] text-sm tracking-tight">Upteky AI</span>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F3F3F3] text-[#111111] border border-[#E5E5E5]">
                   PRO
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium">Business Operations</p>
+              <p className="text-[11px] text-[#8A8A8A]">
+                {user?.role === 'SUPER_ADMIN' ? 'Platform Console' : 'Business Operations'}
+              </p>
             </div>
           </Link>
 
           {/* Close button for mobile drawer */}
           <button
             onClick={onCloseMobile}
-            className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-white"
+            className="lg:hidden p-1.5 rounded-md text-[#666666] hover:text-[#111111] hover:bg-[#F7F7F7]"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Current Tenant / Org Pill */}
-        <div className="mx-4 mt-4 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between">
+        {/* Current Tenant / Role Container */}
+        <div className="mx-3.5 mt-3.5 p-2.5 rounded-md bg-[#F9FAFB] border border-[#E5E5E5] flex items-center justify-between">
           <div className="truncate">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Tenant Org</p>
-            <p className="text-xs font-semibold text-slate-200 truncate">{user?.organization_name || 'Upteky Technologies'}</p>
+            <p className="text-[10px] font-medium text-[#8A8A8A] uppercase tracking-wider">
+              {user?.role === 'SUPER_ADMIN' ? 'System Console' : 'Tenant Org'}
+            </p>
+            <p className="text-xs font-semibold text-[#111111] truncate">
+              {user?.role === 'SUPER_ADMIN' ? 'Upteky Global Cloud' : (user?.organization_name || 'Upteky Technologies')}
+            </p>
           </div>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="System Operational" />
+          <span className="w-2 h-2 rounded-full bg-emerald-500" title="System Operational" />
         </div>
 
-        {/* The 9 Specified Core Modules */}
-        <nav className="mt-4 px-3 space-y-1">
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-wider uppercase text-slate-500">
-            Core Modules
+        {/* Role-Specific Navigation */}
+        <nav className="mt-4 px-2.5 space-y-0.5 pb-6">
+          <p className="px-2.5 pb-1.5 text-[10px] font-medium tracking-wider uppercase text-[#8A8A8A]">
+            {currentRoleNav.section}
           </p>
-          {coreModules.map((item) => {
+          {currentRoleNav.items.map((item) => {
             const Icon = item.icon;
+            const active = isItemActive(item.path);
             return (
-              <NavLink
+              <Link
                 key={item.path}
                 to={item.path}
                 onClick={onCloseMobile}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'bg-brand-600/15 text-brand-300 border border-brand-500/30 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`
-                }
+                className={`flex items-center justify-between px-2.5 py-2 rounded-md text-xs transition-colors duration-150 group ${
+                  active
+                    ? 'bg-[#F3F3F3] text-[#111111] font-semibold'
+                    : 'text-[#666666] hover:text-[#111111] hover:bg-[#F7F7F7] font-medium'
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 transition-transform group-hover:scale-110 text-slate-400 group-hover:text-brand-400" />
+                <div className="flex items-center gap-2.5">
+                  <Icon
+                    className={`w-4 h-4 ${
+                      active ? 'text-[#111111]' : 'text-[#666666] group-hover:text-[#111111]'
+                    }`}
+                  />
                   <span>{item.label}</span>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500" />
-              </NavLink>
+              </Link>
             );
           })}
         </nav>
-
-        {/* Secondary Tools */}
-        <div className="mt-4 px-3 space-y-1">
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-wider uppercase text-slate-500">
-            Operations & Team
-          </p>
-          {secondaryTools.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onCloseMobile}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'bg-brand-600/15 text-brand-300 border border-brand-500/30 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`
-                }
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 transition-transform group-hover:scale-110 text-slate-400 group-hover:text-brand-400" />
-                  <span>{item.label}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {item.badge && (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                      {item.badge}
-                    </span>
-                  )}
-                  <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500" />
-                </div>
-              </NavLink>
-            );
-          })}
-        </div>
       </div>
 
       {/* Footer Profile & Logout */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
+      <div className="p-3.5 border-t border-[#E5E5E5] bg-white">
         <Link
           to="/profile"
           onClick={onCloseMobile}
-          className="flex items-center gap-3 mb-3 p-1.5 rounded-xl hover:bg-slate-800/50 transition group"
+          className="flex items-center gap-2.5 mb-2 p-1.5 rounded-md hover:bg-[#F7F7F7] transition group"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+          <div className="w-7 h-7 rounded-md bg-[#111111] text-white flex items-center justify-center font-semibold text-xs">
             {user?.full_name ? user.full_name.charAt(0) : 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white truncate group-hover:text-brand-300 transition">
-              {user?.full_name}
+            <p className="text-xs font-semibold text-[#111111] truncate">
+              {user?.full_name || 'Admin User'}
             </p>
             <RoleBadge role={user?.role || 'EMPLOYEE'} />
           </div>
@@ -185,7 +210,7 @@ export const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition border border-transparent hover:border-rose-500/20"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#666666] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-md transition border border-transparent hover:border-[#FCA5A5]"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out</span>

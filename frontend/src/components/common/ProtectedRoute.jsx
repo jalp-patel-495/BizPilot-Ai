@@ -7,10 +7,10 @@ export const ProtectedRoute = ({ allowedRoles }) => {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#0b0f19]">
+      <div className="flex h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-3 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-400 font-medium">Validating Upteky AI session...</p>
+          <div className="w-8 h-8 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-[#666666] font-medium">Validating session...</p>
         </div>
       </div>
     );

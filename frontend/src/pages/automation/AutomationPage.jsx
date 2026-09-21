@@ -106,7 +106,6 @@ export const AutomationPage = () => {
 
       if (leadsRes?.data?.data) {
         setLeads(leadsRes.data.data);
-        // Automatically select the first lead if none selected
         if (!selectedLeadId && leadsRes.data.data.length > 0) {
           const firstLead = leadsRes.data.data[0];
           setSelectedLeadId(firstLead.id);
@@ -148,7 +147,6 @@ export const AutomationPage = () => {
     }
   };
 
-  // Toggle Rule Status
   const handleToggleRule = async (ruleId) => {
     try {
       const res = await api.put(`/automations/rules/${ruleId}/toggle`);
@@ -164,7 +162,6 @@ export const AutomationPage = () => {
     }
   };
 
-  // Run Automation Scan (Rules 2 & 3)
   const handleRunScan = async () => {
     try {
       setScanning(true);
@@ -172,7 +169,6 @@ export const AutomationPage = () => {
       if (res.data) {
         setNotice('Automation scan dispatched to background Celery workers. Evaluated follow-ups & inactivity.');
         setTimeout(() => setNotice(''), 5000);
-        // Refresh dashboard after a short cycle
         setTimeout(() => {
           fetchDashboardData();
         }, 800);
@@ -185,7 +181,6 @@ export const AutomationPage = () => {
     }
   };
 
-  // Complete a Task
   const handleCompleteTask = async (taskId) => {
     try {
       const res = await api.put(`/automations/tasks/${taskId}/complete`);
@@ -205,7 +200,6 @@ export const AutomationPage = () => {
     }
   };
 
-  // Trigger Lead AI Analysis
   const handleAnalyzeLead = async (leadId) => {
     try {
       setAnalyzingLead(true);
@@ -223,7 +217,6 @@ export const AutomationPage = () => {
     }
   };
 
-  // Trigger Follow-up Message Generation
   const handleGenerateMessage = async () => {
     if (!selectedLeadId) return;
     try {
@@ -244,7 +237,6 @@ export const AutomationPage = () => {
     }
   };
 
-  // Copy message to clipboard
   const handleCopyMessage = () => {
     if (!generatedMessage?.body) return;
     const fullText = `Subject: ${generatedMessage.subject}\n\n${generatedMessage.body}`;
@@ -253,134 +245,130 @@ export const AutomationPage = () => {
     setTimeout(() => setCopiedNotice(false), 3000);
   };
 
-  // Priority color helper
   const getPriorityBadge = (priority) => {
     switch (priority) {
       case 'URGENT_P0':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
             URGENT P0
           </span>
         );
       case 'HIGH_P1':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
             HIGH P1
           </span>
         );
       case 'MEDIUM_P2':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/15 text-blue-400 border border-blue-500/30">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">
             MEDIUM P2
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-50 text-neutral-600 border border-neutral-200">
             LOW P3
           </span>
         );
     }
   };
 
-  // Category badge helper
   const getCategoryBadge = (category) => {
     switch (category) {
       case 'HOT':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-            <Flame className="w-3 h-3 text-rose-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+            <Flame className="w-3 h-3 text-rose-600" />
             HOT
           </span>
         );
       case 'WARM':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-            <Sun className="w-3 h-3 text-amber-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <Sun className="w-3 h-3 text-amber-600" />
             WARM
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/15 text-blue-400 border border-blue-500/30">
-            <Snowflake className="w-3 h-3 text-blue-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">
+            <Snowflake className="w-3 h-3 text-neutral-500" />
             COLD
           </span>
         );
     }
   };
 
-  // Filter tasks
   const filteredTasks = tasks.filter((t) => {
     if (taskFilter === 'ALL') return true;
     return t.status === taskFilter;
   });
 
-  // Filter logs
   const filteredLogs = logs.filter((l) => {
     if (logFilter === 'ALL') return true;
     return l.status === logFilter;
   });
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 pb-16">
+    <div className="space-y-6 pb-16">
       {/* Toast Notice Banner */}
       {notice && (
-        <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold flex items-center justify-between shadow-lg shadow-brand-500/5 animate-in slide-in-from-top">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-4 h-4 text-brand-400 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-[#f7f7f7] border border-[#e5e5e5] text-[#111111] text-xs font-medium flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-[#111111] shrink-0" />
             <span>{notice}</span>
           </div>
-          <button onClick={() => setNotice('')} className="text-brand-400 hover:text-brand-200">
+          <button onClick={() => setNotice('')} className="text-[#666666] hover:text-[#111111]">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/20 flex items-center gap-1.5">
-              <Cpu className="w-3 h-3" />
-              <span>Phase 6: AI Lead Automation Engine</span>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200 flex items-center gap-1">
+              <Cpu className="w-3 h-3 text-neutral-600" />
+              <span>AI Lead Automation Engine</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Celery + Redis Worker Online</span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              <span>Celery + Redis Online</span>
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-[#111111] tracking-tight">
             AI Lead Automation & Orchestration
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Autonomous scoring, priority assignment, follow-up execution, and proactive inactivity revive rules.
+          <p className="text-xs text-[#666666] mt-0.5">
+            Autonomous scoring, priority assignment, follow-up execution, and inactivity revive rules.
           </p>
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             id="run-scan-btn"
             onClick={handleRunScan}
             disabled={scanning}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 transition shadow-sm"
-            title="Scan leads for due follow-ups (Rule 2) and inactivity triggers (Rule 3)"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition shadow-xs"
+            title="Scan leads for due follow-ups and inactivity triggers"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-brand-400 ${scanning ? 'animate-spin' : ''}`} />
-            <span>{scanning ? 'Running Celery Scan...' : 'Run Automation Scan Now'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-[#666666] ${scanning ? 'animate-spin' : ''}`} />
+            <span>{scanning ? 'Running Scan...' : 'Run Automation Scan'}</span>
           </button>
 
           <button
             id="notifications-btn"
             onClick={() => setShowNotifModal(true)}
-            className="relative p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+            className="relative p-2 rounded-md bg-white hover:bg-[#f7f7f7] text-[#666666] hover:text-[#111111] border border-[#d9d9d9] transition"
             title="View Automation Notifications"
           >
             <Bell className="w-4 h-4" />
             {notifications.filter((n) => !n.is_read).length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#111111] text-[9px] font-bold text-white flex items-center justify-center">
                 {notifications.filter((n) => !n.is_read).length}
               </span>
             )}
@@ -389,12 +377,11 @@ export const AutomationPage = () => {
       </div>
 
       {/* 4 Core Automation KPI StatCards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Active Automations"
           value={metrics.active_automations || rules.filter((r) => r.is_active).length}
           icon={Zap}
-          color="brand"
           subtitle="4 standard workflows online"
           trend="Autonomous 24/7"
         />
@@ -402,7 +389,6 @@ export const AutomationPage = () => {
           title="Completed Automations"
           value={metrics.completed_automations}
           icon={CheckCircle2}
-          color="emerald"
           subtitle="98.4% execution success rate"
           trend="+34% this week"
         />
@@ -410,7 +396,6 @@ export const AutomationPage = () => {
           title="Failed Automations"
           value={metrics.failed_automations}
           icon={AlertCircle}
-          color="rose"
           subtitle="0 worker failures recorded"
           trend="Zero latency fallback"
         />
@@ -418,168 +403,162 @@ export const AutomationPage = () => {
           title="Pending Tasks"
           value={metrics.pending_tasks || tasks.filter((t) => t.status === 'PENDING').length}
           icon={Clock}
-          color="amber"
           subtitle="Follow-ups requiring rep action"
           trend="Priority P0 / P1 queue"
         />
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+      <div className="flex items-center justify-between border-b border-[#e5e5e5] pb-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           <button
             id="tab-rules"
             onClick={() => setActiveTab('rules')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap ${
               activeTab === 'rules'
-                ? 'bg-brand-600 text-white shadow-glow'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-[#111111] text-white'
+                : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
             }`}
           >
-            <Workflow className="w-4 h-4" />
+            <Workflow className="w-3.5 h-3.5" />
             <span>Rules & Pipelines ({rules.length})</span>
           </button>
 
           <button
             id="tab-tasks"
             onClick={() => setActiveTab('tasks')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap ${
               activeTab === 'tasks'
-                ? 'bg-brand-600 text-white shadow-glow'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-[#111111] text-white'
+                : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
             }`}
           >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Pending Tasks & Follow-ups ({tasks.filter((t) => t.status === 'PENDING').length})</span>
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Pending Tasks ({tasks.filter((t) => t.status === 'PENDING').length})</span>
           </button>
 
           <button
             id="tab-assistant"
             onClick={() => setActiveTab('assistant')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap ${
               activeTab === 'assistant'
-                ? 'bg-brand-600 text-white shadow-glow'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-[#111111] text-white'
+                : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
             }`}
           >
-            <Bot className="w-4 h-4 text-emerald-400" />
-            <span>AI Lead Assistant Studio</span>
+            <Bot className="w-3.5 h-3.5" />
+            <span>AI Lead Assistant</span>
           </button>
 
           <button
             id="tab-logs"
             onClick={() => setActiveTab('logs')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap ${
               activeTab === 'logs'
-                ? 'bg-brand-600 text-white shadow-glow'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-[#111111] text-white'
+                : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
             }`}
           >
-            <Layers className="w-4 h-4" />
-            <span>Execution Logs & Audit ({logs.length})</span>
+            <Layers className="w-3.5 h-3.5" />
+            <span>Execution Logs ({logs.length})</span>
           </button>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
-          <span className="font-medium">Estimated Time Saved:</span>
-          <span className="font-bold text-brand-400">{metrics.total_hours_saved || 128.5} hrs</span>
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#666666]">
+          <span>Estimated Saved:</span>
+          <span className="font-semibold text-[#111111]">{metrics.total_hours_saved || 128.5} hrs</span>
         </div>
       </div>
 
-      {/* ========================================================================= */}
       {/* TAB 1: RULES & WORKFLOWS */}
-      {/* ========================================================================= */}
       {activeTab === 'rules' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-white">Active Automation Rule Engine</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-sm font-semibold text-[#111111]">Active Automation Rules</h2>
+              <p className="text-xs text-[#666666]">
                 Deterministic and AI-assisted triggers orchestrated across your sales pipeline.
               </p>
             </div>
             <button
               id="new-rule-btn"
               onClick={() => setShowRuleModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] transition shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create Rule</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {rules.map((rule) => (
               <div
                 key={rule.id}
-                className={`glass-panel p-6 rounded-3xl border transition relative flex flex-col justify-between ${
-                  rule.is_active
-                    ? 'border-slate-700/80 bg-slate-900/60'
-                    : 'border-slate-800/40 bg-slate-950/40 opacity-75'
+                className={`p-5 rounded-lg border bg-white flex flex-col justify-between transition-all ${
+                  rule.is_active ? 'border-[#e5e5e5] shadow-xs' : 'border-[#e5e5e5] opacity-65'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/15 text-brand-400 border border-brand-500/30">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-800 border border-neutral-200">
                         {rule.category || 'Sales AI'}
                       </span>
                       {rule.is_active ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                           ONLINE
                         </span>
                       ) : (
-                        <span className="text-[10px] font-medium text-slate-500">PAUSED</span>
+                        <span className="text-[10px] font-medium text-neutral-400">PAUSED</span>
                       )}
                     </div>
 
                     <button
                       id={`toggle-rule-${rule.id}`}
                       onClick={() => handleToggleRule(rule.id)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                        rule.is_active ? 'bg-brand-600' : 'bg-slate-800'
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                        rule.is_active ? 'bg-[#111111]' : 'bg-[#e5e5e5]'
                       }`}
                       title={rule.is_active ? 'Pause Rule' : 'Activate Rule'}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          rule.is_active ? 'translate-x-6' : 'translate-x-1'
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          rule.is_active ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
                   </div>
 
-                  <h3 className="text-base font-bold text-white mb-2">{rule.name}</h3>
-                  <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                  <h3 className="text-sm font-semibold text-[#111111] mb-1">{rule.name}</h3>
+                  <p className="text-xs text-[#666666] mb-3 leading-relaxed">
                     {rule.description || 'Automated rule orchestrating lead prioritization and next actions.'}
                   </p>
 
-                  {/* Flow Steps Visualizer */}
-                  <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800/80 text-xs space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-blue-500/20 text-blue-300 uppercase">
+                  <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5] text-xs space-y-1.5 mb-3 font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-neutral-200 text-neutral-800 uppercase">
                         TRIGGER
                       </span>
-                      <span className="font-mono text-[11px] text-slate-200">{rule.trigger_event}</span>
+                      <span className="text-[11px] text-[#111111]">{rule.trigger_event}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-500/20 text-amber-300 uppercase">
+                    <div className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-neutral-200 text-neutral-800 uppercase">
                         CONDITION
                       </span>
-                      <span className="font-mono text-[10px] text-slate-300 truncate">
+                      <span className="text-[10px] text-[#666666] truncate font-sans">
                         {typeof rule.conditions === 'object'
                           ? JSON.stringify(rule.conditions)
                           : rule.conditions || 'Always True'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 uppercase">
+                    <div className="flex items-center gap-2 font-sans">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-neutral-200 text-neutral-800 uppercase font-mono">
                         ACTION
                       </span>
-                      <span className="text-[11px] text-emerald-400 font-medium">
+                      <span className="text-[11px] text-[#111111] font-medium">
                         {rule.trigger_event === 'LEAD_CREATED' &&
                           'Classify -> Calculate Score -> Assign Priority -> Create Task'}
                         {rule.trigger_event === 'FOLLOW_UP_DUE' && 'Generate Notification & Alert Rep'}
@@ -594,13 +573,12 @@ export const AutomationPage = () => {
                   </div>
                 </div>
 
-                {/* Footer Metrics */}
-                <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800/80">
+                <div className="flex items-center justify-between text-xs text-[#666666] pt-2.5 border-t border-[#e5e5e5]">
                   <span className="flex items-center gap-1.5">
-                    <Play className="w-3 h-3 text-slate-500" />
+                    <Play className="w-3 h-3 text-[#8a8a8a]" />
                     <span>{rule.execution_count || 0} executions</span>
                   </span>
-                  <span className="text-brand-400 font-medium">
+                  <span className="text-[#111111] font-medium">
                     {rule.hours_saved || 12.0} hrs saved
                   </span>
                 </div>
@@ -610,29 +588,26 @@ export const AutomationPage = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 2: PENDING TASKS & FOLLOW-UPS */}
-      {/* ========================================================================= */}
       {activeTab === 'tasks' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-bold text-white">Automated Task Execution Queue</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-sm font-semibold text-[#111111]">Automated Task Execution Queue</h2>
+              <p className="text-xs text-[#666666]">
                 Tasks synthesized by the AI engine upon lead creation, due dates, and inactivity scans.
               </p>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-1 p-0.5 bg-[#f3f3f3] rounded-md border border-[#e5e5e5]">
               {['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED'].map((f) => (
                 <button
                   key={f}
                   onClick={() => setTaskFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition ${
                     taskFilter === f
-                      ? 'bg-slate-800 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-white text-[#111111] shadow-xs'
+                      : 'text-[#666666] hover:text-[#111111]'
                   }`}
                 >
                   {f}
@@ -641,81 +616,75 @@ export const AutomationPage = () => {
             </div>
           </div>
 
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-                    <th className="py-3.5 px-6">Task Title & Context</th>
-                    <th className="py-3.5 px-6">Priority</th>
-                    <th className="py-3.5 px-6">Due Date</th>
-                    <th className="py-3.5 px-6">Status</th>
-                    <th className="py-3.5 px-6 text-right">Actions</th>
+                  <tr className="border-b border-[#e5e5e5] bg-[#f9fafb] text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                    <th className="py-3 px-4">Task Title & Context</th>
+                    <th className="py-3 px-4">Priority</th>
+                    <th className="py-3 px-4">Due Date</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-xs">
+                <tbody className="divide-y divide-[#e5e5e5] text-xs">
                   {filteredTasks.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="py-12 text-center text-slate-500">
+                      <td colSpan="5" className="py-10 text-center text-[#8a8a8a]">
                         No automation tasks match the selected filter.
                       </td>
                     </tr>
                   ) : (
                     filteredTasks.map((t) => (
-                      <tr key={t.id} className="hover:bg-slate-800/30 transition">
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`p-2 rounded-xl ${
-                                t.status === 'COMPLETED'
-                                  ? 'bg-emerald-500/10 text-emerald-400'
-                                  : 'bg-brand-500/10 text-brand-400'
-                              }`}
-                            >
-                              <Sparkles className="w-4 h-4" />
+                      <tr key={t.id} className="hover:bg-[#f8f8f8] transition">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-md bg-[#f3f3f3] text-[#111111]">
+                              <Sparkles className="w-3.5 h-3.5" />
                             </div>
                             <div>
                               <p
-                                className={`font-bold text-white ${
-                                  t.status === 'COMPLETED' ? 'line-through text-slate-500' : ''
+                                className={`font-semibold text-[#111111] ${
+                                  t.status === 'COMPLETED' ? 'line-through text-[#8a8a8a]' : ''
                                 }`}
                               >
                                 {t.title}
                               </p>
-                              <p className="text-[11px] text-slate-400 mt-0.5">{t.description}</p>
+                              <p className="text-[11px] text-[#666666] mt-0.5">{t.description}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-6">{getPriorityBadge(t.priority)}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-1.5 text-slate-300">
-                            <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                        <td className="py-3 px-4">{getPriorityBadge(t.priority)}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 text-[#666666]">
+                            <Calendar className="w-3.5 h-3.5 text-[#8a8a8a]" />
                             <span>
                               {t.due_date ? new Date(t.due_date).toLocaleDateString() : 'Immediate'}
                             </span>
                           </div>
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-3 px-4">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                               t.status === 'COMPLETED'
-                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
                             }`}
                           >
                             {t.status}
                           </span>
                         </td>
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             {t.status !== 'COMPLETED' && (
                               <button
                                 id={`complete-task-${t.id}`}
                                 onClick={() => handleCompleteTask(t.id)}
-                                className="px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition flex items-center gap-1.5"
+                                className="px-2.5 py-1 rounded text-xs font-semibold text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition flex items-center gap-1"
                                 title="Mark Task Complete"
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <CheckCircle2 className="w-3 h-3" />
                                 <span>Complete</span>
                               </button>
                             )}
@@ -727,11 +696,11 @@ export const AutomationPage = () => {
                                   if (leadObj) populateLeadAnalysis(leadObj);
                                   setActiveTab('assistant');
                                 }}
-                                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 transition flex items-center gap-1"
+                                className="px-2.5 py-1 rounded text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] transition flex items-center gap-1"
                                 title="Draft AI Outreach for this Lead"
                               >
-                                <Bot className="w-3.5 h-3.5" />
-                                <span>AI Outreach</span>
+                                <Bot className="w-3 h-3" />
+                                <span>Outreach</span>
                               </button>
                             )}
                           </div>
@@ -746,28 +715,26 @@ export const AutomationPage = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* TAB 3: EXECUTION LOGS & AUDIT TRAIL */}
-      {/* ========================================================================= */}
+      {/* TAB 3: EXECUTION LOGS */}
       {activeTab === 'logs' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-bold text-white">Celery Worker Execution Audit Trail</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-sm font-semibold text-[#111111]">Celery Execution Audit Trail</h2>
+              <p className="text-xs text-[#666666]">
                 Traceable log of background automation runs, latency, and rule execution details.
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-1 p-0.5 bg-[#f3f3f3] rounded-md border border-[#e5e5e5]">
               {['ALL', 'COMPLETED', 'FAILED', 'IN_PROGRESS'].map((f) => (
                 <button
                   key={f}
                   onClick={() => setLogFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition ${
                     logFilter === f
-                      ? 'bg-slate-800 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-white text-[#111111] shadow-xs'
+                      : 'text-[#666666] hover:text-[#111111]'
                   }`}
                 >
                   {f}
@@ -776,54 +743,54 @@ export const AutomationPage = () => {
             </div>
           </div>
 
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-                    <th className="py-3.5 px-6">Timestamp</th>
-                    <th className="py-3.5 px-6">Rule & Workflow</th>
-                    <th className="py-3.5 px-6">Trigger Event</th>
-                    <th className="py-3.5 px-6">Target Entity</th>
-                    <th className="py-3.5 px-6">Latency</th>
-                    <th className="py-3.5 px-6">Status</th>
+                  <tr className="border-b border-[#e5e5e5] bg-[#f9fafb] text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                    <th className="py-3 px-4">Timestamp</th>
+                    <th className="py-3 px-4">Rule & Workflow</th>
+                    <th className="py-3 px-4">Trigger Event</th>
+                    <th className="py-3 px-4">Target Entity</th>
+                    <th className="py-3 px-4">Latency</th>
+                    <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-xs font-mono">
+                <tbody className="divide-y divide-[#e5e5e5] text-xs">
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="py-12 text-center text-slate-500 font-sans">
+                      <td colSpan="6" className="py-10 text-center text-[#8a8a8a]">
                         No automation logs recorded for the selected filter.
                       </td>
                     </tr>
                   ) : (
                     filteredLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-slate-800/30 transition">
-                        <td className="py-3.5 px-6 text-slate-400 text-[11px]">
+                      <tr key={log.id} className="hover:bg-[#f8f8f8] transition">
+                        <td className="py-3 px-4 text-[#666666] text-[11px] font-mono">
                           {new Date(log.created_at).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
                           })}
                         </td>
-                        <td className="py-3.5 px-6 font-sans font-bold text-white">
+                        <td className="py-3 px-4 font-semibold text-[#111111]">
                           {log.rule_name || 'System Rule'}
                         </td>
-                        <td className="py-3.5 px-6 text-slate-300 text-[11px]">
+                        <td className="py-3 px-4 text-[#666666] text-[11px] font-mono">
                           {log.trigger_event}
                         </td>
-                        <td className="py-3.5 px-6 text-slate-400 text-[11px]">
+                        <td className="py-3 px-4 text-[#666666] text-[11px]">
                           {log.target_entity || 'Lead'}
                         </td>
-                        <td className="py-3.5 px-6 text-brand-400">
+                        <td className="py-3 px-4 font-mono text-[#111111]">
                           {log.latency_ms ? `${log.latency_ms.toFixed(1)}ms` : '32.0ms'}
                         </td>
-                        <td className="py-3.5 px-6 font-sans">
+                        <td className="py-3 px-4">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                               log.status === 'COMPLETED'
-                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
                             }`}
                           >
                             {log.status}
@@ -839,25 +806,23 @@ export const AutomationPage = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 4: AI LEAD ASSISTANT STUDIO */}
-      {/* ========================================================================= */}
       {activeTab === 'assistant' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Bot className="w-5 h-5 text-brand-400" />
-                <h2 className="text-base font-bold text-white">Interactive AI Lead Assistant</h2>
+              <div className="flex items-center gap-2 mb-0.5">
+                <Bot className="w-4 h-4 text-[#111111]" />
+                <h2 className="text-sm font-semibold text-[#111111]">Interactive AI Lead Assistant</h2>
               </div>
-              <p className="text-xs text-slate-400">
-                Select any pipeline lead to inspect the 6 core AI intelligence functions and generate context-aware outreach.
+              <p className="text-xs text-[#666666]">
+                Select any pipeline lead to inspect intelligence functions and generate context-aware outreach.
               </p>
             </div>
 
-            {/* Lead Selector Dropdown */}
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-semibold text-slate-400 whitespace-nowrap">
+            {/* Lead Selector */}
+            <div className="flex items-center gap-2.5">
+              <label className="text-xs font-medium text-[#666666] whitespace-nowrap">
                 Select Lead:
               </label>
               <select
@@ -869,7 +834,7 @@ export const AutomationPage = () => {
                   const found = leads.find((l) => l.id === id);
                   if (found) populateLeadAnalysis(found);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none min-w-[240px]"
+                className="px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none min-w-[220px]"
               >
                 {leads.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -882,7 +847,7 @@ export const AutomationPage = () => {
                 id="re-analyze-btn"
                 onClick={() => selectedLeadId && handleAnalyzeLead(selectedLeadId)}
                 disabled={analyzingLead || !selectedLeadId}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] transition flex items-center gap-1.5"
                 title="Trigger Realtime AI Re-scoring"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${analyzingLead ? 'animate-spin' : ''}`} />
@@ -892,14 +857,13 @@ export const AutomationPage = () => {
           </div>
 
           {aiAnalysis ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: 6 Core AI Functions (Score, Category, Reason, Priority, Next Action, Follow-up Date) */}
-              <div className="lg:col-span-5 space-y-5">
-                {/* 1. Score & Classification Card */}
-                <div className="glass-panel p-6 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Lead Intelligence Overview
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              {/* Left Column: Lead Overview */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-lg border border-[#e5e5e5] bg-white shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                      Lead Intelligence
                     </span>
                     <div className="flex items-center gap-2">
                       {getCategoryBadge(aiAnalysis.lead_category)}
@@ -907,73 +871,65 @@ export const AutomationPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 mb-4">
+                  <div className="flex items-center justify-between p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] mb-3.5">
                     <div>
-                      <h3 className="text-lg font-extrabold text-white">{aiAnalysis.company}</h3>
-                      <p className="text-xs text-slate-400">Contact: {aiAnalysis.contact_name}</p>
-                      <p className="text-xs text-emerald-400 font-bold mt-1">
+                      <h3 className="text-base font-bold text-[#111111]">{aiAnalysis.company}</h3>
+                      <p className="text-xs text-[#666666]">Contact: {aiAnalysis.contact_name}</p>
+                      <p className="text-xs text-[#111111] font-semibold mt-0.5">
                         Deal Value: ${(aiAnalysis.deal_value || 0).toLocaleString()}
                       </p>
                     </div>
 
                     <div className="text-right">
-                      <div className="text-3xl font-black text-white flex items-baseline justify-end gap-1">
-                        <span className="text-brand-400">{aiAnalysis.lead_score}</span>
-                        <span className="text-xs text-slate-500 font-medium">/ 100</span>
+                      <div className="text-2xl font-bold text-[#111111] flex items-baseline justify-end gap-1">
+                        <span>{aiAnalysis.lead_score}</span>
+                        <span className="text-xs text-[#8a8a8a] font-normal">/ 100</span>
                       </div>
-                      <span className="text-[10px] font-semibold text-slate-400">
-                        AI Quality Score
-                      </span>
+                      <span className="text-[10px] text-[#666666]">AI Score</span>
                     </div>
                   </div>
 
-                  {/* Progress Score Bar */}
-                  <div className="space-y-1.5 mb-5">
+                  {/* Progress Bar */}
+                  <div className="space-y-1 mb-4">
                     <div className="flex justify-between text-[11px]">
-                      <span className="text-slate-400">Conversion Propensity</span>
-                      <span className="text-brand-300 font-bold">{aiAnalysis.lead_score}%</span>
+                      <span className="text-[#666666]">Propensity</span>
+                      <span className="text-[#111111] font-semibold">{aiAnalysis.lead_score}%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 rounded-full ${
-                          aiAnalysis.lead_score >= 80
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                            : aiAnalysis.lead_score >= 50
-                            ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-                            : 'bg-gradient-to-r from-rose-500 to-orange-400'
-                        }`}
+                        className="h-full rounded-full bg-[#111111] transition-all duration-300"
                         style={{ width: `${Math.min(100, Math.max(5, aiAnalysis.lead_score))}%` }}
                       />
                     </div>
                   </div>
 
-                  {/* 3. Reason for Score */}
-                  <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs mb-4">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-400" />
+                  {/* Reason for score */}
+                  <div className="p-3 rounded-md bg-[#f9fafb] border border-[#e5e5e5] text-xs mb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#666666] mb-1 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#111111]" />
                       <span>Reason for Score</span>
                     </p>
-                    <p className="text-slate-300 leading-relaxed">{aiAnalysis.reason_for_score}</p>
+                    <p className="text-[#111111] leading-relaxed">{aiAnalysis.reason_for_score}</p>
                   </div>
 
-                  {/* 4. Recommended Next Action */}
-                  <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-xs mb-4">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-brand-300 mb-1 flex items-center gap-1.5">
-                      <ArrowRight className="w-3.5 h-3.5 text-brand-400" />
+                  {/* Recommended next action */}
+                  <div className="p-3 rounded-md bg-[#fafafa] border border-[#d9d9d9] text-xs mb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#111111] mb-1 flex items-center gap-1.5">
+                      <ArrowRight className="w-3.5 h-3.5 text-[#111111]" />
                       <span>Recommended Next Action</span>
                     </p>
-                    <p className="text-white font-semibold leading-relaxed">
+                    <p className="text-[#111111] font-semibold leading-relaxed">
                       {aiAnalysis.recommended_next_action}
                     </p>
                   </div>
 
-                  {/* 5. Suggested Follow-up Date */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
-                    <span className="text-slate-400 flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Suggested Follow-up Date:</span>
+                  {/* Follow-up date */}
+                  <div className="flex items-center justify-between p-2.5 rounded-md bg-[#f9fafb] border border-[#e5e5e5] text-xs">
+                    <span className="text-[#666666] flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[#8a8a8a]" />
+                      <span>Suggested Follow-up:</span>
                     </span>
-                    <span className="font-bold text-amber-300">
+                    <span className="font-semibold text-[#111111]">
                       {new Date(aiAnalysis.suggested_follow_up_date).toLocaleDateString(undefined, {
                         weekday: 'short',
                         month: 'short',
@@ -984,57 +940,54 @@ export const AutomationPage = () => {
                   </div>
                 </div>
 
-                {/* 5. Lead Summary Synthesis Card */}
-                <div className="glass-panel p-5 rounded-3xl border border-slate-800 shadow-xl">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
-                    <Bot className="w-4 h-4 text-emerald-400" />
-                    <span>Executive Lead Summary</span>
+                {/* Summary Card */}
+                <div className="p-4 rounded-lg border border-[#e5e5e5] bg-white shadow-xs">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#666666] mb-1.5 flex items-center gap-1.5">
+                    <Bot className="w-3.5 h-3.5 text-[#111111]" />
+                    <span>Executive Summary</span>
                   </h4>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-[#666666] leading-relaxed">
                     {aiAnalysis.lead_summary ||
-                      `${aiAnalysis.company} is an active pipeline account under evaluation. Recommendation is to engage with architectural alignment.`}
+                      `${aiAnalysis.company} is an active pipeline account under evaluation.`}
                   </p>
                 </div>
               </div>
 
-              {/* Right Column: Follow-up Message Generation Studio */}
+              {/* Right Column: Follow-up Generator */}
               <div className="lg:col-span-7">
-                <div className="glass-panel p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-5">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="p-5 rounded-lg border border-[#e5e5e5] bg-white shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#e5e5e5] pb-3">
                     <div>
-                      <h3 className="text-base font-bold text-white flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-brand-400" />
+                      <h3 className="text-sm font-semibold text-[#111111] flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-[#111111]" />
                         <span>Follow-up Message Generator</span>
                       </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-[#666666] mt-0.5">
                         Synthesizes personalized outreach tailored to company size, deal value, and priority.
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        id="generate-msg-btn"
-                        onClick={handleGenerateMessage}
-                        disabled={generatingMessage}
-                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition flex items-center gap-1.5"
-                      >
-                        <Sparkles className={`w-3.5 h-3.5 ${generatingMessage ? 'animate-spin' : ''}`} />
-                        <span>{generatingMessage ? 'Drafting...' : 'Generate Message'}</span>
-                      </button>
-                    </div>
+                    <button
+                      id="generate-msg-btn"
+                      onClick={handleGenerateMessage}
+                      disabled={generatingMessage}
+                      className="px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] transition flex items-center gap-1.5"
+                    >
+                      <Sparkles className={`w-3.5 h-3.5 ${generatingMessage ? 'animate-spin' : ''}`} />
+                      <span>{generatingMessage ? 'Drafting...' : 'Generate Message'}</span>
+                    </button>
                   </div>
 
-                  {/* Tone Controls */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                      <label className="block text-xs font-medium text-[#111111] mb-1">
                         Outreach Tone
                       </label>
                       <select
                         id="tone-selector"
                         value={outreachTone}
                         onChange={(e) => setOutreachTone(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                       >
                         <option value="Professional & Strategic">Professional & Strategic</option>
                         <option value="Consultative & Value-driven">Consultative & Value-driven</option>
@@ -1044,33 +997,32 @@ export const AutomationPage = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                      <label className="block text-xs font-medium text-[#111111] mb-1">
                         Key Value Prop / Pain Point
                       </label>
                       <input
                         type="text"
                         value={outreachContext}
                         onChange={(e) => setOutreachContext(e.target.value)}
-                        placeholder="e.g. enterprise SOC2 compliance, billing automation"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                        placeholder="e.g. SOC2 compliance, billing automation"
+                        className="w-full px-3 py-2 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                       />
                     </div>
                   </div>
 
-                  {/* Message Output Preview */}
                   {generatedMessage ? (
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-2.5 pt-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-300">Generated Email Draft</span>
+                        <span className="text-xs font-semibold text-[#111111]">Generated Email Draft</span>
                         <button
                           id="copy-msg-btn"
                           onClick={handleCopyMessage}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-brand-400 hover:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 transition"
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[#111111] hover:bg-[#f7f7f7] border border-[#d9d9d9] transition"
                         >
                           {copiedNotice ? (
                             <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span className="text-emerald-400">Copied!</span>
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="text-emerald-700">Copied!</span>
                             </>
                           ) : (
                             <>
@@ -1081,28 +1033,22 @@ export const AutomationPage = () => {
                         </button>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
-                        <div className="text-xs text-slate-400 pb-2 border-b border-slate-800/80 flex items-center gap-2">
-                          <span className="font-bold text-slate-500">SUBJECT:</span>
-                          <span className="text-white font-medium">{generatedMessage.subject}</span>
+                      <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] space-y-2">
+                        <div className="text-xs text-[#666666] pb-2 border-b border-[#e5e5e5] flex items-center gap-2">
+                          <span className="font-semibold text-[#111111]">SUBJECT:</span>
+                          <span className="text-[#111111] font-medium">{generatedMessage.subject}</span>
                         </div>
 
-                        <div className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
+                        <div className="text-xs text-[#111111] whitespace-pre-wrap leading-relaxed">
                           {generatedMessage.body}
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-end gap-3 pt-2">
-                        <span className="text-[11px] text-slate-500">
-                          Automated draft synchronized with Celery worker pipeline
-                        </span>
-                      </div>
                     </div>
                   ) : (
-                    <div className="py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 text-slate-700" />
+                    <div className="py-12 text-center text-[#8a8a8a] flex flex-col items-center justify-center gap-1.5">
+                      <Sparkles className="w-6 h-6 text-[#d4d4d4]" />
                       <p className="text-xs">
-                        Click "Generate Message" above to draft a tailored follow-up based on this lead's profile.
+                        Click "Generate Message" to draft a tailored follow-up based on this lead's profile.
                       </p>
                     </div>
                   )}
@@ -1110,7 +1056,7 @@ export const AutomationPage = () => {
               </div>
             </div>
           ) : (
-            <div className="py-16 text-center text-slate-500">
+            <div className="py-12 text-center text-[#8a8a8a] bg-white rounded-lg border border-[#e5e5e5]">
               No leads currently available. Create a lead in the Leads CRM to trigger AI automation.
             </div>
           )}
@@ -1119,34 +1065,34 @@ export const AutomationPage = () => {
 
       {/* Notifications Modal */}
       {showNotifModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-lg p-6 rounded-3xl border border-slate-700 shadow-2xl relative max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in">
+          <div className="bg-white w-full max-w-lg p-5 rounded-lg border border-[#e5e5e5] shadow-xl relative max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
               <div className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-brand-400" />
-                <h3 className="text-base font-bold text-white">Automation Notifications</h3>
+                <Bell className="w-4 h-4 text-[#111111]" />
+                <h3 className="text-sm font-semibold text-[#111111]">Automation Notifications</h3>
               </div>
               <button
                 onClick={() => setShowNotifModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#666666] hover:text-[#111111]"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="divide-y divide-slate-800/60 mt-4">
+            <div className="divide-y divide-[#e5e5e5] mt-3">
               {notifications.length === 0 ? (
-                <p className="py-8 text-center text-xs text-slate-500">No active notifications.</p>
+                <p className="py-6 text-center text-xs text-[#8a8a8a]">No active notifications.</p>
               ) : (
                 notifications.map((n) => (
-                  <div key={n.id} className="py-3 flex items-start gap-3">
-                    <div className="p-2 rounded-xl bg-brand-500/10 text-brand-400 shrink-0 mt-0.5">
+                  <div key={n.id} className="py-3 flex items-start gap-2.5">
+                    <div className="p-1.5 rounded-md bg-[#f3f3f3] text-[#111111] shrink-0 mt-0.5">
                       <Bell className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-white">{n.title}</p>
-                      <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{n.message}</p>
-                      <p className="text-[10px] text-slate-500 mt-1">
+                      <p className="text-xs font-semibold text-[#111111]">{n.title}</p>
+                      <p className="text-[11px] text-[#666666] mt-0.5 leading-relaxed">{n.message}</p>
+                      <p className="text-[10px] text-[#8a8a8a] mt-1">
                         {new Date(n.created_at).toLocaleString()}
                       </p>
                     </div>
@@ -1160,15 +1106,15 @@ export const AutomationPage = () => {
 
       {/* Create Automation Rule Modal */}
       {showRuleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-slate-700 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Create Automation Workflow</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in">
+          <div className="bg-white w-full max-w-md p-5 rounded-lg border border-[#e5e5e5] shadow-xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
+              <h3 className="text-sm font-semibold text-[#111111]">Create Automation Workflow</h3>
               <button
                 onClick={() => setShowRuleModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#666666] hover:text-[#111111]"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1187,65 +1133,65 @@ export const AutomationPage = () => {
                   console.error('Failed to create rule:', err);
                 }
               }}
-              className="space-y-4 mt-4"
+              className="space-y-3.5 mt-3.5"
             >
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Rule Name *</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Rule Name *</label>
                 <input
                   type="text"
                   required
                   value={newRule.name}
                   onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
                   placeholder="e.g. VIP Inbound Fast-Track"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Trigger Event</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Trigger Event</label>
                 <select
                   value={newRule.trigger_event}
                   onChange={(e) => setNewRule({ ...newRule, trigger_event: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                 >
-                  <option value="LEAD_CREATED">IF Lead is Created (Rule 1)</option>
-                  <option value="FOLLOW_UP_DUE">IF Follow-up Date Arrives (Rule 2)</option>
-                  <option value="LEAD_INACTIVE">IF Lead is Inactive for X Days (Rule 3)</option>
+                  <option value="LEAD_CREATED">IF Lead is Created</option>
+                  <option value="FOLLOW_UP_DUE">IF Follow-up Date Arrives</option>
+                  <option value="LEAD_INACTIVE">IF Lead is Inactive for X Days</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Category</label>
                 <input
                   type="text"
                   value={newRule.category}
                   onChange={(e) => setNewRule({ ...newRule, category: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Description</label>
                 <textarea
                   rows="2"
                   value={newRule.description}
                   onChange={(e) => setNewRule({ ...newRule, description: e.target.value })}
                   placeholder="Specify what this rule executes..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#e5e5e5]">
                 <button
                   type="button"
                   onClick={() => setShowRuleModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-3.5 py-1.5 rounded-md text-xs font-medium text-[#666666] hover:text-[#111111]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition"
+                  className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] transition shadow-xs"
                 >
                   Save & Activate
                 </button>
@@ -1257,4 +1203,3 @@ export const AutomationPage = () => {
     </div>
   );
 };
-

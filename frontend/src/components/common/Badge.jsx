@@ -4,35 +4,35 @@ export const RoleBadge = ({ role }) => {
   const configs = {
     SUPER_ADMIN: {
       label: 'Super Admin',
-      bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-      dot: 'bg-rose-500',
+      bg: 'bg-neutral-100 text-neutral-900 border-neutral-300',
+      dot: 'bg-neutral-900',
     },
     BUSINESS_ADMIN: {
       label: 'Business Admin',
-      bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-      dot: 'bg-indigo-500',
+      bg: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+      dot: 'bg-neutral-700',
     },
     SALES_MANAGER: {
       label: 'Sales Manager',
-      bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-      dot: 'bg-amber-500',
+      bg: 'bg-neutral-50 text-neutral-700 border-neutral-200',
+      dot: 'bg-neutral-500',
     },
     EMPLOYEE: {
       label: 'Employee',
-      bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-      dot: 'bg-emerald-500',
+      bg: 'bg-neutral-50 text-neutral-600 border-neutral-200',
+      dot: 'bg-neutral-400',
     },
   };
 
   const config = configs[role] || {
     label: role,
-    bg: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-    dot: 'bg-slate-400',
+    bg: 'bg-neutral-50 text-neutral-600 border-neutral-200',
+    dot: 'bg-neutral-400',
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${config.bg}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${config.dot} animate-pulse`} />
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border ${config.bg}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       {config.label}
     </span>
   );
@@ -40,26 +40,26 @@ export const RoleBadge = ({ role }) => {
 
 export const StatusBadge = ({ status }) => {
   const configs = {
-    ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    PAID: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    WON: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    QUALIFIED: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    PROCESSED: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    PROPOSAL: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    IN_PROGRESS: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    NEW: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    CONTACTED: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    HIGH: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    URGENT: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    LOST: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-    CLOSED: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+    ACTIVE: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    PAID: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    WON: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    QUALIFIED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+    PROCESSED: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+    PROPOSAL: 'bg-neutral-100 text-neutral-700 border-neutral-200',
+    IN_PROGRESS: 'bg-neutral-100 text-neutral-700 border-neutral-200',
+    NEW: 'bg-neutral-50 text-neutral-700 border-neutral-200',
+    CONTACTED: 'bg-amber-50 text-amber-800 border-amber-200',
+    PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
+    HIGH: 'bg-rose-50 text-rose-800 border-rose-200',
+    URGENT: 'bg-rose-50 text-rose-800 border-rose-200',
+    LOST: 'bg-neutral-50 text-neutral-500 border-neutral-200',
+    CLOSED: 'bg-neutral-50 text-neutral-500 border-neutral-200',
   };
 
-  const style = configs[status?.toUpperCase()] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+  const style = configs[status?.toUpperCase()] || 'bg-neutral-50 text-neutral-600 border-neutral-200';
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border ${style}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${style}`}>
       {status}
     </span>
   );

@@ -3,6 +3,7 @@ import io
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Tuple
+from collections import defaultdict
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from fpdf import FPDF
@@ -13,7 +14,7 @@ from app.models.lead import Lead
 from app.models.customer import Customer
 from app.models.invoice import Invoice
 from app.models.product import Product
-from app.models.automation_log import AutomationLog
+from app.models.subscription import Subscription
 from app.schemas.report import (
     BusinessReportResponse,
     ReportMetric,
@@ -131,50 +132,48 @@ class BusinessReportService:
         now = datetime.now(timezone.utc)
         yesterday = now - timedelta(days=1)
 
-        # Query database metrics
-        day_sales = self.db.query(Sale).filter(
-            Sale.organization_id == self.org_id,
-            Sale.created_at >= yesterday
-        ).all()
-        total_sales_amount = sum(s.amount for s in day_sales) or 4820.00
-        deals_count = len(day_sales) or 6
+        query_sales = self.db.query(Sale).filter(Sale.created_at >= yesterday)
+        query_leads = self.db.query(Lead).filter(Lead.created_at >= yesterday)
+        query_invs = self.db.query(Invoice).filter(Invoice.created_at >= yesterday)
+        if self.org_id:
+            query_sales = query_sales.filter(Sale.organization_id == self.org_id)
+            query_leads = query_leads.filter(Lead.organization_id == self.org_id)
+            query_invs = query_invs.filter(Invoice.organization_id == self.org_id)
 
-        day_leads = self.db.query(Lead).filter(
-            Lead.organization_id == self.org_id,
-            Lead.created_at >= yesterday
-        ).all()
-        leads_count = len(day_leads) or 14
+        day_sales = query_sales.all()
+        total_sales_amount = sum(s.amount for s in day_sales)
+        deals_count = len(day_sales)
 
-        day_invoices = self.db.query(Invoice).filter(
-            Invoice.organization_id == self.org_id,
-            Invoice.created_at >= yesterday
-        ).all()
-        invoices_processed = len(day_invoices) or 8
+        day_leads = query_leads.all()
+        leads_count = len(day_leads)
+
+        day_invoices = query_invs.all()
+        invoices_processed = len(day_invoices)
 
         metrics = [
             ReportMetric(
                 key="daily_revenue",
                 label="Daily Revenue",
                 value=f"${total_sales_amount:,.2f}",
-                change_pct=12.4,
-                trend_direction="UP",
-                subtitle="vs previous 24h ($4,288)",
+                change_pct=0.0,
+                trend_direction="UP" if total_sales_amount > 0 else "NEUTRAL",
+                subtitle="past 24 hours recognized sales",
             ),
             ReportMetric(
                 key="deals_closed",
                 label="Deals Closed",
                 value=str(deals_count),
-                change_pct=20.0,
-                trend_direction="UP",
-                subtitle="average deal: $803",
+                change_pct=0.0,
+                trend_direction="UP" if deals_count > 0 else "NEUTRAL",
+                subtitle=f"average deal: ${total_sales_amount / max(1, deals_count):,.2f}" if deals_count > 0 else "no deals closed",
             ),
             ReportMetric(
                 key="new_leads",
                 label="New Leads Ingested",
                 value=str(leads_count),
-                change_pct=7.7,
-                trend_direction="UP",
-                subtitle="64% AI-qualified as Hot/Warm",
+                change_pct=0.0,
+                trend_direction="UP" if leads_count > 0 else "NEUTRAL",
+                subtitle="inbound pipeline entries",
             ),
             ReportMetric(
                 key="invoices_processed",
@@ -182,47 +181,33 @@ class BusinessReportService:
                 value=str(invoices_processed),
                 change_pct=0.0,
                 trend_direction="NEUTRAL",
-                subtitle="98.7% automated OCR accuracy",
+                subtitle="automated OCR intake",
             ),
         ]
 
-        chart_data = [
-            {"period": "09:00", "primary_value": 450, "secondary_value": 2, "label": "9 AM"},
-            {"period": "11:00", "primary_value": 1120, "secondary_value": 5, "label": "11 AM"},
-            {"period": "13:00", "primary_value": 780, "secondary_value": 3, "label": "1 PM"},
-            {"period": "15:00", "primary_value": 1490, "secondary_value": 6, "label": "3 PM"},
-            {"period": "17:00", "primary_value": 980, "secondary_value": 4, "label": "5 PM"},
-        ]
+        chart_data = []
+        if deals_count > 0 or leads_count > 0:
+            chart_data = [
+                {"period": "Past 24h", "primary_value": round(total_sales_amount, 2), "secondary_value": deals_count + leads_count, "label": "Past 24h"}
+            ]
 
-        changes = [
-            ImportantChange(
-                id="c-d1",
-                title="Intraday Revenue Peak at 15:00",
-                impact_type="POSITIVE",
-                timestamp="Today at 15:12 UTC",
-                details="Enterprise AI Suite mid-market deal closed ($1,490), driving today's highest hourly volume.",
-            ),
-            ImportantChange(
-                id="c-d2",
-                title="High Intent Inbound Ingestion",
-                impact_type="POSITIVE",
-                timestamp="Today at 11:45 UTC",
-                details="4 enterprise leads ingested from organic search; auto-classified as HOT with follow-up scheduled.",
-            ),
-            ImportantChange(
-                id="c-d3",
-                title="Zero Document Processing Errors",
-                impact_type="INFO",
-                timestamp="Today at 17:00 UTC",
-                details="All 8 invoice documents extracted successfully without human correction required.",
-            ),
-        ]
+        changes = []
+        if deals_count > 0:
+            changes.append(
+                ImportantChange(
+                    id="c-d1",
+                    title="Daily Transactions Recorded",
+                    impact_type="POSITIVE",
+                    timestamp="Past 24h",
+                    details=f"{deals_count} sales transactions completed totaling ${total_sales_amount:,.2f}.",
+                )
+            )
 
         ai_summary = (
-            "Operational performance across the past 24 hours reflects robust velocity with $4,820 in realized sales, "
-            "representing a 12.4% day-over-day acceleration. Sales conversions peaked in the mid-afternoon bracket driven "
-            "by the Enterprise AI Suite. Inbound lead generation remains healthy with 14 leads captured and routed via "
-            "automated classification. Recommend sales reps prioritize the 4 HOT leads before end-of-day."
+            f"Operational briefing for the past 24 hours: {deals_count} transactions completed totaling ${total_sales_amount:,.2f}, "
+            f"with {leads_count} new leads ingested and {invoices_processed} documents processed."
+            if (deals_count > 0 or leads_count > 0)
+            else "No sales or operational transactions recorded in the past 24 hours. Activity will appear as records are processed."
         )
 
         return BusinessReportResponse(
@@ -239,9 +224,8 @@ class BusinessReportService:
                 chart_type="area",
             ),
             trends=[
-                "Intraday sales conversion peaked 18% higher than typical weekday averages.",
-                "Inbound lead ingestion from organic search generated 64% of today's pipeline.",
-                "Average automated document OCR processing time maintained at 3.4 seconds per file.",
+                f"Recorded daily commercial sales: ${total_sales_amount:,.2f}.",
+                f"Active pipeline intake: {leads_count} leads.",
             ],
             important_changes=changes,
             ai_summary=ai_summary,
@@ -252,185 +236,158 @@ class BusinessReportService:
         now = datetime.now(timezone.utc)
         week_ago = now - timedelta(days=7)
 
-        week_sales = self.db.query(Sale).filter(
-            Sale.organization_id == self.org_id,
-            Sale.created_at >= week_ago
-        ).all()
-        total_sales_amount = sum(s.amount for s in week_sales) or 34650.00
+        query_sales = self.db.query(Sale).filter(Sale.created_at >= week_ago)
+        query_leads = self.db.query(Lead).filter(Lead.created_at >= week_ago)
+        if self.org_id:
+            query_sales = query_sales.filter(Sale.organization_id == self.org_id)
+            query_leads = query_leads.filter(Lead.organization_id == self.org_id)
+
+        week_sales = query_sales.all()
+        total_sales_amount = sum(s.amount for s in week_sales)
+        deals_count = len(week_sales)
+        week_leads = query_leads.all()
+        leads_count = len(week_leads)
+        avg_deal = total_sales_amount / max(1, deals_count) if deals_count > 0 else 0.0
 
         metrics = [
             ReportMetric(
                 key="weekly_revenue",
                 label="Weekly Revenue",
                 value=f"${total_sales_amount:,.2f}",
-                change_pct=16.8,
-                trend_direction="UP",
-                subtitle="vs previous week ($29,660)",
+                change_pct=0.0,
+                trend_direction="UP" if total_sales_amount > 0 else "NEUTRAL",
+                subtitle="last 7 days total volume",
             ),
             ReportMetric(
                 key="weekly_deals",
                 label="Deals Won",
-                value="28",
-                change_pct=12.0,
-                trend_direction="UP",
-                subtitle="Win rate: 31.4% (+3.2%)",
+                value=str(deals_count),
+                change_pct=0.0,
+                trend_direction="UP" if deals_count > 0 else "NEUTRAL",
+                subtitle="closed won transactions",
             ),
             ReportMetric(
                 key="new_leads",
                 label="New Qualified Leads",
-                value="84",
-                change_pct=21.7,
-                trend_direction="UP",
-                subtitle="52 Hot, 24 Warm, 8 Cold",
+                value=str(leads_count),
+                change_pct=0.0,
+                trend_direction="UP" if leads_count > 0 else "NEUTRAL",
+                subtitle="new opportunities",
             ),
             ReportMetric(
                 key="avg_deal_size",
                 label="Average Deal Size",
-                value="$1,237",
-                change_pct=4.2,
-                trend_direction="UP",
-                subtitle="expansion in Tier 2 accounts",
+                value=f"${avg_deal:,.2f}",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="mean realized deal value",
             ),
         ]
 
-        chart_data = [
-            {"period": "Mon", "primary_value": 4200, "secondary_value": 11, "label": "Monday"},
-            {"period": "Tue", "primary_value": 5600, "secondary_value": 14, "label": "Tuesday"},
-            {"period": "Wed", "primary_value": 6800, "secondary_value": 18, "label": "Wednesday"},
-            {"period": "Thu", "primary_value": 7450, "secondary_value": 20, "label": "Thursday"},
-            {"period": "Fri", "primary_value": 8100, "secondary_value": 22, "label": "Friday"},
-            {"period": "Sat", "primary_value": 1500, "secondary_value": 4, "label": "Saturday"},
-            {"period": "Sun", "primary_value": 1000, "secondary_value": 3, "label": "Sunday"},
-        ]
-
-        changes = [
-            ImportantChange(
-                id="c-w1",
-                title="Weekly Quota Milestone Reached",
-                impact_type="POSITIVE",
-                timestamp="Friday 16:30 UTC",
-                details="Weekly revenue exceeded target by 108% due to closing two enterprise annual licenses.",
-            ),
-            ImportantChange(
-                id="c-w2",
-                title="Sales Cycle Accelerated by 1.8 Days",
-                impact_type="POSITIVE",
-                timestamp="Thursday 11:00 UTC",
-                details="Average turnaround from Lead Ingested to Negotiation dropped from 9.4 days to 7.6 days.",
-            ),
-            ImportantChange(
-                id="c-w3",
-                title="SMB Lead Conversion Softness",
-                impact_type="WARNING",
-                timestamp="Wednesday 14:00 UTC",
-                details="SMB segment conversion dropped 2.3%; automated follow-up cadence reconfigured.",
-            ),
-        ]
+        chart_data = []
+        if deals_count > 0:
+            by_day = defaultdict(float)
+            for s in week_sales:
+                day_name = s.created_at.strftime("%a") if s.created_at else "Other"
+                by_day[day_name] += s.amount
+            chart_data = [
+                {"period": d, "primary_value": round(amt, 2), "secondary_value": 0, "label": d}
+                for d, amt in by_day.items()
+            ]
 
         ai_summary = (
-            "The past 7 days concluded with $34,650 in total bookings, beating forecast projections by 16.8%. "
-            "The commercial acceleration was anchored by mid-week conversion spikes on Thursday and Friday. "
-            "Pipeline health remains exceptionally favorable with 84 newly qualified leads. However, SMB lead conversion "
-            "showed marginal friction in the qualification stage; deploying the automated AI follow-up recommendation engine "
-            "is expected to recapture 15-20% of stalled SMB prospects next week."
+            f"The past 7 days concluded with ${total_sales_amount:,.2f} in total bookings across {deals_count} transactions, "
+            f"with {leads_count} inbound leads registered."
+            if (deals_count > 0 or leads_count > 0)
+            else "No sales or lead acquisitions recorded over the past 7 days."
         )
 
         return BusinessReportResponse(
             report_type="weekly",
             title="Weekly Executive Summary",
-            period_label="Last 7 Days (Mon - Sun)",
+            period_label="Last 7 Days",
             generated_at=now,
             key_metrics=metrics,
             chart_data=chart_data,
             chart_config=ReportChartConfig(
-                title="Day-by-Day Revenue and Lead Ingestion Run Rate",
+                title="Day-by-Day Revenue Run Rate",
                 primary_label="Revenue ($)",
-                secondary_label="New Leads",
+                secondary_label="Deals",
                 chart_type="bar",
             ),
             trends=[
-                "Strongest commercial volume observed on Thursday and Friday (+42% higher than early week).",
-                "Lead-to-opportunity velocity accelerated by 19% week-over-week.",
-                "Enterprise pipeline value expanded by $48,000 into next week's closing cycle.",
+                f"7-day total revenue: ${total_sales_amount:,.2f}.",
+                f"Average deal size: ${avg_deal:,.2f}.",
             ],
-            important_changes=changes,
+            important_changes=[],
             ai_summary=ai_summary,
         )
 
     # 3. MONTHLY REPORT
     def _generate_monthly_report(self) -> BusinessReportResponse:
         now = datetime.now(timezone.utc)
+        first_day_this_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        query_sales = self.db.query(Sale).filter(Sale.created_at >= first_day_this_month)
+        query_cust = self.db.query(Customer)
+        query_sub = self.db.query(Subscription).filter(Subscription.status == "ACTIVE")
+        if self.org_id:
+            query_sales = query_sales.filter(Sale.organization_id == self.org_id)
+            query_cust = query_cust.filter(Customer.organization_id == self.org_id)
+            query_sub = query_sub.filter(Subscription.organization_id == self.org_id)
+
+        sales = query_sales.all()
+        month_revenue = sum(s.amount for s in sales)
+        active_customers = query_cust.filter(Customer.status == "ACTIVE").count()
+        subs = query_sub.all()
+        mrr = sum(sub.monthly_price for sub in subs)
+
         metrics = [
             ReportMetric(
                 key="monthly_mrr",
                 label="Monthly Recurring Revenue",
-                value="$146,800",
-                change_pct=14.3,
-                trend_direction="UP",
-                subtitle="104.8% of monthly quota",
+                value=f"${mrr:,.2f}",
+                change_pct=0.0,
+                trend_direction="UP" if mrr > 0 else "NEUTRAL",
+                subtitle="active subscription run rate",
             ),
             ReportMetric(
-                key="net_new_arr",
-                label="Net New ARR",
-                value="$38,400",
-                change_pct=22.1,
-                trend_direction="UP",
-                subtitle="driven by enterprise upgrades",
+                key="monthly_sales",
+                label="Month-to-Date Sales",
+                value=f"${month_revenue:,.2f}",
+                change_pct=0.0,
+                trend_direction="UP" if month_revenue > 0 else "NEUTRAL",
+                subtitle="actual booked volume",
             ),
             ReportMetric(
                 key="active_customers",
                 label="Active Customers",
-                value="48",
-                change_pct=9.1,
-                trend_direction="UP",
-                subtitle="+4 enterprise accounts added",
+                value=str(active_customers),
+                change_pct=0.0,
+                trend_direction="UP" if active_customers > 0 else "NEUTRAL",
+                subtitle="accounts in good standing",
             ),
             ReportMetric(
                 key="churn_rate",
                 label="Monthly Logo Churn",
-                value="1.2%",
-                change_pct=-0.4,
-                trend_direction="UP",
-                subtitle="industry benchmark: 2.5%",
+                value="0.0%",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="customer retention metric",
             ),
         ]
 
-        chart_data = [
-            {"period": "Week 1", "primary_value": 28400, "secondary_value": 92, "label": "W1"},
-            {"period": "Week 2", "primary_value": 34900, "secondary_value": 110, "label": "W2"},
-            {"period": "Week 3", "primary_value": 39500, "secondary_value": 125, "label": "W3"},
-            {"period": "Week 4", "primary_value": 44000, "secondary_value": 142, "label": "W4"},
-        ]
-
-        changes = [
-            ImportantChange(
-                id="c-m1",
-                title="Apex Financial Solutions Closed ($48.5K ARR)",
-                impact_type="POSITIVE",
-                timestamp="12 days ago",
-                details="Largest enterprise subscription signed this quarter, including full OCR and automation suite.",
-            ),
-            ImportantChange(
-                id="c-m2",
-                title="Gross Margin Expanded to 76.8%",
-                impact_type="POSITIVE",
-                timestamp="5 days ago",
-                details="Infrastructure optimization reduced per-inference LLM costs by 18%.",
-            ),
-            ImportantChange(
-                id="c-m3",
-                title="Two Contract Renewal Discussions Flagged",
-                impact_type="WARNING",
-                timestamp="Yesterday",
-                details="Mid-market clients requested tier adjustment; customer success assigned for account review.",
-            ),
-        ]
+        chart_data = []
+        if len(sales) > 0:
+            chart_data = [
+                {"period": now.strftime("%b %Y"), "primary_value": round(month_revenue, 2), "secondary_value": len(sales), "label": now.strftime("%b")}
+            ]
 
         ai_summary = (
-            "Monthly recurring revenue expanded to $146,800, generating a 14.3% MoM expansion rate and outperforming the target "
-            "baseline by $6,800. Strong customer retention (98.8% logo retention) coupled with enterprise tier expansion "
-            "demonstrated product-market fit. Gross margins advanced to 76.8% through AI caching optimizations. "
-            "Key operational priority for next month is scaling outbound SDR capacity to match the 22% ARR demand trajectory."
+            f"Monthly strategic review: Month-to-date sales reached ${month_revenue:,.2f} with ${mrr:,.2f} in active MRR "
+            f"supporting {active_customers} active client accounts."
+            if (month_revenue > 0 or mrr > 0)
+            else "No sales or subscriptions recorded for the current month."
         )
 
         return BusinessReportResponse(
@@ -441,100 +398,95 @@ class BusinessReportService:
             key_metrics=metrics,
             chart_data=chart_data,
             chart_config=ReportChartConfig(
-                title="Weekly Cumulative Revenue Growth & Quota Run Rate",
-                primary_label="Weekly Bookings ($)",
-                secondary_label="Pipeline Leads",
+                title="Monthly Cumulative Revenue Growth",
+                primary_label="Bookings ($)",
+                secondary_label="Transactions",
                 chart_type="line",
             ),
             trends=[
-                "Consistent week-over-week revenue compounding (+15% Week 1 through Week 4).",
-                "Expansion revenue accounted for 34% of total top-line growth.",
-                "Net Revenue Retention (NRR) reached a record 118.4%.",
+                f"Current month gross sales: ${month_revenue:,.2f}.",
+                f"Platform subscription MRR: ${mrr:,.2f}.",
             ],
-            important_changes=changes,
+            important_changes=[],
             ai_summary=ai_summary,
         )
 
     # 4. SALES REPORT
     def _generate_sales_report(self) -> BusinessReportResponse:
         now = datetime.now(timezone.utc)
+        query = self.db.query(Sale).filter(Sale.status == "COMPLETED")
+        if self.org_id:
+            query = query.filter(Sale.organization_id == self.org_id)
+        sales = query.all()
+
+        total_rev = sum(s.amount for s in sales)
+        tx_count = len(sales)
+        aov = total_rev / max(1, tx_count) if tx_count > 0 else 0.0
+
+        lead_query = self.db.query(Lead)
+        if self.org_id:
+            lead_query = lead_query.filter(Lead.organization_id == self.org_id)
+        total_leads = lead_query.count()
+        won_leads = lead_query.filter(Lead.status.in_(["WON", "CONVERTED"])).count()
+        win_rate = round((won_leads / max(1, total_leads)) * 100.0, 1) if total_leads > 0 else 0.0
+
         metrics = [
             ReportMetric(
                 key="gross_sales",
                 label="Gross Sales Revenue",
-                value="$128,450",
-                change_pct=14.8,
-                trend_direction="UP",
-                subtitle="142 closed transactions",
+                value=f"${total_rev:,.2f}",
+                change_pct=0.0,
+                trend_direction="UP" if total_rev > 0 else "NEUTRAL",
+                subtitle=f"{tx_count} closed transactions",
             ),
             ReportMetric(
                 key="aov",
                 label="Average Order Value (AOV)",
-                value="$904.58",
-                change_pct=8.3,
-                trend_direction="UP",
-                subtitle="up from $835 last period",
+                value=f"${aov:,.2f}",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="mean transaction value",
             ),
             ReportMetric(
                 key="sales_velocity",
-                label="Sales Velocity",
-                value="11.2 Days",
-                change_pct=-14.5,
-                trend_direction="UP",
-                subtitle="faster deal cycle",
+                label="Total Orders",
+                value=str(tx_count),
+                change_pct=0.0,
+                trend_direction="UP" if tx_count > 0 else "NEUTRAL",
+                subtitle="completed transactions",
             ),
             ReportMetric(
                 key="pipeline_win_rate",
                 label="Pipeline Win Rate",
-                value="28.6%",
-                change_pct=3.8,
-                trend_direction="UP",
-                subtitle="vs 24.8% previous quarter",
+                value=f"{win_rate}%",
+                change_pct=0.0,
+                trend_direction="UP" if win_rate > 0 else "NEUTRAL",
+                subtitle="lead-to-win ratio",
             ),
         ]
 
-        chart_data = [
-            {"period": "Enterprise AI Suite", "primary_value": 68500, "secondary_value": 32, "label": "Enterprise Suite"},
-            {"period": "OCR Document Processor", "primary_value": 31200, "secondary_value": 48, "label": "Document OCR"},
-            {"period": "Lead Intelligence Bot", "primary_value": 18450, "secondary_value": 41, "label": "Lead Bot"},
-            {"period": "Support Copilot", "primary_value": 10300, "secondary_value": 21, "label": "Support Copilot"},
-        ]
-
-        changes = [
-            ImportantChange(
-                id="c-s1",
-                title="Enterprise AI Suite Reaches 53% Revenue Share",
-                impact_type="POSITIVE",
-                timestamp="Past 14 days",
-                details="Core product package delivered $68,500 in sales, cementing position as principal growth driver.",
-            ),
-            ImportantChange(
-                id="c-s2",
-                title="OCR Document Processor Volume Surge (+34%)",
-                impact_type="POSITIVE",
-                timestamp="Past 7 days",
-                details="48 automated invoice processing licenses activated across logistics and accounting sectors.",
-            ),
-            ImportantChange(
-                id="c-s3",
-                title="Discounting Variance Alert",
-                impact_type="WARNING",
-                timestamp="3 days ago",
-                details="End-of-month promotional concessions averaged 11.2%; leadership guidance recommends max 8%.",
-            ),
-        ]
+        chart_data = []
+        if sales:
+            by_prod = defaultdict(lambda: {"revenue": 0.0, "units": 0})
+            for s in sales:
+                pname = s.product_name or "Enterprise AI Suite"
+                by_prod[pname]["revenue"] += s.amount
+                by_prod[pname]["units"] += 1
+            chart_data = [
+                {"period": p, "primary_value": round(info["revenue"], 2), "secondary_value": info["units"], "label": p}
+                for p, info in by_prod.items()
+            ]
 
         ai_summary = (
-            "Sales performance demonstrated strong health with $128,450 generated across 142 discrete transactions. "
-            "Average Order Value rose to $904.58 as customers bundled the OCR Document Processor with the Enterprise AI Suite. "
-            "Sales cycle velocity improved by 14.5% to 11.2 days, driven by AI lead scoring prioritization. "
-            "Management should rein in end-of-month discount concessions while capitalizing on strong OCR cross-sell momentum."
+            f"Sales velocity summary: Generated ${total_rev:,.2f} across {tx_count} completed orders, with an Average Order Value of ${aov:,.2f} and a {win_rate}% lead win rate."
+            if tx_count > 0
+            else "No completed sales transactions found in the database. Transactions will automatically populate this performance report."
         )
 
         return BusinessReportResponse(
             report_type="sales",
             title="Sales Velocity & Quota Performance",
-            period_label="Current Evaluation Period",
+            period_label="All Recorded Sales",
             generated_at=now,
             key_metrics=metrics,
             chart_data=chart_data,
@@ -545,94 +497,85 @@ class BusinessReportService:
                 chart_type="bar",
             ),
             trends=[
-                "Enterprise AI Suite represents over 53% of total commercial billing.",
-                "Cross-sell rate between Lead Automation and Support Copilot increased by 22%.",
-                "Deals assigned high AI priority scores converted 2.8x faster than average leads.",
+                f"Cumulative gross sales: ${total_rev:,.2f}.",
+                f"Total completed orders: {tx_count}.",
             ],
-            important_changes=changes,
+            important_changes=[],
             ai_summary=ai_summary,
         )
 
     # 5. LEAD REPORT
     def _generate_lead_report(self) -> BusinessReportResponse:
         now = datetime.now(timezone.utc)
+        query = self.db.query(Lead)
+        if self.org_id:
+            query = query.filter(Lead.organization_id == self.org_id)
+        leads = query.all()
+
+        total = len(leads)
+        hot_warm = sum(1 for l in leads if (l.classification or "").upper() in ("HOT", "WARM"))
+        qual_rate = round((hot_warm / max(1, total)) * 100.0, 1) if total > 0 else 0.0
+        won_count = sum(1 for l in leads if (l.status or "").upper() in ("WON", "CONVERTED"))
+        mql_sql = round((won_count / max(1, total)) * 100.0, 1) if total > 0 else 0.0
+        avg_score = round(sum(l.ai_score or 0.0 for l in leads) / max(1, total), 1) if total > 0 else 0.0
+
         metrics = [
             ReportMetric(
                 key="total_leads",
                 label="Total Leads Managed",
-                value="236",
-                change_pct=18.6,
-                trend_direction="UP",
-                subtitle="past 30 days pipeline",
+                value=str(total),
+                change_pct=0.0,
+                trend_direction="UP" if total > 0 else "NEUTRAL",
+                subtitle="inbound and outbound prospects",
             ),
             ReportMetric(
                 key="qualification_rate",
                 label="AI Qualification Rate",
-                value="68.2%",
-                change_pct=5.4,
-                trend_direction="UP",
+                value=f"{qual_rate}%",
+                change_pct=0.0,
+                trend_direction="UP" if qual_rate > 0 else "NEUTRAL",
                 subtitle="classified as Hot or Warm",
             ),
             ReportMetric(
                 key="mql_to_sql",
-                label="MQL to SQL Conversion",
-                value="41.5%",
-                change_pct=4.1,
-                trend_direction="UP",
-                subtitle="sales accepted opportunities",
+                label="Win Conversion Rate",
+                value=f"{mql_sql}%",
+                change_pct=0.0,
+                trend_direction="UP" if mql_sql > 0 else "NEUTRAL",
+                subtitle="won customer conversion",
             ),
             ReportMetric(
                 key="avg_lead_score",
                 label="Average Lead Score",
-                value="74.2 / 100",
-                change_pct=3.2,
-                trend_direction="UP",
-                subtitle="AI multi-factor evaluation",
+                value=f"{avg_score} / 100",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="mean algorithmic score",
             ),
         ]
 
-        chart_data = [
-            {"period": "Organic Search", "primary_value": 98, "secondary_value": 78, "label": "Organic Search"},
-            {"period": "Paid Campaigns", "primary_value": 64, "secondary_value": 68, "label": "Paid Google/LinkedIn"},
-            {"period": "Client Referrals", "primary_value": 46, "secondary_value": 86, "label": "Referrals"},
-            {"period": "Cold Outbound", "primary_value": 28, "secondary_value": 54, "label": "Outbound Email"},
-        ]
-
-        changes = [
-            ImportantChange(
-                id="c-l1",
-                title="Referral Channel Conversion Dominance (86 Score)",
-                impact_type="POSITIVE",
-                timestamp="Ongoing",
-                details="Customer referral leads exhibit 58% closed-won rate with minimal customer acquisition cost.",
-            ),
-            ImportantChange(
-                id="c-l2",
-                title="Follow-up SLA Improved to 2.4 Hours",
-                impact_type="POSITIVE",
-                timestamp="Past week",
-                details="Automated follow-up reminders cut sales rep initial touchpoint latency by 65%.",
-            ),
-            ImportantChange(
-                id="c-l3",
-                title="Outbound Channel Fatigue",
-                impact_type="WARNING",
-                timestamp="Past 10 days",
-                details="Cold email response rates dropped 1.8%; recommended shift toward LinkedIn social selling.",
-            ),
-        ]
+        chart_data = []
+        if leads:
+            by_src = defaultdict(lambda: {"count": 0, "score": 0.0})
+            for l in leads:
+                src = l.source or "Direct"
+                by_src[src]["count"] += 1
+                by_src[src]["score"] += l.ai_score or 0.0
+            chart_data = [
+                {"period": s, "primary_value": info["count"], "secondary_value": round(info["score"] / max(1, info["count"]), 1), "label": s}
+                for s, info in by_src.items()
+            ]
 
         ai_summary = (
-            "Total lead volume expanded to 236 inbound and outbound prospects with an AI qualification rate of 68.2%. "
-            "Organic search and direct referrals generated the highest quality leads (average lead score 82/100). "
-            "Automated follow-up reminders reduced first response latency to 2.4 hours, directly driving a 4.1% increase "
-            "in MQL to SQL conversion. Tactical recommendation: double down on organic SEO content and customer referral incentives."
+            f"Lead intelligence review: Total pipeline volume stands at {total} leads with an AI qualification rate of {qual_rate}% and average score of {avg_score}/100."
+            if total > 0
+            else "No leads registered in the pipeline. Ingest inbound leads to generate attribution analytics."
         )
 
         return BusinessReportResponse(
             report_type="lead",
             title="Lead Intelligence & Funnel Attribution",
-            period_label="Last 30 Days Pipeline",
+            period_label="Pipeline Overview",
             generated_at=now,
             key_metrics=metrics,
             chart_data=chart_data,
@@ -643,87 +586,77 @@ class BusinessReportService:
                 chart_type="bar",
             ),
             trends=[
-                "Organic Search is the largest acquisition channel (41.5% of total lead volume).",
-                "Referrals deliver highest win-rate (58%) and highest average lead score (86/100).",
-                "Leads contacted within 2 hours of ingestion close at 3.1x the rate of delayed leads.",
+                f"Total pipeline records: {total}.",
+                f"AI qualified prospects: {hot_warm}.",
             ],
-            important_changes=changes,
+            important_changes=[],
             ai_summary=ai_summary,
         )
 
     # 6. CUSTOMER REPORT
     def _generate_customer_report(self) -> BusinessReportResponse:
         now = datetime.now(timezone.utc)
+        query = self.db.query(Customer)
+        if self.org_id:
+            query = query.filter(Customer.organization_id == self.org_id)
+        customers = query.all()
+
+        total = len(customers)
+        active_count = sum(1 for c in customers if c.status == "ACTIVE")
+        total_ltv = sum(c.ltv or 0.0 for c in customers)
+        avg_ltv = total_ltv / max(1, total) if total > 0 else 0.0
+
         metrics = [
             ReportMetric(
                 key="active_customers",
                 label="Total Active Customers",
-                value="48",
-                change_pct=9.1,
-                trend_direction="UP",
-                subtitle="across 5 industry verticals",
+                value=str(active_count),
+                change_pct=0.0,
+                trend_direction="UP" if active_count > 0 else "NEUTRAL",
+                subtitle=f"out of {total} total accounts",
             ),
             ReportMetric(
                 key="nrr",
-                label="Net Revenue Retention (NRR)",
-                value="118.4%",
-                change_pct=4.2,
-                trend_direction="UP",
-                subtitle="benchmark target: 110%",
+                label="Total Customer LTV",
+                value=f"${total_ltv:,.2f}",
+                change_pct=0.0,
+                trend_direction="UP" if total_ltv > 0 else "NEUTRAL",
+                subtitle="aggregate account value",
             ),
             ReportMetric(
                 key="avg_ltv",
                 label="Average Customer LTV",
-                value="$18,450",
-                change_pct=11.5,
-                trend_direction="UP",
-                subtitle="based on 36-month horizon",
+                value=f"${avg_ltv:,.2f}",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="mean value per customer",
             ),
             ReportMetric(
                 key="csat_score",
-                label="Customer Satisfaction (CSAT)",
-                value="96.2%",
-                change_pct=1.4,
-                trend_direction="UP",
-                subtitle="AI support copilot assisted",
+                label="Account Health",
+                value="Good" if active_count > 0 else "Neutral",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="portfolio status",
             ),
         ]
 
-        chart_data = [
-            {"period": "Enterprise (>500 emp)", "primary_value": 14, "secondary_value": 72400, "label": "Enterprise"},
-            {"period": "Mid-Market (50-500)", "primary_value": 22, "secondary_value": 46800, "label": "Mid-Market"},
-            {"period": "SMB (<50 emp)", "primary_value": 12, "secondary_value": 27600, "label": "SMB"},
-        ]
-
-        changes = [
-            ImportantChange(
-                id="c-c1",
-                title="Apex Financial Solutions Tier Upgrade",
-                impact_type="POSITIVE",
-                timestamp="8 days ago",
-                details="Expanded from Starter to Full Platform Enterprise tier, adding $24,000 in ARR.",
-            ),
-            ImportantChange(
-                id="c-c2",
-                title="AI Copilot Deflects 74% of Routine Support Tickets",
-                impact_type="POSITIVE",
-                timestamp="This month",
-                details="Customer resolution times dropped to 8 minutes on average, driving CSAT to 96.2%.",
-            ),
-            ImportantChange(
-                id="c-c3",
-                title="Healthcare Vertical Adoption",
-                impact_type="INFO",
-                timestamp="2 weeks ago",
-                details="BioCare Health Network onboarding completed; HIPAA-compliant document workflows deployed.",
-            ),
-        ]
+        chart_data = []
+        if customers:
+            by_tier = defaultdict(lambda: {"count": 0, "ltv": 0.0})
+            for c in customers:
+                tier = c.tier or "Standard"
+                by_tier[tier]["count"] += 1
+                by_tier[tier]["ltv"] += c.ltv or 0.0
+            chart_data = [
+                {"period": t, "primary_value": info["count"], "secondary_value": round(info["ltv"], 2), "label": t}
+                for t, info in by_tier.items()
+            ]
 
         ai_summary = (
-            "Customer account health remains in the top decile with 48 active corporate clients and Net Revenue Retention "
-            "reaching 118.4%. The Enterprise customer cohort accounts for nearly 50% of revenue with zero logo churn recorded "
-            "over the past 90 days. AI support bot integration successfully handles 74% of tier-1 support queries without "
-            "human escalation. Recommend scheduling quarterly business reviews with the 22 Mid-Market accounts to drive upsell."
+            f"Customer health report: Portfolio encompasses {total} registered accounts ({active_count} active) with an aggregate realized LTV of ${total_ltv:,.2f}."
+            if total > 0
+            else "No customer accounts registered in directory. Add customers to monitor retention."
         )
 
         return BusinessReportResponse(
@@ -736,113 +669,98 @@ class BusinessReportService:
             chart_config=ReportChartConfig(
                 title="Customer Segment Distribution & Contract Value ($)",
                 primary_label="Account Count",
-                secondary_label="Total ARR ($)",
+                secondary_label="Total LTV ($)",
                 chart_type="bar",
             ),
             trends=[
-                "Enterprise accounts expanded average spend by 26% through add-on OCR processing.",
-                "Zero churn recorded across all accounts with >6 months platform tenure.",
-                "Customer onboarding time decreased from 14 days to 4.5 days with automated setup.",
+                f"Registered accounts: {total}.",
+                f"Aggregate customer LTV: ${total_ltv:,.2f}.",
             ],
-            important_changes=changes,
+            important_changes=[],
             ai_summary=ai_summary,
         )
 
     # 7. REVENUE REPORT
     def _generate_revenue_report(self) -> BusinessReportResponse:
         now = datetime.now(timezone.utc)
+        query_sales = self.db.query(Sale).filter(Sale.status == "COMPLETED")
+        query_invs = self.db.query(Invoice).filter(Invoice.status != "PAID")
+        if self.org_id:
+            query_sales = query_sales.filter(Sale.organization_id == self.org_id)
+            query_invs = query_invs.filter(Invoice.organization_id == self.org_id)
+
+        sales = query_sales.all()
+        invoices = query_invs.all()
+
+        net_rev = sum(s.amount for s in sales)
+        ar_total = sum(i.total_amount or 0.0 for i in invoices)
+
         metrics = [
             ReportMetric(
                 key="net_recognized_rev",
                 label="Net Recognized Revenue",
-                value="$138,900",
-                change_pct=15.2,
-                trend_direction="UP",
-                subtitle="GAAP compliant billing",
+                value=f"${net_rev:,.2f}",
+                change_pct=0.0,
+                trend_direction="UP" if net_rev > 0 else "NEUTRAL",
+                subtitle="completed sales receipts",
             ),
             ReportMetric(
                 key="accounts_receivable",
                 label="Accounts Receivable",
-                value="$18,420",
-                change_pct=-8.4,
-                trend_direction="UP",
-                subtitle="improved collection cycle",
+                value=f"${ar_total:,.2f}",
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle=f"{len(invoices)} pending/unsettled invoices",
             ),
             ReportMetric(
                 key="gross_margin",
-                label="Gross Margin Percentage",
-                value="76.8%",
-                change_pct=2.4,
-                trend_direction="UP",
-                subtitle="after cloud & LLM costs",
+                label="Realized Transactions",
+                value=str(len(sales)),
+                change_pct=0.0,
+                trend_direction="UP" if len(sales) > 0 else "NEUTRAL",
+                subtitle="total billed events",
             ),
             ReportMetric(
                 key="dso",
-                label="Days Sales Outstanding (DSO)",
-                value="16.4 Days",
-                change_pct=-18.0,
-                trend_direction="UP",
-                subtitle="industry standard: 30 days",
+                label="Outstanding Invoices",
+                value=str(len(invoices)),
+                change_pct=0.0,
+                trend_direction="NEUTRAL",
+                subtitle="awaiting verification/payment",
             ),
         ]
 
-        chart_data = [
-            {"period": "SaaS Subscriptions", "primary_value": 98500, "secondary_value": 71, "label": "Subscriptions"},
-            {"period": "Document OCR Usage", "primary_value": 24200, "secondary_value": 17, "label": "OCR Usage"},
-            {"period": "AI Automation Add-ons", "primary_value": 12800, "secondary_value": 9, "label": "AI Add-ons"},
-            {"period": "Professional Services", "primary_value": 3400, "secondary_value": 3, "label": "Services"},
-        ]
-
-        changes = [
-            ImportantChange(
-                id="c-r1",
-                title="DSO Improved to Record 16.4 Days",
-                impact_type="POSITIVE",
-                timestamp="Past 30 days",
-                details="Automated invoice generation and payment reminder workflows accelerated client settlements.",
-            ),
-            ImportantChange(
-                id="c-r2",
-                title="Usage-Based Document Revenue Up 38%",
-                impact_type="POSITIVE",
-                timestamp="Past 14 days",
-                details="High-volume enterprise invoice scanning generated $24,200 in metered usage overages.",
-            ),
-            ImportantChange(
-                id="c-r3",
-                title="Outstanding Invoice Follow-up Required",
-                impact_type="WARNING",
-                timestamp="Today",
-                details="Two invoices totaling $4,850 crossed 30-day net terms; automated reminder triggered.",
-            ),
-        ]
+        chart_data = []
+        if net_rev > 0 or ar_total > 0:
+            chart_data = [
+                {"period": "Recognized Revenue", "primary_value": round(net_rev, 2), "secondary_value": len(sales), "label": "Revenue"},
+                {"period": "Accounts Receivable", "primary_value": round(ar_total, 2), "secondary_value": len(invoices), "label": "Receivables"},
+            ]
 
         ai_summary = (
-            "Financial earnings quality remains strong with $138,900 in net recognized revenue and an operating gross margin "
-            "of 76.8%. Subscription revenue constitutes 71% of recurring receipts, complemented by high-margin usage overages "
-            "from document OCR processing. Cash collections were particularly disciplined, driving Days Sales Outstanding (DSO) "
-            "down to 16.4 days. Projected 90-day cash flow indicates positive runway with negligible bad debt exposure."
+            f"Financial audit: Net recognized revenue is ${net_rev:,.2f} across {len(sales)} transactions, with ${ar_total:,.2f} currently in pending accounts receivable across {len(invoices)} invoices."
+            if (net_rev > 0 or ar_total > 0)
+            else "No sales revenue or invoices recorded for financial audit."
         )
 
         return BusinessReportResponse(
             report_type="revenue",
             title="Revenue, Collections & Financial Audit",
-            period_label="Current Financial Quarter",
+            period_label="Current Financial Status",
             generated_at=now,
             key_metrics=metrics,
             chart_data=chart_data,
             chart_config=ReportChartConfig(
-                title="Revenue Breakdown by Stream & % Contribution",
-                primary_label="Revenue ($)",
-                secondary_label="% Share",
+                title="Revenue Breakdown vs Receivables",
+                primary_label="Amount ($)",
+                secondary_label="Count",
                 chart_type="bar",
             ),
             trends=[
-                "High-margin subscription revenues provide steady baseline stability ($98.5K).",
-                "Metered OCR usage revenue expanded 38% month-over-month.",
-                "Cash collection efficiency leads SaaS industry averages with DSO under 17 days.",
+                f"Recognized revenue total: ${net_rev:,.2f}.",
+                f"Accounts receivable total: ${ar_total:,.2f}.",
             ],
-            important_changes=changes,
+            important_changes=[],
             ai_summary=ai_summary,
         )
 
@@ -872,7 +790,8 @@ class BusinessReportService:
         pdf.set_y(36)
         pdf.set_font("Helvetica", "I", 8)
         pdf.set_text_color(100, 116, 139)
-        pdf.cell(0, 5, clean_latin1(f"Generated on: {report.generated_at.strftime('%Y-%m-%d %H:%M:%S UTC')} | Organization ID: {self.org_id[:12]}..."), ln=1)
+        org_label = f"Organization ID: {self.org_id[:12]}..." if self.org_id else "Platform Wide"
+        pdf.cell(0, 5, clean_latin1(f"Generated on: {report.generated_at.strftime('%Y-%m-%d %H:%M:%S UTC')} | {org_label}"), ln=1)
 
         # Section 1: AI-Generated Executive Summary
         pdf.ln(3)
@@ -884,9 +803,8 @@ class BusinessReportService:
         pdf.set_draw_color(203, 213, 225)
         pdf.set_font("Helvetica", "", 9.5)
         pdf.set_text_color(51, 65, 85)
-        
+
         # Summary Box
-        start_y = pdf.get_y()
         pdf.multi_cell(180, 5.5, clean_latin1(report.ai_summary), border=1, fill=True)
         pdf.ln(4)
 
@@ -922,31 +840,32 @@ class BusinessReportService:
         pdf.ln(5)
 
         # Section 3: Important Changes & Notable Events
-        pdf.set_font("Helvetica", "B", 12)
-        pdf.set_text_color(15, 23, 42)
-        pdf.cell(0, 7, clean_latin1("3. Important Changes & Operational Events"), ln=1)
+        if report.important_changes:
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(15, 23, 42)
+            pdf.cell(0, 7, clean_latin1("3. Important Changes & Operational Events"), ln=1)
 
-        pdf.set_font("Helvetica", "", 8.5)
-        for c in report.important_changes:
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(79, 70, 229) if c.impact_type == "POSITIVE" else pdf.set_text_color(225, 29, 72)
-            pdf.cell(0, 5, clean_latin1(f"[{c.impact_type}] {c.title} ({c.timestamp})"), ln=1)
             pdf.set_font("Helvetica", "", 8.5)
-            pdf.set_text_color(71, 85, 105)
-            pdf.multi_cell(180, 4.5, clean_latin1(f"  * {c.details}"))
-            pdf.ln(1)
-
-        pdf.ln(4)
+            for c in report.important_changes:
+                pdf.set_font("Helvetica", "B", 9)
+                pdf.set_text_color(79, 70, 229) if c.impact_type == "POSITIVE" else pdf.set_text_color(225, 29, 72)
+                pdf.cell(0, 5, clean_latin1(f"[{c.impact_type}] {c.title} ({c.timestamp})"), ln=1)
+                pdf.set_font("Helvetica", "", 8.5)
+                pdf.set_text_color(71, 85, 105)
+                pdf.multi_cell(180, 4.5, clean_latin1(f"  * {c.details}"))
+                pdf.ln(1)
+            pdf.ln(4)
 
         # Section 4: Macro Trend Observations
-        pdf.set_font("Helvetica", "B", 12)
-        pdf.set_text_color(15, 23, 42)
-        pdf.cell(0, 7, clean_latin1("4. Macro Strategic Trends"), ln=1)
+        if report.trends:
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(15, 23, 42)
+            pdf.cell(0, 7, clean_latin1("4. Strategic Observations"), ln=1)
 
-        pdf.set_font("Helvetica", "", 8.5)
-        pdf.set_text_color(51, 65, 85)
-        for t in report.trends:
-            pdf.multi_cell(180, 5, clean_latin1(f"- {t}"))
+            pdf.set_font("Helvetica", "", 8.5)
+            pdf.set_text_color(51, 65, 85)
+            for t in report.trends:
+                pdf.multi_cell(180, 5, clean_latin1(f"- {t}"))
 
         # Footer note
         pdf.ln(8)
@@ -966,7 +885,6 @@ class BusinessReportService:
         output = io.StringIO()
         writer = csv.writer(output)
 
-        # Header section
         writer.writerow(["UPTEKY AI BUSINESS REPORT"])
         writer.writerow(["Report Type", report.report_type])
         writer.writerow(["Report Title", report.title])
@@ -974,19 +892,16 @@ class BusinessReportService:
         writer.writerow(["Generated At", report.generated_at.isoformat()])
         writer.writerow([])
 
-        # AI Summary
         writer.writerow(["EXECUTIVE AI SUMMARY"])
         writer.writerow([report.ai_summary])
         writer.writerow([])
 
-        # Key Metrics
         writer.writerow(["KEY PERFORMANCE METRICS"])
         writer.writerow(["Key", "Label", "Value", "Change %", "Trend Direction", "Subtitle"])
         for m in report.key_metrics:
             writer.writerow([m.key, m.label, m.value, f"{m.change_pct}%", m.trend_direction, m.subtitle])
         writer.writerow([])
 
-        # Chart Series Data
         writer.writerow(["CHART SERIES DATA", report.chart_config.title])
         if report.chart_data:
             headers = list(report.chart_data[0].keys())
@@ -995,14 +910,12 @@ class BusinessReportService:
                 writer.writerow([row.get(h, "") for h in headers])
         writer.writerow([])
 
-        # Important Changes
         writer.writerow(["IMPORTANT CHANGES & EVENTS"])
         writer.writerow(["ID", "Impact Type", "Timestamp", "Title", "Details"])
         for c in report.important_changes:
             writer.writerow([c.id, c.impact_type, c.timestamp, c.title, c.details])
         writer.writerow([])
 
-        # Trends
         writer.writerow(["STRATEGIC TRENDS"])
         for t in report.trends:
             writer.writerow([t])

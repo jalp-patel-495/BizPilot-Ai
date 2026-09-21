@@ -143,6 +143,9 @@ def delete_user(
     if not user:
         raise NotFoundException(f"User with ID {user_id} not found")
 
+    if current_user.role != UserRole.SUPER_ADMIN.value and user.organization_id != current_user.organization_id:
+        raise ForbiddenException("Cannot delete users outside your organization")
+
     db.delete(user)
     db.commit()
     return APIResponse(message=f"User {user.full_name} deleted successfully", data={"deleted_id": user_id})

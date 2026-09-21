@@ -2,8 +2,9 @@ from typing import Any, List, Optional
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_user
-from app.core.exceptions import NotFoundException
+from app.api.deps import get_db, get_current_user, require_roles
+from app.core.rbac import UserRole
+from app.core.exceptions import NotFoundException, ForbiddenException
 from app.models.lead import Lead
 from app.models.user import User
 from app.models.customer import Customer
@@ -72,7 +73,13 @@ def list_leads(
     db: Session = Depends(get_db),
 ) -> Any:
     """List business leads for the organization with search and multi-dimensional filters."""
-    query = db.query(Lead).filter(Lead.organization_id == current_user.organization_id)
+    if current_user.role == UserRole.SUPER_ADMIN.value and not current_user.organization_id:
+        query = db.query(Lead)
+    else:
+        query = db.query(Lead).filter(Lead.organization_id == current_user.organization_id)
+        # Role-based scoping: Employees only see their own assigned leads
+        if current_user.role == UserRole.EMPLOYEE.value:
+            query = query.filter(Lead.assigned_to == current_user.id)
 
     if status:
         query = query.filter(Lead.status == status.upper())
@@ -80,7 +87,7 @@ def list_leads(
         query = query.filter(Lead.classification == classification.upper())
     if source:
         query = query.filter(Lead.source.ilike(f"%{source}%"))
-    if assigned_to:
+    if assigned_to and current_user.role != UserRole.EMPLOYEE.value:
         query = query.filter(Lead.assigned_to == assigned_to)
     if search:
         term = f"%{search}%"
@@ -108,28 +115,34 @@ async def create_lead(
     """
     org_id = current_user.organization_id
 
-    # 1. Compute ML & AI prediction scores
-    ml_result = ml_service.predict_lead_conversion(
-        deal_value=lead_in.deal_value,
-        industry=lead_in.industry or "Technology",
-    )
-    ai_result = await ai_service.analyze_lead_intent({
-        "company": lead_in.company,
-        "deal_value": lead_in.deal_value,
-        "industry": lead_in.industry,
-    })
-    combined_score = round((ml_result["lead_score"] * 0.5) + (ai_result["ai_score"] * 0.5), 1)
+    # If employee creates a lead, default assignment to self
+    assigned_to = lead_in.assigned_to
+    if current_user.role == UserRole.EMPLOYEE.value or not assigned_to:
+        assigned_to = current_user.id if current_user.role == UserRole.EMPLOYEE.value else assigned_to
 
-    # 2. Automated Classification (Hot, Warm, Cold)
-    clf_result = lead_classifier.classify_lead(
+    # 1. Evaluate Rule-based Classification
+    rule_eval = lead_classifier.classify_lead(
         deal_value=lead_in.deal_value,
-        status=lead_in.status or "NEW",
-        source=lead_in.source or "Website",
-        ai_score=combined_score,
+        status=lead_in.status,
+        source=lead_in.source,
+        notes=lead_in.notes,
         follow_up_date=lead_in.follow_up_date,
     )
 
-    new_lead = Lead(
+    # 2. Predictive ML Scoring Baseline
+    predicted_score = ml_service.predict_lead_score(
+        deal_value=lead_in.deal_value,
+        industry=lead_in.industry,
+        source=lead_in.source,
+    )
+
+    # 3. Generate AI Intent & Context Summary
+    ai_summary = await ai_service.generate_lead_summary(
+        company=lead_in.company,
+        notes=lead_in.notes or "New inbound interest received.",
+    )
+
+    lead = Lead(
         organization_id=org_id,
         contact_name=lead_in.contact_name,
         email=lead_in.email,
@@ -137,29 +150,32 @@ async def create_lead(
         company=lead_in.company,
         address=lead_in.address or "",
         industry=lead_in.industry or "Technology",
-        deal_value=lead_in.deal_value,
+        deal_value=lead_in.deal_value or 0.0,
         source=lead_in.source or "Website",
         status=lead_in.status or "NEW",
         follow_up_date=lead_in.follow_up_date,
-        assigned_to=lead_in.assigned_to or current_user.id,
-        classification=clf_result["classification"],
-        classification_reason=clf_result["reason"],
-        ai_score=combined_score,
-        ai_summary=ai_result["ai_summary"],
+        assigned_to=assigned_to,
         notes=lead_in.notes,
+        classification=rule_eval["classification"],
+        classification_reason=rule_eval["reason"],
+        ai_score=round(predicted_score, 1),
+        ai_summary=ai_summary,
     )
-    db.add(new_lead)
+    db.add(lead)
     db.commit()
-    db.refresh(new_lead)
+    db.refresh(lead)
 
-    # Phase 6: Trigger Rule 1 (Classify, score, assign priority, create follow-up task)
-    from app.services.lead_automation_service import lead_automation_service
-    lead_automation_service.execute_lead_created_rules(db, new_lead.id)
-    db.refresh(new_lead)
+    # Deep AI automated analysis & task generation
+    try:
+        from app.services.lead_automation_service import lead_automation_service
+        lead_automation_service.execute_lead_created_rules(db, lead.id)
+        db.refresh(lead)
+    except Exception:
+        pass
 
     return APIResponse(
-        message=f"Lead created and automated pipeline executed ({new_lead.classification}, {new_lead.sales_priority})",
-        data=_format_lead_out(new_lead),
+        message="Lead registered, ML scored, and auto-classified successfully",
+        data=_format_lead_out(lead),
     )
 
 
@@ -176,7 +192,7 @@ def get_classification_rules(
 @router.put("/rules/classification", response_model=APIResponse[ClassificationRulesConfig])
 def update_classification_rules(
     rules_in: ClassificationRulesConfig,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN])),
 ) -> Any:
     """Update active automated lead classification thresholds."""
     updated = lead_classifier.update_rules(rules_in.rules)
@@ -190,11 +206,14 @@ def get_lead(
     db: Session = Depends(get_db),
 ) -> Any:
     """Fetch single lead details."""
-    lead = db.query(Lead).filter(
-        Lead.id == lead_id, Lead.organization_id == current_user.organization_id
-    ).first()
+    query = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.role != UserRole.SUPER_ADMIN.value:
+        query = query.filter(Lead.organization_id == current_user.organization_id)
+        if current_user.role == UserRole.EMPLOYEE.value:
+            query = query.filter(Lead.assigned_to == current_user.id)
+    lead = query.first()
     if not lead:
-        raise NotFoundException("Lead not found")
+        raise NotFoundException("Lead not found or unauthorized")
     return APIResponse(data=_format_lead_out(lead))
 
 
@@ -206,13 +225,20 @@ def update_lead(
     db: Session = Depends(get_db),
 ) -> Any:
     """Edit lead details with automatic re-classification."""
-    lead = db.query(Lead).filter(
-        Lead.id == lead_id, Lead.organization_id == current_user.organization_id
-    ).first()
+    query = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.role != UserRole.SUPER_ADMIN.value:
+        query = query.filter(Lead.organization_id == current_user.organization_id)
+        if current_user.role == UserRole.EMPLOYEE.value:
+            query = query.filter(Lead.assigned_to == current_user.id)
+    lead = query.first()
     if not lead:
-        raise NotFoundException("Lead not found")
+        raise NotFoundException("Lead not found or unauthorized")
 
     update_dict = lead_update.model_dump(exclude_unset=True)
+    # Employee cannot reassign lead to someone else
+    if current_user.role == UserRole.EMPLOYEE.value and "assigned_to" in update_dict:
+        del update_dict["assigned_to"]
+
     for field, val in update_dict.items():
         setattr(lead, field, val)
 
@@ -236,13 +262,14 @@ def update_lead(
 @router.delete("/{lead_id}", response_model=APIResponse[dict])
 def delete_lead(
     lead_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Delete a lead."""
-    lead = db.query(Lead).filter(
-        Lead.id == lead_id, Lead.organization_id == current_user.organization_id
-    ).first()
+    """Delete a lead. Restricted to Admins and Sales Managers."""
+    query = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.role != UserRole.SUPER_ADMIN.value:
+        query = query.filter(Lead.organization_id == current_user.organization_id)
+    lead = query.first()
     if not lead:
         raise NotFoundException("Lead not found")
 
@@ -267,6 +294,8 @@ def convert_lead_to_customer(
     ).first()
     if not lead:
         raise NotFoundException("Lead not found")
+    if current_user.role == UserRole.EMPLOYEE.value and lead.assigned_to != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access to unassigned lead is restricted")
 
     # Check if customer already exists for this email
     customer = (

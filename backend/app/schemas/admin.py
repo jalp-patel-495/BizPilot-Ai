@@ -10,12 +10,15 @@ from app.schemas.subscription import SubscriptionOut, UsageSummary
 class AdminDashboardMetrics(BaseModel):
     mrr: float
     mrr_growth: float
+    total_businesses: int = 0
     active_businesses: int
+    new_businesses: int = 0
     total_users: int
+    user_growth: float = 0.0
     monthly_api_requests: int
     monthly_ai_requests: int
     total_ai_tokens: int
-    system_uptime: str
+    system_uptime: str = "Unavailable"
     plan_distribution: List[Dict[str, Any]]
     recent_activities: List[Dict[str, Any]]
     system_health: Dict[str, Any]

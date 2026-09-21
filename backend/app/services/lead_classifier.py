@@ -41,6 +41,8 @@ class LeadClassifierService:
         source: Optional[str] = None,
         ai_score: Optional[float] = None,
         follow_up_date: Optional[datetime] = None,
+        notes: Optional[str] = None,
+        **kwargs,
     ) -> Dict[str, str]:
         """
         Evaluate business parameters against configurable rules and return classification & reason.

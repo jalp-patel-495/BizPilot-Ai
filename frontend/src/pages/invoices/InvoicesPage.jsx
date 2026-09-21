@@ -97,11 +97,9 @@ export const InvoicesPage = () => {
     fetchData();
   }, [searchTerm, statusFilter]);
 
-  // Handle File Upload and Extraction
   const handleFileUpload = async (file) => {
     if (!file) return;
 
-    // Validate client-side extension
     const ext = '.' + file.name.split('.').pop().toLowerCase();
     if (!['.pdf', '.jpg', '.jpeg', '.png'].includes(ext)) {
       setNotice('Unsupported file format! Please upload PDF, JPG, or PNG.');
@@ -145,13 +143,11 @@ export const InvoicesPage = () => {
     }
   };
 
-  // Demo Sample Invoice Generator (for instant testing without local files)
   const handleSimulateSampleUpload = async (sampleType) => {
     try {
       setUploading(true);
       setUploadProgress(30);
 
-      // Create a small mock text/blob representing an invoice
       let sampleName = 'Google_Cloud_Platform_Invoice.pdf';
       let sampleText = `INVOICE #INV-2026-9941
 Vendor: Google Cloud Platform LLC
@@ -196,7 +192,6 @@ Total Amount: 1203.60`;
     }
   };
 
-  // Save & Verify Edited Invoice
   const handleVerifyInvoice = async (e) => {
     e.preventDefault();
     if (!editingInvoice) return;
@@ -208,7 +203,7 @@ Total Amount: 1203.60`;
         const verifiedInv = res.data.data;
         setInvoices((prev) => prev.map((inv) => (inv.id === verifiedInv.id ? verifiedInv : inv)));
         setShowReviewModal(false);
-        setNotice(`Invoice ${verifiedInv.invoice_number} verified and saved to PostgreSQL!`);
+        setNotice(`Invoice ${verifiedInv.invoice_number} verified and saved!`);
         setTimeout(() => setNotice(''), 5000);
         fetchData();
       }
@@ -221,7 +216,6 @@ Total Amount: 1203.60`;
     }
   };
 
-  // Delete Invoice
   const handleDeleteInvoice = async (invoiceId) => {
     if (!window.confirm('Are you sure you want to delete this invoice?')) return;
     try {
@@ -235,7 +229,6 @@ Total Amount: 1203.60`;
     }
   };
 
-  // Download Invoice as JSON or CSV
   const handleDownloadInvoice = async (invoiceId, invNum, format = 'json') => {
     try {
       const res = await api.get(`/invoices/${invoiceId}/download`, {
@@ -258,20 +251,17 @@ Total Amount: 1203.60`;
     }
   };
 
-  // Line Item Handlers in Modal
   const handleItemChange = (index, field, value) => {
     if (!editingInvoice) return;
     const items = [...(editingInvoice.items || [])];
     items[index] = { ...items[index], [field]: value };
 
-    // Auto calculate amount when quantity or unit_price changes
     if (field === 'quantity' || field === 'unit_price') {
       const q = parseFloat(field === 'quantity' ? value : items[index].quantity) || 0;
       const p = parseFloat(field === 'unit_price' ? value : items[index].unit_price) || 0;
       items[index].amount = Math.round(q * p * 100) / 100;
     }
 
-    // Recompute subtotal and grand total
     const newSubtotal = items.reduce((acc, it) => acc + (parseFloat(it.amount) || 0), 0);
     const newTax = Math.round(newSubtotal * 0.18 * 100) / 100;
     const newTotal = Math.round((newSubtotal + newTax) * 100) / 100;
@@ -321,56 +311,54 @@ Total Amount: 1203.60`;
     });
   };
 
-  // Status Badge Helper
   const getStatusBadge = (status) => {
     switch (status) {
       case 'VERIFIED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-            <Check className="w-3 h-3 text-emerald-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <Check className="w-3 h-3 text-emerald-600" />
             VERIFIED
           </span>
         );
       case 'EXTRACTED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-            <Clock className="w-3 h-3 text-amber-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <Clock className="w-3 h-3 text-amber-600" />
             PENDING REVIEW
           </span>
         );
       case 'PAID':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
             PAID
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-50 text-neutral-600 border border-neutral-200">
             {status}
           </span>
         );
     }
   };
 
-  // Format Icon Helper
   const getFormatIcon = (format) => {
     if (format === 'PDF') {
-      return <FileText className="w-4 h-4 text-rose-400" />;
+      return <FileText className="w-4 h-4 text-[#111111]" />;
     }
-    return <ImageIcon className="w-4 h-4 text-cyan-400" />;
+    return <ImageIcon className="w-4 h-4 text-[#111111]" />;
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 pb-16">
+    <div className="space-y-6 pb-16">
       {/* Toast Alert Banner */}
       {notice && (
-        <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold flex items-center justify-between shadow-lg shadow-brand-500/5 animate-in slide-in-from-top">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-4 h-4 text-brand-400 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-[#f7f7f7] border border-[#e5e5e5] text-[#111111] text-xs font-medium flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-[#111111] shrink-0" />
             <span>{notice}</span>
           </div>
-          <button onClick={() => setNotice('')} className="text-brand-400 hover:text-brand-200">
+          <button onClick={() => setNotice('')} className="text-[#666666] hover:text-[#111111]">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -379,26 +367,26 @@ Total Amount: 1203.60`;
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/20 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3" />
-              <span>Phase 7: AI Document Processing & OCR Vision</span>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-800 border border-neutral-200 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-neutral-600" />
+              <span>AI Document Processing</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
               <span>Multi-Format OCR Online</span>
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Smart Invoice & Document Processing
+          <h1 className="text-2xl font-bold text-[#111111] tracking-tight">
+            Smart Invoices & Document Processing
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs text-[#666666] mt-0.5">
             Ingest vendor invoices, bills, and receipts in PDF, JPG, or PNG. Review extracted GST, line items, and commit verified records.
           </p>
         </div>
 
         {/* Quick Upload Action */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <input
             type="file"
             ref={fileInputRef}
@@ -411,21 +399,20 @@ Total Amount: 1203.60`;
             id="upload-invoice-btn"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] shadow-xs transition"
           >
-            <UploadCloud className={`w-4 h-4 ${uploading ? 'animate-bounce' : ''}`} />
+            <UploadCloud className="w-4 h-4" />
             <span>{uploading ? 'Processing OCR...' : 'Upload Document'}</span>
           </button>
         </div>
       </div>
 
       {/* 4 Core Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Invoices"
           value={stats.total_invoices || invoices.length}
           icon={ReceiptText}
-          color="brand"
           subtitle="Processed via OCR Engine"
           trend="+12 this month"
         />
@@ -435,7 +422,6 @@ Total Amount: 1203.60`;
             minimumFractionDigits: 2,
           })}`}
           icon={DollarSign}
-          color="emerald"
           subtitle="Vendor payables reconciled"
           trend="+28.4% volume"
         />
@@ -443,7 +429,6 @@ Total Amount: 1203.60`;
           title="Verification Rate"
           value={`${stats.verification_rate || 66.7}%`}
           icon={CheckCircle2}
-          color="cyan"
           subtitle={`${stats.verified_count || 0} verified records`}
           trend="Audited & Committed"
         />
@@ -451,7 +436,6 @@ Total Amount: 1203.60`;
           title="Average OCR Accuracy"
           value={`${stats.average_confidence || 98.4}%`}
           icon={Sparkles}
-          color="amber"
           subtitle="Subtotal & GST matched"
           trend="High precision"
         />
@@ -469,40 +453,40 @@ Total Amount: 1203.60`;
           setDragOver(false);
           if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
         }}
-        className={`glass-panel p-8 rounded-3xl border-2 border-dashed transition-all relative overflow-hidden ${
+        className={`p-6 rounded-lg border-2 border-dashed transition-all bg-white text-center ${
           dragOver
-            ? 'border-brand-500 bg-brand-500/10'
-            : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+            ? 'border-[#111111] bg-[#fafafa]'
+            : 'border-[#d9d9d9] hover:border-[#111111]'
         }`}
       >
-        <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center shadow-glow">
-            <UploadCloud className="w-7 h-7" />
+        <div className="flex flex-col items-center justify-center max-w-md mx-auto space-y-3">
+          <div className="w-10 h-10 rounded-full bg-[#f3f3f3] text-[#111111] flex items-center justify-center">
+            <UploadCloud className="w-5 h-5" />
           </div>
 
           <div>
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-sm font-semibold text-[#111111]">
               Drag & Drop invoices here or click to browse
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Supports <span className="text-white font-semibold">PDF</span>,{' '}
-              <span className="text-white font-semibold">JPG</span>, and{' '}
-              <span className="text-white font-semibold">PNG</span> up to 15MB. Automatically parses GST numbers, line items, and totals.
+            <p className="text-xs text-[#666666] mt-0.5">
+              Supports <span className="font-semibold text-[#111111]">PDF</span>,{' '}
+              <span className="font-semibold text-[#111111]">JPG</span>, and{' '}
+              <span className="font-semibold text-[#111111]">PNG</span> up to 15MB. Automatically parses GST numbers, line items, and totals.
             </p>
           </div>
 
           {uploading ? (
-            <div className="w-full max-w-sm space-y-2 pt-2">
-              <div className="flex justify-between text-xs text-slate-400">
+            <div className="w-full max-w-xs space-y-1.5 pt-1">
+              <div className="flex justify-between text-xs text-[#666666]">
                 <span className="flex items-center gap-1.5">
-                  <RefreshCw className="w-3 h-3 animate-spin text-brand-400" />
-                  <span>Extracting Line Items & GST via OCR...</span>
+                  <RefreshCw className="w-3 h-3 animate-spin text-[#111111]" />
+                  <span>Extracting Line Items & GST...</span>
                 </span>
-                <span className="text-brand-300 font-bold">{uploadProgress}%</span>
+                <span className="text-[#111111] font-semibold">{uploadProgress}%</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-brand-600 to-cyan-400 transition-all duration-300"
+                  className="h-full bg-[#111111] rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -512,29 +496,29 @@ Total Amount: 1203.60`;
               <button
                 id="browse-files-btn"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
+                className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition shadow-xs"
               >
                 Browse Files
               </button>
 
-              <span className="text-xs text-slate-500 px-2">or quick demo with:</span>
+              <span className="text-xs text-[#8a8a8a] px-1">or quick test:</span>
 
               <button
                 id="demo-pdf-btn"
                 onClick={() => handleSimulateSampleUpload('PDF')}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 transition flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-md text-xs font-medium text-[#111111] bg-[#f7f7f7] hover:bg-[#ebebeb] border border-[#e5e5e5] transition flex items-center gap-1.5"
               >
-                <FileText className="w-3.5 h-3.5 text-brand-400" />
-                <span>Sample Cloud Invoice (PDF)</span>
+                <FileText className="w-3.5 h-3.5 text-[#666666]" />
+                <span>Sample PDF</span>
               </button>
 
               <button
                 id="demo-image-btn"
                 onClick={() => handleSimulateSampleUpload('STRIPE')}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-md text-xs font-medium text-[#111111] bg-[#f7f7f7] hover:bg-[#ebebeb] border border-[#e5e5e5] transition flex items-center gap-1.5"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Sample Receipt (PNG)</span>
+                <ImageIcon className="w-3.5 h-3.5 text-[#666666]" />
+                <span>Sample PNG</span>
               </button>
             </div>
           )}
@@ -543,37 +527,37 @@ Total Amount: 1203.60`;
 
       {/* Invoice List & Filters Section */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-white">Extracted Invoices Ledger</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-sm font-semibold text-[#111111]">Extracted Invoices Ledger</h2>
+            <p className="text-xs text-[#666666]">
               Audit, review, and export invoices saved in your PostgreSQL repository.
             </p>
           </div>
 
           {/* Search & Filter Toolbar */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-3.5 h-3.5 text-[#8a8a8a] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 id="invoice-search-input"
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search invoice #, vendor, GST..."
-                className="pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none w-56 sm:w-64"
+                className="pl-8 pr-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none w-52 sm:w-60"
               />
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs">
+            <div className="flex items-center gap-1 p-0.5 bg-[#f3f3f3] rounded-md border border-[#e5e5e5] text-xs">
               {['ALL', 'EXTRACTED', 'VERIFIED', 'PAID'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition ${
                     statusFilter === st
-                      ? 'bg-slate-800 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-white text-[#111111] shadow-xs'
+                      : 'text-[#666666] hover:text-[#111111]'
                   }`}
                 >
                   {st === 'EXTRACTED' ? 'Pending Review' : st}
@@ -584,54 +568,54 @@ Total Amount: 1203.60`;
         </div>
 
         {/* Invoices Table */}
-        <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+        <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-                  <th className="py-3.5 px-6">Invoice # & Format</th>
-                  <th className="py-3.5 px-6">Company / Vendor</th>
-                  <th className="py-3.5 px-6">Customer & Date</th>
-                  <th className="py-3.5 px-6">GST Number</th>
-                  <th className="py-3.5 px-6">Amount</th>
-                  <th className="py-3.5 px-6">OCR Confidence</th>
-                  <th className="py-3.5 px-6">Status</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                <tr className="border-b border-[#e5e5e5] bg-[#f9fafb] text-[11px] font-semibold uppercase tracking-wider text-[#666666]">
+                  <th className="py-3 px-4">Invoice # & Format</th>
+                  <th className="py-3 px-4">Company / Vendor</th>
+                  <th className="py-3 px-4">Customer & Date</th>
+                  <th className="py-3 px-4">GST Number</th>
+                  <th className="py-3 px-4">Amount</th>
+                  <th className="py-3 px-4">OCR Confidence</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-xs">
+              <tbody className="divide-y divide-[#e5e5e5] text-xs">
                 {invoices.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="py-12 text-center text-slate-500">
+                    <td colSpan="8" className="py-10 text-center text-[#8a8a8a]">
                       {loading ? 'Loading invoices...' : 'No invoices match the specified criteria.'}
                     </td>
                   </tr>
                 ) : (
                   invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-800/30 transition">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-xl bg-slate-800 text-slate-300">
+                    <tr key={inv.id} className="hover:bg-[#f8f8f8] transition">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-md bg-[#f3f3f3] text-[#111111]">
                             {getFormatIcon(inv.file_format)}
                           </div>
                           <div>
-                            <span className="font-mono font-bold text-white block">
+                            <span className="font-mono font-semibold text-[#111111] block">
                               {inv.invoice_number}
                             </span>
-                            <span className="text-[10px] text-slate-400">{inv.file_format} Document</span>
+                            <span className="text-[10px] text-[#8a8a8a]">{inv.file_format} Document</span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-white">{inv.company_name}</div>
-                        <div className="text-[10px] text-slate-400">{inv.original_filename}</div>
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#111111]">{inv.company_name}</div>
+                        <div className="text-[10px] text-[#8a8a8a]">{inv.original_filename}</div>
                       </td>
 
-                      <td className="py-4 px-6">
-                        <div className="text-slate-300 font-medium">{inv.customer_name || 'Upteky Inc.'}</div>
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Calendar className="w-3 h-3 text-slate-500" />
+                      <td className="py-3 px-4">
+                        <div className="text-[#111111]">{inv.customer_name || 'Upteky Inc.'}</div>
+                        <div className="text-[11px] text-[#666666] flex items-center gap-1 mt-0.5">
+                          <Calendar className="w-3 h-3 text-[#8a8a8a]" />
                           <span>
                             {inv.invoice_date
                               ? new Date(inv.invoice_date).toLocaleDateString()
@@ -640,85 +624,81 @@ Total Amount: 1203.60`;
                         </div>
                       </td>
 
-                      <td className="py-4 px-6">
-                        <span className="font-mono text-[11px] text-brand-300 font-semibold bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                      <td className="py-3 px-4">
+                        <span className="font-mono text-[11px] text-[#111111] font-medium bg-[#f3f3f3] px-1.5 py-0.5 rounded border border-[#e5e5e5]">
                           {inv.gst_number || 'N/A'}
                         </span>
                       </td>
 
-                      <td className="py-4 px-6">
-                        <div className="font-extrabold text-emerald-400 text-sm">
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#111111] text-xs">
                           ${(inv.total_amount || 0).toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                           })}
                         </div>
-                        <div className="text-[10px] text-slate-500">
-                          Subtotal: ${(inv.subtotal || 0).toFixed(2)} | Tax: ${(inv.tax_amount || 0).toFixed(2)}
+                        <div className="text-[10px] text-[#8a8a8a]">
+                          Sub: ${(inv.subtotal || 0).toFixed(2)} | Tax: ${(inv.tax_amount || 0).toFixed(2)}
                         </div>
                       </td>
 
-                      <td className="py-4 px-6">
+                      <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-16 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="w-14 h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-brand-500 to-emerald-400 rounded-full"
+                              className="h-full bg-[#111111] rounded-full"
                               style={{ width: `${inv.ocr_confidence || 98.5}%` }}
                             />
                           </div>
-                          <span className="font-bold text-slate-300 text-[11px]">
+                          <span className="font-semibold text-[#111111] text-[11px]">
                             {inv.ocr_confidence || 98.5}%
                           </span>
                         </div>
                       </td>
 
-                      <td className="py-4 px-6">{getStatusBadge(inv.status)}</td>
+                      <td className="py-3 px-4">{getStatusBadge(inv.status)}</td>
 
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* View Details Drawer */}
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             id={`view-inv-${inv.id}`}
                             onClick={() => {
                               setSelectedInvoice(inv);
                               setShowDetailDrawer(true);
                             }}
-                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                            className="p-1.5 rounded-md bg-white hover:bg-[#f7f7f7] text-[#666666] hover:text-[#111111] border border-[#d9d9d9] transition"
                             title="View Invoice Details"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Edit / Review Button */}
                           <button
                             id={`edit-inv-${inv.id}`}
                             onClick={() => {
                               setEditingInvoice(JSON.parse(JSON.stringify(inv)));
                               setShowReviewModal(true);
                             }}
-                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-brand-500/20 text-slate-300 hover:text-brand-300 transition"
+                            className="p-1.5 rounded-md bg-white hover:bg-[#f7f7f7] text-[#666666] hover:text-[#111111] border border-[#d9d9d9] transition"
                             title="Edit & Verify Extracted Fields"
                           >
-                            <Edit3 className="w-4 h-4" />
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Download Button */}
                           <button
                             id={`download-inv-${inv.id}`}
                             onClick={() => handleDownloadInvoice(inv.id, inv.invoice_number, 'json')}
-                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 transition"
+                            className="p-1.5 rounded-md bg-white hover:bg-[#f7f7f7] text-[#666666] hover:text-[#111111] border border-[#d9d9d9] transition"
                             title="Download JSON"
                           >
-                            <Download className="w-4 h-4" />
+                            <Download className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Delete Button */}
                           <button
                             id={`delete-inv-${inv.id}`}
                             onClick={() => handleDeleteInvoice(inv.id)}
-                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
+                            className="p-1.5 rounded-md bg-white hover:bg-rose-50 text-[#8a8a8a] hover:text-rose-600 border border-[#d9d9d9] transition"
                             title="Delete Invoice"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -731,44 +711,37 @@ Total Amount: 1203.60`;
         </div>
       </div>
 
-      {/* ========================================================================= */}
       {/* EXTRACTION REVIEW & EDIT MODAL */}
-      {/* ========================================================================= */}
       {showReviewModal && editingInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="glass-panel w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-700 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in overflow-y-auto">
+          <div className="bg-white w-full max-w-3xl p-6 rounded-lg border border-[#e5e5e5] shadow-xl relative my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/30 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    <span>OCR Extracted Record</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
+                    OCR Extracted Record
                   </span>
-                  <span className="text-xs text-slate-400">
-                    Confidence: <span className="text-emerald-400 font-bold">{editingInvoice.ocr_confidence}%</span>
+                  <span className="text-xs text-[#666666]">
+                    Confidence: <span className="text-emerald-700 font-semibold">{editingInvoice.ocr_confidence}%</span>
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-white">
-                  Review & Verify Extracted Invoice Information
+                <h3 className="text-base font-bold text-[#111111]">
+                  Review & Verify Invoice Details
                 </h3>
-                <p className="text-xs text-slate-400">
-                  Verify or edit fields extracted by the OCR pipeline before committing to PostgreSQL.
-                </p>
               </div>
 
               <button
                 onClick={() => setShowReviewModal(false)}
-                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800"
+                className="text-[#666666] hover:text-[#111111]"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleVerifyInvoice} className="space-y-6 mt-6">
-              {/* 9 Core Fields Matrix */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <form onSubmit={handleVerifyInvoice} className="space-y-4 mt-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#111111] mb-1">
                     Invoice Number *
                   </label>
                   <input
@@ -779,12 +752,12 @@ Total Amount: 1203.60`;
                     onChange={(e) =>
                       setEditingInvoice({ ...editingInvoice, invoice_number: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs font-mono focus:border-[#111111] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#111111] mb-1">
                     Company / Vendor Name *
                   </label>
                   <input
@@ -795,13 +768,13 @@ Total Amount: 1203.60`;
                     onChange={(e) =>
                       setEditingInvoice({ ...editingInvoice, company_name: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Customer Name (Billed To) *
+                  <label className="block text-xs font-medium text-[#111111] mb-1">
+                    Customer Name *
                   </label>
                   <input
                     id="edit-customer-name"
@@ -811,14 +784,14 @@ Total Amount: 1203.60`;
                     onChange={(e) =>
                       setEditingInvoice({ ...editingInvoice, customer_name: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#111111] mb-1">
                     Invoice Date *
                   </label>
                   <input
@@ -835,12 +808,12 @@ Total Amount: 1203.60`;
                         invoice_date: new Date(e.target.value).toISOString(),
                       })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#111111] mb-1">
                     GST Number *
                   </label>
                   <input
@@ -850,12 +823,12 @@ Total Amount: 1203.60`;
                     onChange={(e) =>
                       setEditingInvoice({ ...editingInvoice, gst_number: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs font-mono focus:border-[#111111] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#111111] mb-1">
                     Currency
                   </label>
                   <select
@@ -863,7 +836,7 @@ Total Amount: 1203.60`;
                     onChange={(e) =>
                       setEditingInvoice({ ...editingInvoice, currency: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -874,24 +847,24 @@ Total Amount: 1203.60`;
               </div>
 
               {/* Line Items Table */}
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-brand-400" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#666666] flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-[#111111]" />
                     <span>Extracted Line Items ({editingInvoice.items?.length || 0})</span>
                   </span>
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 transition"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition shadow-xs"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                     <span>Add Item</span>
                   </button>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
-                  <div className="grid grid-cols-12 gap-2 text-[10px] font-extrabold uppercase text-slate-500 px-1">
+                <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] space-y-2">
+                  <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold uppercase text-[#666666] px-1">
                     <div className="col-span-6">Description</div>
                     <div className="col-span-2">Qty</div>
                     <div className="col-span-2">Unit Price ($)</div>
@@ -905,7 +878,7 @@ Total Amount: 1203.60`;
                           type="text"
                           value={item.description}
                           onChange={(e) => handleItemChange(idx, 'description', e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-2 py-1 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:outline-none focus:border-[#111111]"
                         />
                       </div>
                       <div className="col-span-2">
@@ -914,7 +887,7 @@ Total Amount: 1203.60`;
                           step="0.1"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-2 py-1 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:outline-none focus:border-[#111111]"
                         />
                       </div>
                       <div className="col-span-2">
@@ -923,17 +896,17 @@ Total Amount: 1203.60`;
                           step="0.01"
                           value={item.unit_price}
                           onChange={(e) => handleItemChange(idx, 'unit_price', e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className="w-full px-2 py-1 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:outline-none focus:border-[#111111]"
                         />
                       </div>
-                      <div className="col-span-2 flex items-center justify-end gap-2">
-                        <span className="font-mono text-emerald-400 font-bold text-xs">
+                      <div className="col-span-2 flex items-center justify-end gap-1.5">
+                        <span className="font-mono text-[#111111] font-semibold text-xs">
                           ${(parseFloat(item.amount) || 0).toFixed(2)}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(idx)}
-                          className="text-slate-500 hover:text-rose-400 p-1"
+                          className="text-[#8a8a8a] hover:text-rose-600 p-0.5"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -944,31 +917,31 @@ Total Amount: 1203.60`;
               </div>
 
               {/* Financial Totals Breakdown */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs text-slate-400">
-                  Calculated automatically from line items. Subtotal + Tax (18% GST) = Total Amount.
+              <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs text-[#666666]">
+                  Calculated automatically: Subtotal + Tax (18% GST) = Total Amount.
                 </div>
 
-                <div className="flex items-center gap-6 text-xs">
+                <div className="flex items-center gap-5 text-xs">
                   <div>
-                    <span className="text-slate-500 block text-[10px] uppercase">Subtotal</span>
-                    <span className="text-white font-bold font-mono">
+                    <span className="text-[#8a8a8a] block text-[10px] uppercase font-medium">Subtotal</span>
+                    <span className="text-[#111111] font-bold font-mono">
                       ${(editingInvoice.subtotal || 0).toFixed(2)}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-slate-500 block text-[10px] uppercase">Tax (18% GST)</span>
-                    <span className="text-white font-bold font-mono">
+                    <span className="text-[#8a8a8a] block text-[10px] uppercase font-medium">Tax (18%)</span>
+                    <span className="text-[#111111] font-bold font-mono">
                       ${(editingInvoice.tax_amount || 0).toFixed(2)}
                     </span>
                   </div>
 
-                  <div className="border-l border-slate-700 pl-6">
-                    <span className="text-emerald-400 block text-[10px] uppercase font-bold">
+                  <div className="border-l border-[#d9d9d9] pl-5">
+                    <span className="text-[#111111] block text-[10px] uppercase font-bold">
                       Grand Total
                     </span>
-                    <span className="text-emerald-400 font-black text-base font-mono">
+                    <span className="text-[#111111] font-black text-sm font-mono">
                       ${(editingInvoice.total_amount || 0).toFixed(2)}
                     </span>
                   </div>
@@ -976,11 +949,11 @@ Total Amount: 1203.60`;
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#e5e5e5]">
                 <button
                   type="button"
                   onClick={() => setShowReviewModal(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition"
+                  className="px-3.5 py-1.5 rounded-md text-xs font-medium text-[#666666] hover:text-[#111111]"
                 >
                   Cancel
                 </button>
@@ -989,17 +962,17 @@ Total Amount: 1203.60`;
                   id="save-verify-btn"
                   type="submit"
                   disabled={submittingVerification}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-glow transition flex items-center gap-2"
+                  className="px-4 py-1.5 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] shadow-xs transition flex items-center gap-1.5"
                 >
                   {submittingVerification ? (
                     <>
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Verifying & Saving...</span>
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Saving...</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Save Verified Data to PostgreSQL</span>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Save Verified Data</span>
                     </>
                   )}
                 </button>
@@ -1009,75 +982,73 @@ Total Amount: 1203.60`;
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* INVOICE DETAILS DRAWER */}
-      {/* ========================================================================= */}
       {showDetailDrawer && selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-xl bg-slate-900 border-l border-slate-800 h-full overflow-y-auto p-6 flex flex-col justify-between shadow-2xl">
-            <div className="space-y-6">
-              <div className="flex items-start justify-between pb-4 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 animate-in fade-in">
+          <div className="w-full max-w-md bg-white border-l border-[#e5e5e5] h-full overflow-y-auto p-5 flex flex-col justify-between shadow-xl">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between pb-3 border-b border-[#e5e5e5]">
                 <div>
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex items-center gap-1.5 mb-1">
                     {getStatusBadge(selectedInvoice.status)}
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#f3f3f3] text-[#666666]">
                       {selectedInvoice.file_format}
                     </span>
                   </div>
-                  <h2 className="text-xl font-extrabold text-white">
+                  <h2 className="text-lg font-bold text-[#111111]">
                     {selectedInvoice.invoice_number}
                   </h2>
-                  <p className="text-xs text-slate-400">Issuer: {selectedInvoice.company_name}</p>
+                  <p className="text-xs text-[#666666]">Issuer: {selectedInvoice.company_name}</p>
                 </div>
                 <button
                   onClick={() => setShowDetailDrawer(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
+                  className="p-1 rounded text-[#666666] hover:text-[#111111]"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Invoice Printable View Card */}
-              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-5">
-                <div className="flex justify-between items-start pb-4 border-b border-slate-800">
+              <div className="p-4 rounded-lg bg-[#fafafa] border border-[#e5e5e5] space-y-3.5 text-xs">
+                <div className="flex justify-between items-start pb-2.5 border-b border-[#e5e5e5]">
                   <div>
-                    <h3 className="font-extrabold text-white text-base">
+                    <h3 className="font-bold text-[#111111]">
                       {selectedInvoice.company_name}
                     </h3>
-                    <p className="text-xs text-slate-400 font-mono mt-0.5">
+                    <p className="text-[11px] text-[#666666] font-mono mt-0.5">
                       GSTIN: {selectedInvoice.gst_number || 'N/A'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-slate-400 uppercase block">Invoice Date</span>
-                    <span className="text-xs font-medium text-white">
+                    <span className="text-[10px] font-semibold text-[#8a8a8a] uppercase block">Date</span>
+                    <span className="text-xs text-[#111111]">
                       {new Date(selectedInvoice.invoice_date).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Billed To</span>
-                  <p className="text-sm font-bold text-white mt-0.5">
+                  <span className="text-[10px] font-semibold text-[#8a8a8a] uppercase block">Billed To</span>
+                  <p className="text-xs font-semibold text-[#111111] mt-0.5">
                     {selectedInvoice.customer_name || 'Upteky Technologies Inc.'}
                   </p>
                 </div>
 
                 {/* Items */}
-                <div className="space-y-2 pt-2">
-                  <span className="text-[10px] font-extrabold uppercase text-slate-500">
-                    Line Item Breakdown
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] font-semibold uppercase text-[#8a8a8a]">
+                    Line Items
                   </span>
-                  <div className="divide-y divide-slate-800/80">
+                  <div className="divide-y divide-[#e5e5e5]">
                     {selectedInvoice.items?.map((it, i) => (
-                      <div key={i} className="py-2.5 flex items-center justify-between text-xs">
+                      <div key={i} className="py-2 flex items-center justify-between text-xs">
                         <div>
-                          <p className="font-medium text-white">{it.description}</p>
-                          <p className="text-[10px] text-slate-400">
+                          <p className="font-medium text-[#111111]">{it.description}</p>
+                          <p className="text-[10px] text-[#666666]">
                             Qty: {it.quantity} × ${it.unit_price?.toFixed(2)}
                           </p>
                         </div>
-                        <span className="font-mono font-bold text-white">
+                        <span className="font-mono font-semibold text-[#111111]">
                           ${it.amount?.toFixed(2)}
                         </span>
                       </div>
@@ -1086,20 +1057,20 @@ Total Amount: 1203.60`;
                 </div>
 
                 {/* Totals */}
-                <div className="pt-4 border-t border-slate-800 space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-400">
+                <div className="pt-2.5 border-t border-[#e5e5e5] space-y-1 text-xs">
+                  <div className="flex justify-between text-[#666666]">
                     <span>Subtotal</span>
-                    <span className="font-mono text-white">${selectedInvoice.subtotal?.toFixed(2)}</span>
+                    <span className="font-mono text-[#111111]">${selectedInvoice.subtotal?.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>Estimated Tax (18% GST)</span>
-                    <span className="font-mono text-white">
+                  <div className="flex justify-between text-[#666666]">
+                    <span>Tax (18% GST)</span>
+                    <span className="font-mono text-[#111111]">
                       ${selectedInvoice.tax_amount?.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm font-black pt-2 border-t border-slate-800 text-emerald-400">
+                  <div className="flex justify-between text-xs font-bold pt-2 border-t border-[#e5e5e5] text-[#111111]">
                     <span>Total Amount</span>
-                    <span className="font-mono text-base">
+                    <span className="font-mono">
                       ${selectedInvoice.total_amount?.toFixed(2)}
                     </span>
                   </div>
@@ -1107,29 +1078,29 @@ Total Amount: 1203.60`;
               </div>
 
               {/* OCR Metadata */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs space-y-1.5">
-                <div className="flex justify-between text-slate-400">
-                  <span>OCR Confidence Rating:</span>
-                  <span className="font-bold text-emerald-400">{selectedInvoice.ocr_confidence}%</span>
+              <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5] text-xs space-y-1">
+                <div className="flex justify-between text-[#666666]">
+                  <span>OCR Confidence:</span>
+                  <span className="font-semibold text-emerald-700">{selectedInvoice.ocr_confidence}%</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Original Upload File:</span>
-                  <span className="font-mono text-slate-300">{selectedInvoice.original_filename}</span>
+                <div className="flex justify-between text-[#666666]">
+                  <span>File:</span>
+                  <span className="font-mono text-[#111111] truncate">{selectedInvoice.original_filename}</span>
                 </div>
               </div>
             </div>
 
             {/* Bottom Actions */}
-            <div className="pt-6 border-t border-slate-800 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+            <div className="pt-4 border-t border-[#e5e5e5] flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-1.5">
                 <button
                   id="drawer-download-json"
                   onClick={() =>
                     handleDownloadInvoice(selectedInvoice.id, selectedInvoice.invoice_number, 'json')
                   }
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 transition flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 rounded-md text-xs font-medium text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition flex items-center gap-1"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3 h-3 text-[#666666]" />
                   <span>JSON</span>
                 </button>
                 <button
@@ -1137,9 +1108,9 @@ Total Amount: 1203.60`;
                   onClick={() =>
                     handleDownloadInvoice(selectedInvoice.id, selectedInvoice.invoice_number, 'csv')
                   }
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 transition flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 rounded-md text-xs font-medium text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition flex items-center gap-1"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3 h-3 text-[#666666]" />
                   <span>CSV</span>
                 </button>
               </div>
@@ -1150,9 +1121,9 @@ Total Amount: 1203.60`;
                   setShowDetailDrawer(false);
                   setShowReviewModal(true);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-white bg-[#111111] hover:bg-[#222222] shadow-xs transition flex items-center gap-1.5"
               >
-                <Edit3 className="w-3.5 h-3.5" />
+                <Edit3 className="w-3 h-3" />
                 <span>Edit Fields</span>
               </button>
             </div>

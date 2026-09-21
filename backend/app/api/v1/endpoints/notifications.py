@@ -1,9 +1,10 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, require_roles
+from app.core.rbac import UserRole
 from app.models.user import User
 from app.models.notification import Notification
 from app.schemas.common import APIResponse
@@ -27,6 +28,8 @@ def get_notifications(
 ) -> Any:
     """Retrieve notifications feed with optional read/unread and type filtering."""
     query = db.query(Notification).filter(Notification.organization_id == current_user.organization_id)
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(or_(Notification.user_id == current_user.id, Notification.user_id.is_(None)))
     if is_read is not None:
         query = query.filter(Notification.is_read == is_read)
     if type:
@@ -42,10 +45,13 @@ def get_unread_count(
     db: Session = Depends(get_db),
 ) -> Any:
     """Get the count of unread notifications for badge indicator."""
-    count = db.query(Notification).filter(
+    query = db.query(Notification).filter(
         Notification.organization_id == current_user.organization_id,
         Notification.is_read == False,
-    ).count()
+    )
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(or_(Notification.user_id == current_user.id, Notification.user_id.is_(None)))
+    count = query.count()
     return APIResponse(data=NotificationUnreadCountResponse(unread_count=count))
 
 
@@ -55,10 +61,13 @@ def mark_all_as_read(
     db: Session = Depends(get_db),
 ) -> Any:
     """Mark all unread notifications as read for the user's organization."""
-    updated = db.query(Notification).filter(
+    query = db.query(Notification).filter(
         Notification.organization_id == current_user.organization_id,
         Notification.is_read == False,
-    ).update({"is_read": True})
+    )
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(or_(Notification.user_id == current_user.id, Notification.user_id.is_(None)))
+    updated = query.update({"is_read": True}, synchronize_session=False)
     db.commit()
     return APIResponse(message=f"Marked {updated} notifications as read", data={"updated_count": updated})
 
@@ -70,10 +79,13 @@ def mark_as_read(
     db: Session = Depends(get_db),
 ) -> Any:
     """Mark an individual notification as read."""
-    notification = db.query(Notification).filter(
+    query = db.query(Notification).filter(
         Notification.id == notification_id,
         Notification.organization_id == current_user.organization_id,
-    ).first()
+    )
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(or_(Notification.user_id == current_user.id, Notification.user_id.is_(None)))
+    notification = query.first()
     if not notification:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
 
@@ -90,10 +102,13 @@ def delete_notification(
     db: Session = Depends(get_db),
 ) -> Any:
     """Dismiss/delete an individual notification."""
-    notification = db.query(Notification).filter(
+    query = db.query(Notification).filter(
         Notification.id == notification_id,
         Notification.organization_id == current_user.organization_id,
-    ).first()
+    )
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(or_(Notification.user_id == current_user.id, Notification.user_id.is_(None)))
+    notification = query.first()
     if not notification:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
 
@@ -105,7 +120,7 @@ def delete_notification(
 @router.post("/trigger-test", response_model=APIResponse[NotificationResponse], status_code=status.HTTP_201_CREATED)
 def trigger_test_notification(
     payload: TriggerTestNotificationRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Trigger one of the 6 notification events for testing and simulation."""

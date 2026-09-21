@@ -5,6 +5,7 @@ from app.db.session import SessionLocal
 from app.models.organization import Organization
 from app.models.user import User
 from app.models.subscription import Subscription
+from app.core.security import get_password_hash
 
 client = TestClient(app)
 
@@ -48,6 +49,22 @@ def test_admin_manage_businesses():
     slugs = [b["slug"] for b in businesses]
     assert "upteky-corp" in slugs
     assert "apex-logistics" in slugs
+
+    # Cleanup: delete test-fintech-co if it exists from a previous run
+    db = SessionLocal()
+    try:
+        existing_org = db.query(Organization).filter(Organization.slug == "test-fintech-co").first()
+        if existing_org:
+            db.query(User).filter(User.organization_id == existing_org.id).delete()
+            db.query(Subscription).filter(Subscription.organization_id == existing_org.id).delete()
+            db.delete(existing_org)
+            db.commit()
+        existing_user = db.query(User).filter(User.email == "admin@testfintech.com").first()
+        if existing_user:
+            db.delete(existing_user)
+            db.commit()
+    finally:
+        db.close()
 
     # Create new business
     new_slug = "test-fintech-co"
@@ -178,6 +195,32 @@ def test_admin_plans_and_observability():
 def test_usage_limit_enforcement_and_tenant_subscription():
     # 1. Login as Business Admin of NovaCraft Studios (Free Plan, max 2 users)
     novacraft_token = get_token("founder@novacraft.io", "Admin@12345")
+
+    # Cleanup: reset NovaCraft subscription back to free plan if upgraded in a previous run,
+    # and remove test designer users
+    db = SessionLocal()
+    try:
+        novacraft_org = db.query(Organization).filter(Organization.slug == "novacraft-studios").first()
+        if novacraft_org:
+            # Reset subscription to free
+            sub = db.query(Subscription).filter(
+                Subscription.organization_id == novacraft_org.id
+            ).order_by(Subscription.created_at.desc()).first()
+            if sub and sub.plan_tier != "free":
+                sub.plan_tier = "free"
+                sub.monthly_price = 0.0
+                db.commit()
+            # Remove test users from previous runs
+            db.query(User).filter(
+                User.organization_id == novacraft_org.id,
+                User.email.in_([
+                    "designer2@novacraft.io",
+                    "designer3@novacraft.io",
+                ])
+            ).delete(synchronize_session=False)
+            db.commit()
+    finally:
+        db.close()
 
     # Current subscription & usage meters
     sub_res = client.get("/api/v1/subscriptions/current", headers={"Authorization": f"Bearer {novacraft_token}"})

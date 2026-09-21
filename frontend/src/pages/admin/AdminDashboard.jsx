@@ -44,16 +44,31 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useSearchParams } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { useAuth } from '../../contexts/AuthContext';
 import { RoleBadge } from '../../components/common/Badge';
 
 export const AdminDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'overview');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+
+  useEffect(() => {
+    const currentTabParam = searchParams.get('tab');
+    if (currentTabParam && currentTabParam !== activeTab) {
+      setActiveTab(currentTabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId });
+  };
 
   // Data States
   const [dashboardData, setDashboardData] = useState(null);
@@ -149,7 +164,6 @@ export const AdminDashboard = () => {
     loadAllData();
   }, []);
 
-  // Handlers
   const handleCreateBusiness = async (e) => {
     e.preventDefault();
     try {
@@ -261,7 +275,6 @@ export const AdminDashboard = () => {
     }
   };
 
-  // Filtered lists
   const filteredBusinesses = businesses.filter((b) => {
     const matchesSearch =
       b.name.toLowerCase().includes(searchBiz.toLowerCase()) ||
@@ -293,153 +306,156 @@ export const AdminDashboard = () => {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'businesses', label: 'Manage Businesses', icon: Building2, count: businesses.length },
-    { id: 'users', label: 'Manage Users', icon: Users, count: usersList.length },
+    { id: 'businesses', label: 'Businesses', icon: Building2, count: businesses.length },
+    { id: 'users', label: 'Users', icon: Users, count: usersList.length },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, count: subscriptions.length },
     { id: 'system_usage', label: 'System Usage', icon: Activity },
-    { id: 'plans', label: 'Manage Plans', icon: Layers, count: plans.length },
+    { id: 'plans', label: 'Plans', icon: Layers, count: plans.length },
     { id: 'api_usage', label: 'API Usage', icon: Terminal },
     { id: 'ai_usage', label: 'AI Usage', icon: Sparkles },
-    { id: 'audit_logs', label: 'System Activity Logs', icon: ShieldCheck, count: auditLogs.length },
+    { id: 'audit_logs', label: 'Audit Logs', icon: ShieldCheck, count: auditLogs.length },
   ];
 
-  const planColors = {
-    free: '#94a3b8',
-    starter: '#3b82f6',
-    business: '#8b5cf6',
-    enterprise: '#06b6d4',
+  const monochromePieColors = ['#111111', '#525252', '#737373', '#d4d4d4'];
+
+  const tooltipStyle = {
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E5E5E5',
+    borderRadius: '6px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    color: '#111111',
+    fontSize: '11px',
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 pb-16">
+    <div className="space-y-6 pb-16">
       {/* Toast banner */}
       {toastMsg && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-slate-900 border border-brand-500/40 text-xs text-white shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 z-50 p-3.5 rounded-lg bg-white border border-[#e5e5e5] text-xs text-[#111111] shadow-md flex items-center gap-2.5">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           <span>{toastMsg}</span>
-          <button onClick={() => setToastMsg('')} className="text-slate-400 hover:text-white">
+          <button onClick={() => setToastMsg('')} className="text-[#666666] hover:text-[#111111]">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/70 to-slate-900 p-6 sm:p-8 border border-slate-800 shadow-2xl">
-        <div className="absolute -right-16 -top-16 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+      <div className="rounded-lg bg-white p-6 border border-[#e5e5e5] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 flex items-center gap-1.5">
-                <ShieldCheck className="w-3 h-3 text-brand-400" />
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-neutral-100 text-neutral-800 border border-neutral-200 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-neutral-600" />
                 Super Admin Console
               </span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                 Cluster Operational
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-[#111111] tracking-tight">
               SaaS Administration & Platform Governance
             </h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+            <p className="text-xs text-[#666666] mt-0.5 max-w-2xl">
               Global control center to manage business tenants, oversee user access, configure tiered subscription plans, inspect API velocity, and track real-time AI quota utilization.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={loadAllData}
               disabled={refreshing}
-              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#f7f7f7] text-[#111111] text-xs font-medium border border-[#d9d9d9] transition shadow-xs"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-[#666666] ${refreshing ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
             <button
               onClick={() => setShowAddBizModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-glow transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white text-xs font-semibold shadow-xs transition"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Add Business</span>
             </button>
           </div>
         </div>
 
         {/* Global KPI Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-6 border-t border-slate-800/60">
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Platform MRR</span>
-            <p className="text-lg font-black text-white mt-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5 pt-5 border-t border-[#e5e5e5]">
+          <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+            <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Platform MRR</span>
+            <p className="text-lg font-bold text-[#111111] mt-0.5">
               ${(dashboardData?.mrr || 4880).toLocaleString()}
             </p>
-            <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5 mt-0.5">
+            <span className="text-[10px] text-emerald-700 font-medium flex items-center gap-0.5 mt-0.5">
               <TrendingUp className="w-3 h-3" /> +{dashboardData?.mrr_growth || 14.8}%
             </span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Active Businesses</span>
-            <p className="text-lg font-black text-white mt-0.5">
+          <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+            <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Active Businesses</span>
+            <p className="text-lg font-bold text-[#111111] mt-0.5">
               {dashboardData?.active_businesses || businesses.length}
             </p>
-            <span className="text-[10px] text-slate-400 font-medium">Multi-tenant</span>
+            <span className="text-[10px] text-[#666666]">Multi-tenant</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Platform Users</span>
-            <p className="text-lg font-black text-white mt-0.5">
+          <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+            <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Total Platform Users</span>
+            <p className="text-lg font-bold text-[#111111] mt-0.5">
               {dashboardData?.total_users || usersList.length}
             </p>
-            <span className="text-[10px] text-brand-300 font-medium">Across 4 Roles</span>
+            <span className="text-[10px] text-[#666666]">Across 4 Roles</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Monthly API Requests</span>
-            <p className="text-lg font-black text-white mt-0.5">
+          <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+            <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Monthly API Requests</span>
+            <p className="text-lg font-bold text-[#111111] mt-0.5">
               {((dashboardData?.monthly_api_requests || 128450) / 1000).toFixed(1)}k
             </p>
-            <span className="text-[10px] text-cyan-400 font-medium">78ms Avg Latency</span>
+            <span className="text-[10px] text-[#666666]">78ms Avg Latency</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Monthly AI Queries</span>
-            <p className="text-lg font-black text-white mt-0.5">
+          <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+            <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Monthly AI Queries</span>
+            <p className="text-lg font-bold text-[#111111] mt-0.5">
               {((dashboardData?.monthly_ai_requests || 6820)).toLocaleString()}
             </p>
-            <span className="text-[10px] text-purple-400 font-medium">Chat & Scoring</span>
+            <span className="text-[10px] text-[#666666]">Chat & Scoring</span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">System Uptime</span>
-            <p className="text-lg font-black text-emerald-400 mt-0.5">
+          <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+            <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">System Uptime</span>
+            <p className="text-lg font-bold text-[#111111] mt-0.5">
               {dashboardData?.system_uptime || '99.98%'}
             </p>
-            <span className="text-[10px] text-slate-400 font-medium">Zero Downtime</span>
+            <span className="text-[10px] text-emerald-700 font-medium">Zero Downtime</span>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-1.5 border-b border-[#e5e5e5] pb-2 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition ${
                 isActive
-                  ? 'bg-brand-600/20 text-brand-300 border border-brand-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-[#111111] text-white'
+                  : 'text-[#666666] hover:text-[#111111] hover:bg-[#f7f7f7]'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-brand-400' : 'text-slate-400'}`} />
+              <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
               {tab.count !== undefined && (
                 <span
                   className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                    isActive ? 'bg-brand-500/30 text-brand-200' : 'bg-slate-800 text-slate-400'
+                    isActive ? 'bg-white/20 text-white' : 'bg-[#f3f3f3] text-[#666666]'
                   }`}
                 >
                   {tab.count}
@@ -450,119 +466,121 @@ export const AdminDashboard = () => {
         })}
       </div>
 
-      {/* ========================================================================= */}
       {/* TAB 1: OVERVIEW */}
-      {/* ========================================================================= */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Plan Distribution Chart */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+            <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white">Subscription Distribution</h3>
-                  <p className="text-xs text-slate-400">Tenants categorized by tier</p>
+                  <h3 className="text-sm font-semibold text-[#111111]">Subscription Distribution</h3>
+                  <p className="text-xs text-[#666666]">Tenants categorized by tier</p>
                 </div>
-                <CreditCard className="w-4 h-4 text-brand-400" />
+                <CreditCard className="w-4 h-4 text-[#8a8a8a]" />
               </div>
 
-              <div className="h-48 flex items-center justify-center">
+              <div className="h-44 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <RePieChart>
                     <Pie
                       data={dashboardData?.plan_distribution || []}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
-                      paddingAngle={4}
+                      innerRadius={45}
+                      outerRadius={70}
+                      paddingAngle={3}
                       dataKey="count"
                     >
                       {(dashboardData?.plan_distribution || []).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || '#6366f1'} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={monochromePieColors[index % monochromePieColors.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px' }}
-                    />
+                    <Tooltip contentStyle={tooltipStyle} />
                   </RePieChart>
                 </ResponsiveContainer>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
-                {(dashboardData?.plan_distribution || []).map((item) => (
-                  <div key={item.tier} className="flex items-center gap-2 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-slate-300 font-medium">{item.tier}:</span>
-                    <span className="text-white font-bold">{item.count}</span>
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#e5e5e5]">
+                {(dashboardData?.plan_distribution || []).map((item, idx) => (
+                  <div key={item.tier} className="flex items-center gap-1.5 text-xs">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: monochromePieColors[idx % monochromePieColors.length] }}
+                    />
+                    <span className="text-[#666666] font-medium capitalize">{item.tier}:</span>
+                    <span className="text-[#111111] font-bold">{item.count}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Platform Infrastructure Health */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 lg:col-span-2">
+            <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-3.5 lg:col-span-2 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white">System Health & Core Services</h3>
-                  <p className="text-xs text-slate-400">Real-time status of compute, broker, and AI endpoints</p>
+                  <h3 className="text-sm font-semibold text-[#111111]">System Health & Core Services</h3>
+                  <p className="text-xs text-[#666666]">Status of compute, broker, and AI endpoints</p>
                 </div>
-                <Server className="w-4 h-4 text-emerald-400" />
+                <Server className="w-4 h-4 text-emerald-600" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/80 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-medium">FastAPI Engine</span>
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Online
+                    <span className="text-[#666666] font-medium">FastAPI Engine</span>
+                    <span className="text-emerald-700 font-semibold flex items-center gap-1 text-[11px]">
+                      <Check className="w-3 h-3 text-emerald-600" /> Online
                     </span>
                   </div>
-                  <p className="text-sm font-black text-white">78ms Response</p>
-                  <p className="text-[10px] text-slate-500">HTTP/2 • REST & Async</p>
+                  <p className="text-sm font-bold text-[#111111]">78ms Response</p>
+                  <p className="text-[10px] text-[#8a8a8a]">HTTP/2 • REST & Async</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/80 space-y-2">
+                <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-medium">Postgres & SQLite</span>
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Active
+                    <span className="text-[#666666] font-medium">Postgres Database</span>
+                    <span className="text-emerald-700 font-semibold flex items-center gap-1 text-[11px]">
+                      <Check className="w-3 h-3 text-emerald-600" /> Active
                     </span>
                   </div>
-                  <p className="text-sm font-black text-white">14 Connections</p>
-                  <p className="text-[10px] text-slate-500">Pool healthy • Latency 1.2ms</p>
+                  <p className="text-sm font-bold text-[#111111]">14 Connections</p>
+                  <p className="text-[10px] text-[#8a8a8a]">Pool healthy • Latency 1.2ms</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/80 space-y-2">
+                <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-medium">AI & ML Pipeline</span>
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Ready
+                    <span className="text-[#666666] font-medium">AI & ML Pipeline</span>
+                    <span className="text-emerald-700 font-semibold flex items-center gap-1 text-[11px]">
+                      <Check className="w-3 h-3 text-emerald-600" /> Ready
                     </span>
                   </div>
-                  <p className="text-sm font-black text-white">Multi-LLM Guard</p>
-                  <p className="text-[10px] text-slate-500">Gemini • GPT-4o • Mock</p>
+                  <p className="text-sm font-bold text-[#111111]">Multi-LLM Guard</p>
+                  <p className="text-[10px] text-[#8a8a8a]">Gemini • GPT-4o • Fallback</p>
                 </div>
               </div>
 
-              {/* Real-time system activity ticker */}
+              {/* Recent activity ticker */}
               <div className="pt-2">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-semibold text-[#666666] uppercase tracking-wider mb-2">
                   Recent Platform Operations
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {(dashboardData?.recent_activities || []).map((act, idx) => (
                     <div
                       key={act.id || idx}
-                      className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] flex items-center justify-between text-xs"
                     >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-neutral-200 text-neutral-800">
                           {act.action}
                         </span>
-                        <span className="text-slate-200 truncate">{act.details}</span>
+                        <span className="text-[#111111] truncate">{act.details}</span>
                       </div>
-                      <span className="text-[10px] text-slate-500 whitespace-nowrap pl-2">
+                      <span className="text-[10px] text-[#8a8a8a] whitespace-nowrap pl-2 font-mono">
                         {act.created_at ? new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'just now'}
                       </span>
                     </div>
@@ -574,28 +592,26 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 2: MANAGE BUSINESSES */}
-      {/* ========================================================================= */}
       {activeTab === 'businesses' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <div className="relative w-full sm:w-72">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-[#8a8a8a] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search businesses by name or slug..."
+                  placeholder="Search businesses..."
                   value={searchBiz}
                   onChange={(e) => setSearchBiz(e.target.value)}
-                  className="w-full bg-slate-950/70 text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] text-xs rounded-md pl-8 pr-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
               <select
                 value={filterPlan}
                 onChange={(e) => setFilterPlan(e.target.value)}
-                className="bg-slate-950/70 text-slate-200 text-xs rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                className="bg-white text-[#111111] text-xs rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
               >
                 <option value="all">All Plans</option>
                 <option value="free">Free</option>
@@ -607,88 +623,87 @@ export const AdminDashboard = () => {
 
             <button
               onClick={() => setShowAddBizModal(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-glow"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white text-xs font-semibold transition shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create Tenant</span>
             </button>
           </div>
 
-          {/* Businesses Table */}
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/70 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] text-[#666666] uppercase text-[10px] tracking-wider border-b border-[#e5e5e5]">
                   <tr>
-                    <th className="px-6 py-4">Business / Organization</th>
-                    <th className="px-6 py-4">Plan Tier</th>
-                    <th className="px-6 py-4">Seats Used</th>
-                    <th className="px-6 py-4">Monthly Usage</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                    <th className="px-4 py-3">Business / Organization</th>
+                    <th className="px-4 py-3">Plan Tier</th>
+                    <th className="px-4 py-3">Seats Used</th>
+                    <th className="px-4 py-3">Monthly Usage</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {filteredBusinesses.map((b) => (
-                    <tr key={b.id} className="hover:bg-slate-800/30 transition">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs">
+                    <tr key={b.id} className="hover:bg-[#f8f8f8] transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-md bg-[#111111] flex items-center justify-center font-bold text-white text-xs">
                             {b.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-white">{b.name}</p>
-                            <p className="text-[11px] text-slate-500 font-mono">slug: {b.slug}</p>
+                            <p className="font-semibold text-[#111111]">{b.name}</p>
+                            <p className="text-[11px] text-[#8a8a8a] font-mono">slug: {b.slug}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 uppercase">
                           {b.plan || 'Starter'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-white">{b.users_count} users</span>
+                      <td className="px-4 py-3">
+                        <span className="font-semibold text-[#111111]">{b.users_count} users</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-slate-300">
-                            API: <span className="font-semibold text-white">{b.current_month_api_requests || 0}</span> calls
+                      <td className="px-4 py-3">
+                        <div className="space-y-0.5 text-[11px]">
+                          <p className="text-[#666666]">
+                            API: <span className="font-semibold text-[#111111]">{b.current_month_api_requests || 0}</span>
                           </p>
-                          <p className="text-[11px] text-slate-400">
-                            AI: <span className="font-semibold text-purple-300">{b.current_month_ai_requests || 0}</span> reqs
+                          <p className="text-[#666666]">
+                            AI: <span className="font-semibold text-[#111111]">{b.current_month_ai_requests || 0}</span>
                           </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                             b.is_active && b.status === 'ACTIVE'
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
                           }`}
                         >
                           {b.is_active ? b.status : 'SUSPENDED'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => {
                               setSelectedBiz({ ...b });
                               setShowEditBizModal(true);
                             }}
-                            className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition"
+                            className="p-1.5 rounded-md bg-white hover:bg-[#f7f7f7] text-[#666666] hover:text-[#111111] border border-[#d9d9d9] transition"
                             title="Edit Plan / Info"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleToggleBusinessStatus(b)}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                            className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition border ${
                               b.is_active
-                                ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20'
-                                : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
+                                ? 'bg-white text-rose-700 hover:bg-rose-50 border-rose-200'
+                                : 'bg-white text-emerald-700 hover:bg-emerald-50 border-emerald-200'
                             }`}
                           >
                             {b.is_active ? 'Suspend' : 'Activate'}
@@ -704,28 +719,26 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 3: MANAGE USERS */}
-      {/* ========================================================================= */}
       {activeTab === 'users' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-[#8a8a8a] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search user by name or email..."
+                  placeholder="Search users..."
                   value={searchUsers}
                   onChange={(e) => setSearchUsers(e.target.value)}
-                  className="w-full bg-slate-950/70 text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] text-xs rounded-md pl-8 pr-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="bg-slate-950/70 text-slate-200 text-xs rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                className="bg-white text-[#111111] text-xs rounded-md px-2.5 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
               >
                 <option value="all">All Roles</option>
                 <option value="SUPER_ADMIN">Super Admin</option>
@@ -737,7 +750,7 @@ export const AdminDashboard = () => {
               <select
                 value={filterOrg}
                 onChange={(e) => setFilterOrg(e.target.value)}
-                className="bg-slate-950/70 text-slate-200 text-xs rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                className="bg-white text-[#111111] text-xs rounded-md px-2.5 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
               >
                 <option value="all">All Businesses</option>
                 {businesses.map((b) => (
@@ -749,40 +762,40 @@ export const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/70 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] text-[#666666] uppercase text-[10px] tracking-wider border-b border-[#e5e5e5]">
                   <tr>
-                    <th className="px-6 py-4">User</th>
-                    <th className="px-6 py-4">Organization</th>
-                    <th className="px-6 py-4">Role</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Quick Actions</th>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Organization</th>
+                    <th className="px-4 py-3">Role</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Quick Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {filteredUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-800/30 transition">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-white text-xs">
+                    <tr key={u.id} className="hover:bg-[#f8f8f8] transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-[#f3f3f3] text-[#111111] flex items-center justify-center font-bold text-xs border border-[#e5e5e5]">
                             {u.full_name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-white">{u.full_name}</p>
-                            <p className="text-[11px] text-slate-500">{u.email}</p>
+                            <p className="font-semibold text-[#111111]">{u.full_name}</p>
+                            <p className="text-[11px] text-[#666666]">{u.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-medium text-slate-300">
+                      <td className="px-4 py-3 text-[#666666]">
                         {u.organization_name || 'Platform Global'}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <select
                           value={u.role}
                           onChange={(e) => handleUpdateUserRole(u.id, e.target.value)}
-                          className="bg-slate-900 text-xs font-semibold rounded-lg px-2 py-1 border border-slate-800 text-slate-200 focus:outline-none focus:border-brand-500"
+                          className="bg-white text-xs font-medium rounded-md px-2 py-1 border border-[#d9d9d9] text-[#111111] focus:outline-none focus:border-[#111111]"
                         >
                           <option value="SUPER_ADMIN">SUPER_ADMIN</option>
                           <option value="BUSINESS_ADMIN">BUSINESS_ADMIN</option>
@@ -790,27 +803,27 @@ export const AdminDashboard = () => {
                           <option value="EMPLOYEE">EMPLOYEE</option>
                         </select>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <button
                           onClick={() => handleToggleUserActive(u)}
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition ${
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition ${
                             u.is_active
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-neutral-100 text-neutral-600 border-neutral-200'
                           }`}
                         >
                           {u.is_active ? 'Active' : 'Inactive'}
                         </button>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => {
                             setSelectedUser(u);
                             setShowResetPwdModal(true);
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white hover:bg-[#f7f7f7] text-[#111111] text-xs font-medium border border-[#d9d9d9] transition"
                         >
-                          <Key className="w-3 h-3 text-amber-400" />
+                          <Key className="w-3 h-3 text-[#666666]" />
                           <span>Reset Password</span>
                         </button>
                       </td>
@@ -823,61 +836,59 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 4: VIEW SUBSCRIPTIONS */}
-      {/* ========================================================================= */}
       {activeTab === 'subscriptions' && (
         <div className="space-y-4">
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/70 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] text-[#666666] uppercase text-[10px] tracking-wider border-b border-[#e5e5e5]">
                   <tr>
-                    <th className="px-6 py-4">Tenant Business</th>
-                    <th className="px-6 py-4">Subscription Tier</th>
-                    <th className="px-6 py-4">Billing Cycle</th>
-                    <th className="px-6 py-4">Price</th>
-                    <th className="px-6 py-4">Current Period Renewal</th>
-                    <th className="px-6 py-4">Auto Renew</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Change Tier</th>
+                    <th className="px-4 py-3">Tenant Business</th>
+                    <th className="px-4 py-3">Subscription Tier</th>
+                    <th className="px-4 py-3">Billing Cycle</th>
+                    <th className="px-4 py-3">Price</th>
+                    <th className="px-4 py-3">Renewal Date</th>
+                    <th className="px-4 py-3">Auto Renew</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Change Tier</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {subscriptions.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-800/30 transition">
-                      <td className="px-6 py-4 font-bold text-white">
+                    <tr key={s.id} className="hover:bg-[#f8f8f8] transition">
+                      <td className="px-4 py-3 font-semibold text-[#111111]">
                         {s.organization_name || 'Business Tenant'}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 uppercase">
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 uppercase">
                           {s.plan_tier}
                         </span>
                       </td>
-                      <td className="px-6 py-4 capitalize text-slate-300 font-medium">
+                      <td className="px-4 py-3 capitalize text-[#666666]">
                         {s.billing_cycle}
                       </td>
-                      <td className="px-6 py-4 font-bold text-white">
+                      <td className="px-4 py-3 font-semibold text-[#111111]">
                         ${s.monthly_price}/mo
                       </td>
-                      <td className="px-6 py-4 text-slate-400 font-mono text-[11px]">
+                      <td className="px-4 py-3 text-[#666666] font-mono text-[11px]">
                         {s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : 'N/A'}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-[10px] font-bold ${s.auto_renew ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      <td className="px-4 py-3">
+                        <span className={`text-[10px] font-semibold ${s.auto_renew ? 'text-emerald-700' : 'text-[#8a8a8a]'}`}>
                           {s.auto_renew ? 'Enabled' : 'Disabled'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {s.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <select
                           value={s.plan_tier}
                           onChange={(e) => handleSubscriptionTierChange(s.id, e.target.value)}
-                          className="bg-slate-900 text-xs rounded-lg px-2.5 py-1 border border-slate-700 text-slate-200 focus:outline-none focus:border-brand-500"
+                          className="bg-white text-xs rounded-md px-2 py-1 border border-[#d9d9d9] text-[#111111] focus:outline-none focus:border-[#111111]"
                         >
                           <option value="free">Free</option>
                           <option value="starter">Starter</option>
@@ -894,104 +905,96 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 5: MONITOR SYSTEM USAGE */}
-      {/* ========================================================================= */}
       {activeTab === 'system_usage' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Cluster Storage</span>
-              <p className="text-xl font-black text-white">{systemUsage?.total_storage_gb || 1.3} GB</p>
-              <p className="text-[10px] text-slate-500">Database & OCR artifacts</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Cluster Storage</span>
+              <p className="text-xl font-bold text-[#111111]">{systemUsage?.total_storage_gb || 1.3} GB</p>
+              <p className="text-[10px] text-[#8a8a8a]">Database & OCR artifacts</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Active Tenants</span>
-              <p className="text-xl font-black text-white">{systemUsage?.active_tenants || 5} of {systemUsage?.total_tenants || 5}</p>
-              <p className="text-[10px] text-emerald-400">100% tenant availability</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Active Tenants</span>
+              <p className="text-xl font-bold text-[#111111]">{systemUsage?.active_tenants || 5} of {systemUsage?.total_tenants || 5}</p>
+              <p className="text-[10px] text-emerald-700 font-medium">100% tenant availability</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total AI Tokens</span>
-              <p className="text-xl font-black text-white">{((systemUsage?.total_ai_tokens || 2480000) / 1000000).toFixed(2)}M</p>
-              <p className="text-[10px] text-purple-400">Tokens this period</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Total AI Tokens</span>
+              <p className="text-xl font-bold text-[#111111]">{((systemUsage?.total_ai_tokens || 2480000) / 1000000).toFixed(2)}M</p>
+              <p className="text-[10px] text-[#666666]">Tokens this period</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Server CPU</span>
-              <p className="text-xl font-black text-white">{systemUsage?.server_metrics?.cpu_utilization_pct || 24.2}%</p>
-              <p className="text-[10px] text-slate-500">8 Background Workers</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Server CPU</span>
+              <p className="text-xl font-bold text-[#111111]">{systemUsage?.server_metrics?.cpu_utilization_pct || 24.2}%</p>
+              <p className="text-[10px] text-[#8a8a8a]">8 Background Workers</p>
             </div>
           </div>
 
           {/* Tenant-by-tenant Usage Table */}
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-xl space-y-3 p-6">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs space-y-3 p-5">
             <div>
-              <h3 className="text-sm font-bold text-white">Tenant Quota & Capacity Utilization</h3>
-              <p className="text-xs text-slate-400">Per-business consumption against subscription plan limits</p>
+              <h3 className="text-sm font-semibold text-[#111111]">Tenant Quota & Capacity Utilization</h3>
+              <p className="text-xs text-[#666666]">Per-business consumption against subscription plan limits</p>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/70 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] text-[#666666] uppercase text-[10px] tracking-wider border-b border-[#e5e5e5]">
                   <tr>
-                    <th className="px-4 py-3">Business</th>
-                    <th className="px-4 py-3">Plan</th>
-                    <th className="px-4 py-3">Seats Quota</th>
-                    <th className="px-4 py-3">AI Requests Quota</th>
-                    <th className="px-4 py-3">API Requests Quota</th>
-                    <th className="px-4 py-3">Storage</th>
+                    <th className="px-4 py-2.5">Business</th>
+                    <th className="px-4 py-2.5">Plan</th>
+                    <th className="px-4 py-2.5">Seats Quota</th>
+                    <th className="px-4 py-2.5">AI Requests Quota</th>
+                    <th className="px-4 py-2.5">API Requests Quota</th>
+                    <th className="px-4 py-2.5">Storage</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {(systemUsage?.tenants || []).map((t) => (
-                    <tr key={t.organization_id} className="hover:bg-slate-800/30 transition">
-                      <td className="px-4 py-3 font-bold text-white">{t.organization_name}</td>
+                    <tr key={t.organization_id} className="hover:bg-[#f8f8f8] transition">
+                      <td className="px-4 py-3 font-semibold text-[#111111]">{t.organization_name}</td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 uppercase">
                           {t.plan_tier}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-semibold text-white">{t.users_count}</span> / {t.users_limit}
+                        <span className="font-semibold text-[#111111]">{t.users_count}</span> / {t.users_limit}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="w-36 space-y-1">
+                        <div className="w-32 space-y-1">
                           <div className="flex justify-between text-[10px]">
                             <span>{t.ai_requests}</span>
-                            <span className={t.ai_percent >= 80 ? 'text-amber-400 font-bold' : 'text-slate-400'}>
+                            <span className={t.ai_percent >= 80 ? 'text-amber-700 font-semibold' : 'text-[#666666]'}>
                               {t.ai_limit >= 999999 ? 'Unlimited' : `${t.ai_percent}%`}
                             </span>
                           </div>
-                          <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="w-full h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${
-                                t.ai_percent >= 90
-                                  ? 'bg-rose-500'
-                                  : t.ai_percent >= 70
-                                  ? 'bg-amber-500'
-                                  : 'bg-purple-500'
-                              }`}
+                              className="h-full rounded-full bg-[#111111]"
                               style={{ width: `${Math.min(100, t.ai_percent)}%` }}
                             />
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="w-36 space-y-1">
+                        <div className="w-32 space-y-1">
                           <div className="flex justify-between text-[10px]">
                             <span>{t.api_requests}</span>
-                            <span className="text-slate-400">
+                            <span className="text-[#666666]">
                               {t.api_limit >= 999999 ? 'Unlimited' : `${t.api_percent}%`}
                             </span>
                           </div>
-                          <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="w-full h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-cyan-500"
+                              className="h-full rounded-full bg-[#525252]"
                               style={{ width: `${Math.min(100, t.api_percent)}%` }}
                             />
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[11px] text-slate-400">
+                      <td className="px-4 py-3 font-mono text-[11px] text-[#666666]">
                         {t.storage_mb} MB
                       </td>
                     </tr>
@@ -1003,88 +1006,82 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 6: MANAGE PLANS */}
-      {/* ========================================================================= */}
       {activeTab === 'plans' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-white">Subscription Tier Configurations</h3>
-              <p className="text-xs text-slate-400">Define seat capacities, monthly AI allowances, and feature flags</p>
+              <h3 className="text-sm font-semibold text-[#111111]">Subscription Tier Configurations</h3>
+              <p className="text-xs text-[#666666]">Define seat capacities, monthly AI allowances, and feature flags</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {plans.map((p) => (
               <div
                 key={p.id}
-                className={`glass-panel p-6 rounded-3xl border flex flex-col justify-between transition-all duration-200 relative ${
-                  p.is_popular
-                    ? 'border-brand-500/50 shadow-glow bg-brand-950/10'
-                    : 'border-slate-800 hover:border-slate-700'
+                className={`bg-white p-5 rounded-lg border flex flex-col justify-between transition-all duration-200 relative ${
+                  p.is_popular ? 'border-[#111111] shadow-xs' : 'border-[#e5e5e5]'
                 }`}
               >
                 {p.badge && (
-                  <span className="absolute -top-3 right-6 text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md">
+                  <span className="absolute -top-2.5 right-4 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#111111] text-white">
                     {p.badge}
                   </span>
                 )}
 
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-lg font-black text-white">{p.name}</h4>
-                    <span className="text-xs font-bold uppercase text-slate-500 font-mono">{p.id}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h4 className="text-base font-bold text-[#111111]">{p.name}</h4>
+                    <span className="text-xs font-mono text-[#8a8a8a] uppercase">{p.id}</span>
                   </div>
-                  <p className="text-xs text-slate-400 min-h-[36px]">{p.description}</p>
+                  <p className="text-xs text-[#666666] min-h-[32px]">{p.description}</p>
 
-                  <div className="my-5">
+                  <div className="my-4">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-white">${p.monthly_price}</span>
-                      <span className="text-xs text-slate-400 font-medium">/ month</span>
+                      <span className="text-2xl font-bold text-[#111111]">${p.monthly_price}</span>
+                      <span className="text-xs text-[#666666]">/ month</span>
                     </div>
                     {p.annual_price > 0 && (
-                      <p className="text-[10px] text-slate-500 mt-0.5">Billed ${p.annual_price}/yr annually</p>
+                      <p className="text-[10px] text-[#8a8a8a] mt-0.5">Billed ${p.annual_price}/yr annually</p>
                     )}
                   </div>
 
-                  {/* Quotas */}
-                  <div className="space-y-2.5 py-4 border-y border-slate-800/80 text-xs">
+                  <div className="space-y-2 py-3 border-y border-[#e5e5e5] text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400">User Seats</span>
-                      <span className="font-bold text-white">{p.max_users} users</span>
+                      <span className="text-[#666666]">User Seats</span>
+                      <span className="font-semibold text-[#111111]">{p.max_users} users</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400">AI Requests</span>
-                      <span className="font-bold text-purple-300">{p.max_ai_requests.toLocaleString()} /mo</span>
+                      <span className="text-[#666666]">AI Requests</span>
+                      <span className="font-semibold text-[#111111]">{p.max_ai_requests.toLocaleString()} /mo</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400">API Calls</span>
-                      <span className="font-bold text-cyan-300">{p.max_api_requests.toLocaleString()} /mo</span>
+                      <span className="text-[#666666]">API Calls</span>
+                      <span className="font-semibold text-[#111111]">{p.max_api_requests.toLocaleString()} /mo</span>
                     </div>
                   </div>
 
-                  {/* Features List */}
-                  <div className="mt-4 space-y-2">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Entitlements</p>
+                  <div className="mt-3.5 space-y-1.5">
+                    <p className="text-[10px] font-semibold text-[#8a8a8a] uppercase tracking-wider">Entitlements</p>
                     {(p.features || []).map((feat) => (
-                      <div key={feat} className="flex items-center gap-2 text-[11px] text-slate-300">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                      <div key={feat} className="flex items-center gap-1.5 text-[11px] text-[#666666]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                         <span className="capitalize">{feat.replace(/_/g, ' ')}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-800">
+                <div className="mt-5 pt-3.5 border-t border-[#e5e5e5]">
                   <button
                     onClick={() => {
                       setSelectedPlan({ ...p });
                       setShowEditPlanModal(true);
                     }}
-                    className="w-full py-2 rounded-xl bg-slate-800 hover:bg-brand-600 text-white font-bold text-xs transition border border-slate-700 hover:border-brand-500"
+                    className="w-full py-1.5 rounded-md bg-white hover:bg-[#f7f7f7] text-[#111111] font-semibold text-xs transition border border-[#d9d9d9]"
                   >
-                    Edit Tier Settings
+                    Edit Tier
                   </button>
                 </div>
               </div>
@@ -1093,69 +1090,57 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 7: VIEW API USAGE */}
-      {/* ========================================================================= */}
       {activeTab === 'api_usage' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Monthly Calls</span>
-              <p className="text-2xl font-black text-white">{apiUsage?.total_requests?.toLocaleString() || '128,450'}</p>
-              <p className="text-[10px] text-cyan-400">{apiUsage?.requests_per_minute || 2.97} requests / min</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Total Monthly Calls</span>
+              <p className="text-2xl font-bold text-[#111111]">{apiUsage?.total_requests?.toLocaleString() || '128,450'}</p>
+              <p className="text-[10px] text-[#666666]">{apiUsage?.requests_per_minute || 2.97} req / min</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Avg Latency</span>
-              <p className="text-2xl font-black text-emerald-400">{apiUsage?.avg_latency_ms || 78.4} ms</p>
-              <p className="text-[10px] text-slate-500">FastAPI Async pipeline</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Avg Latency</span>
+              <p className="text-2xl font-bold text-emerald-700">{apiUsage?.avg_latency_ms || 78.4} ms</p>
+              <p className="text-[10px] text-[#8a8a8a]">FastAPI Async pipeline</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Success Rate</span>
-              <p className="text-2xl font-black text-white">99.3%</p>
-              <p className="text-[10px] text-slate-400">
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Success Rate</span>
+              <p className="text-2xl font-bold text-[#111111]">99.3%</p>
+              <p className="text-[10px] text-[#8a8a8a]">
                 2xx: {apiUsage?.status_distribution?.['2xx'] || 124000} • 4xx: {apiUsage?.status_distribution?.['4xx'] || 3600}
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Endpoints */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
-              <h3 className="text-sm font-bold text-white">Most Active API Routes</h3>
-              <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-3.5 shadow-xs">
+              <h3 className="text-sm font-semibold text-[#111111]">Most Active API Routes</h3>
+              <div className="space-y-2.5">
                 {(apiUsage?.top_endpoints || []).map((ep) => (
                   <div key={ep.endpoint} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono text-slate-300">{ep.endpoint}</span>
-                      <span className="font-bold text-white">{ep.requests.toLocaleString()} ({ep.share}%)</span>
+                      <span className="font-mono text-[#111111]">{ep.endpoint}</span>
+                      <span className="font-semibold text-[#111111]">{ep.requests.toLocaleString()} ({ep.share}%)</span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${ep.share}%` }} />
+                    <div className="w-full h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
+                      <div className="h-full bg-[#111111] rounded-full" style={{ width: `${ep.share}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Daily Trend Chart */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
-              <h3 className="text-sm font-bold text-white">7-Day Request Volume & Latency</h3>
-              <div className="h-60">
+            <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-3.5 shadow-xs">
+              <h3 className="text-sm font-semibold text-[#111111]">7-Day Request Volume & Latency</h3>
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={apiUsage?.daily_trends || []}>
-                    <defs>
-                      <linearGradient id="apiGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
-                    <XAxis dataKey="day" stroke="#94a3b8" fontSize={10} />
-                    <YAxis stroke="#94a3b8" fontSize={10} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px' }}
-                    />
-                    <Area type="monotone" dataKey="requests" stroke="#06b6d4" fillOpacity={1} fill="url(#apiGrad)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
+                    <XAxis dataKey="day" stroke="#8a8a8a" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#8a8a8a" fontSize={10} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Area type="monotone" dataKey="requests" stroke="#111111" fill="#f3f3f3" strokeWidth={1.5} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -1164,64 +1149,60 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 8: VIEW AI USAGE */}
-      {/* ========================================================================= */}
       {activeTab === 'ai_usage' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total AI Prompts</span>
-              <p className="text-2xl font-black text-white">{aiUsage?.total_requests?.toLocaleString() || '6,820'}</p>
-              <p className="text-[10px] text-purple-400">Copilot, Leads, Reports</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Total AI Prompts</span>
+              <p className="text-2xl font-bold text-[#111111]">{aiUsage?.total_requests?.toLocaleString() || '6,820'}</p>
+              <p className="text-[10px] text-[#666666]">Copilot, Leads, Reports</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Tokens Consumed</span>
-              <p className="text-2xl font-black text-white">{((aiUsage?.total_tokens || 2480000) / 1000000).toFixed(2)}M</p>
-              <p className="text-[10px] text-slate-500">65% Prompt / 35% Completion</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Tokens Consumed</span>
+              <p className="text-2xl font-bold text-[#111111]">{((aiUsage?.total_tokens || 2480000) / 1000000).toFixed(2)}M</p>
+              <p className="text-[10px] text-[#8a8a8a]">65% Prompt / 35% Completion</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Estimated LLM Cost</span>
-              <p className="text-2xl font-black text-emerald-400">${aiUsage?.estimated_cost_usd || 4.96}</p>
-              <p className="text-[10px] text-slate-500">Blended compute pricing</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Estimated LLM Cost</span>
+              <p className="text-2xl font-bold text-emerald-700">${aiUsage?.estimated_cost_usd || 4.96}</p>
+              <p className="text-[10px] text-[#8a8a8a]">Blended compute pricing</p>
             </div>
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Active Models</span>
-              <p className="text-2xl font-black text-white">3 Engines</p>
-              <p className="text-[10px] text-slate-500">Gemini 1.5, GPT-4o, Mock</p>
+            <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
+              <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Active Models</span>
+              <p className="text-2xl font-bold text-[#111111]">3 Engines</p>
+              <p className="text-[10px] text-[#8a8a8a]">Gemini 1.5, GPT-4o, Mock</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Feature Distribution */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
-              <h3 className="text-sm font-bold text-white">AI Consumption by Feature Area</h3>
-              <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-3.5 shadow-xs">
+              <h3 className="text-sm font-semibold text-[#111111]">AI Consumption by Feature</h3>
+              <div className="space-y-2.5">
                 {(aiUsage?.feature_distribution || []).map((f) => (
                   <div key={f.feature} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-300 font-medium">{f.feature}</span>
-                      <span className="font-bold text-purple-300">{f.requests.toLocaleString()} ({f.share}%)</span>
+                      <span className="text-[#666666] font-medium">{f.feature}</span>
+                      <span className="font-semibold text-[#111111]">{f.requests.toLocaleString()} ({f.share}%)</span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-purple-500 rounded-full" style={{ width: `${f.share}%` }} />
+                    <div className="w-full h-1.5 rounded-full bg-[#e5e5e5] overflow-hidden">
+                      <div className="h-full bg-[#111111] rounded-full" style={{ width: `${f.share}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Model Distribution */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
-              <h3 className="text-sm font-bold text-white">Model Engine Share</h3>
-              <div className="space-y-3">
+            <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-3.5 shadow-xs">
+              <h3 className="text-sm font-semibold text-[#111111]">Model Engine Share</h3>
+              <div className="space-y-2">
                 {(aiUsage?.model_distribution || []).map((m) => (
-                  <div key={m.model} className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 flex items-center justify-between text-xs">
+                  <div key={m.model} className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5] flex items-center justify-between text-xs">
                     <div>
-                      <p className="font-bold text-white">{m.model}</p>
-                      <p className="text-[10px] text-slate-400">Tokens: {((m.tokens || 0) / 1000).toFixed(0)}k</p>
+                      <p className="font-semibold text-[#111111]">{m.model}</p>
+                      <p className="text-[10px] text-[#8a8a8a]">Tokens: {((m.tokens || 0) / 1000).toFixed(0)}k</p>
                     </div>
-                    <span className="font-black text-brand-300 text-sm">{m.share}%</span>
+                    <span className="font-bold text-[#111111] text-sm">{m.share}%</span>
                   </div>
                 ))}
               </div>
@@ -1230,38 +1211,36 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 9: SYSTEM ACTIVITY LOGS */}
-      {/* ========================================================================= */}
       {activeTab === 'audit_logs' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#8a8a8a] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search audit trail by action, actor, details..."
+                placeholder="Search audit trail..."
                 value={searchLogs}
                 onChange={(e) => setSearchLogs(e.target.value)}
-                className="w-full bg-slate-950/70 text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                className="w-full bg-white text-[#111111] text-xs rounded-md pl-8 pr-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
               />
             </div>
           </div>
 
-          <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
+          <div className="bg-white rounded-lg border border-[#e5e5e5] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/70 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] text-[#666666] uppercase text-[10px] tracking-wider border-b border-[#e5e5e5]">
                   <tr>
-                    <th className="px-6 py-4">Timestamp</th>
-                    <th className="px-6 py-4">Actor</th>
-                    <th className="px-6 py-4">Action</th>
-                    <th className="px-6 py-4">Resource</th>
-                    <th className="px-6 py-4">Details</th>
-                    <th className="px-6 py-4">IP Address</th>
+                    <th className="px-4 py-3">Timestamp</th>
+                    <th className="px-4 py-3">Actor</th>
+                    <th className="px-4 py-3">Action</th>
+                    <th className="px-4 py-3">Resource</th>
+                    <th className="px-4 py-3">Details</th>
+                    <th className="px-4 py-3">IP Address</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {filteredLogs.map((l) => (
                     <tr
                       key={l.id}
@@ -1269,31 +1248,31 @@ export const AdminDashboard = () => {
                         setSelectedLog(l);
                         setShowLogDetailModal(true);
                       }}
-                      className="hover:bg-slate-800/30 transition cursor-pointer"
+                      className="hover:bg-[#f8f8f8] transition cursor-pointer"
                     >
-                      <td className="px-6 py-4 text-slate-400 whitespace-nowrap font-mono text-[11px]">
+                      <td className="px-4 py-3 text-[#666666] whitespace-nowrap font-mono text-[11px]">
                         {l.created_at ? new Date(l.created_at).toLocaleString() : 'Recent'}
                       </td>
-                      <td className="px-6 py-4 font-semibold text-white">
+                      <td className="px-4 py-3 font-semibold text-[#111111]">
                         {l.user_name || 'System Worker'}
                         {l.organization_name && (
-                          <span className="block text-[10px] text-slate-500 font-normal">
+                          <span className="block text-[10px] text-[#8a8a8a] font-normal">
                             {l.organization_name}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
                           {l.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-mono text-[11px] text-slate-300">
+                      <td className="px-4 py-3 font-mono text-[11px] text-[#666666]">
                         {l.resource}
                       </td>
-                      <td className="px-6 py-4 text-slate-300 max-w-xs truncate">
+                      <td className="px-4 py-3 text-[#111111] max-w-xs truncate">
                         {l.details}
                       </td>
-                      <td className="px-6 py-4 text-slate-500 font-mono text-[11px]">
+                      <td className="px-4 py-3 text-[#8a8a8a] font-mono text-[11px]">
                         {l.ip_address || '127.0.0.1'}
                       </td>
                     </tr>
@@ -1305,50 +1284,48 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL: ADD BUSINESS */}
-      {/* ========================================================================= */}
       {showAddBizModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-lg p-6 rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Provision New Business Tenant</h3>
-              <button onClick={() => setShowAddBizModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg p-6 rounded-lg border border-[#e5e5e5] shadow-xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
+              <h3 className="text-sm font-semibold text-[#111111]">Provision New Business Tenant</h3>
+              <button onClick={() => setShowAddBizModal(false)} className="text-[#666666] hover:text-[#111111]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateBusiness} className="mt-4 space-y-4 text-xs">
+            <form onSubmit={handleCreateBusiness} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Company / Organization Name</label>
+                <label className="block text-[#111111] font-medium mb-1">Company / Organization Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Acme Corporation"
                   value={newBizForm.name}
                   onChange={(e) => setNewBizForm({ ...newBizForm, name: e.target.value })}
-                  className="w-full bg-slate-950 text-white rounded-xl px-3.5 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] rounded-md px-3 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">URL Identifier Slug</label>
+                  <label className="block text-[#111111] font-medium mb-1">URL Identifier Slug</label>
                   <input
                     type="text"
                     required
                     placeholder="acme-corp"
                     value={newBizForm.slug}
                     onChange={(e) => setNewBizForm({ ...newBizForm, slug: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3.5 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Subscription Plan</label>
+                  <label className="block text-[#111111] font-medium mb-1">Subscription Plan</label>
                   <select
                     value={newBizForm.plan_tier}
                     onChange={(e) => setNewBizForm({ ...newBizForm, plan_tier: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-2.5 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   >
                     <option value="free">Free ($0/mo)</option>
                     <option value="starter">Starter ($49/mo)</option>
@@ -1358,47 +1335,47 @@ export const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80">
-                <p className="text-[11px] font-bold text-brand-300 uppercase tracking-wider mb-2">
+              <div className="pt-2 border-t border-[#e5e5e5]">
+                <p className="text-[11px] font-semibold text-[#111111] uppercase tracking-wider mb-2">
                   Primary Administrator Account
                 </p>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Admin Full Name</label>
+                    <label className="block text-[#111111] font-medium mb-1">Admin Full Name</label>
                     <input
                       type="text"
                       required
                       placeholder="Jane Doe"
                       value={newBizForm.admin_name}
                       onChange={(e) => setNewBizForm({ ...newBizForm, admin_name: e.target.value })}
-                      className="w-full bg-slate-950 text-white rounded-xl px-3.5 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                      className="w-full bg-white text-[#111111] rounded-md px-3 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Admin Email Address</label>
+                    <label className="block text-[#111111] font-medium mb-1">Admin Email Address</label>
                     <input
                       type="email"
                       required
                       placeholder="admin@acme.com"
                       value={newBizForm.admin_email}
                       onChange={(e) => setNewBizForm({ ...newBizForm, admin_email: e.target.value })}
-                      className="w-full bg-slate-950 text-white rounded-xl px-3.5 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                      className="w-full bg-white text-[#111111] rounded-md px-3 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2.5 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowAddBizModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                  className="px-3.5 py-1.5 rounded-md text-[#666666] hover:text-[#111111]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold shadow-glow"
+                  className="px-4 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold shadow-xs"
                 >
                   Provision Tenant
                 </button>
@@ -1408,36 +1385,34 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL: EDIT BUSINESS */}
-      {/* ========================================================================= */}
       {showEditBizModal && selectedBiz && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Edit Business: {selectedBiz.name}</h3>
-              <button onClick={() => setShowEditBizModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg border border-[#e5e5e5] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
+              <h3 className="text-sm font-semibold text-[#111111]">Edit Business: {selectedBiz.name}</h3>
+              <button onClick={() => setShowEditBizModal(false)} className="text-[#666666] hover:text-[#111111]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateBusiness} className="mt-4 space-y-4 text-xs">
+            <form onSubmit={handleUpdateBusiness} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Organization Name</label>
+                <label className="block text-[#111111] font-medium mb-1">Organization Name</label>
                 <input
                   type="text"
                   value={selectedBiz.name}
                   onChange={(e) => setSelectedBiz({ ...selectedBiz, name: e.target.value })}
-                  className="w-full bg-slate-950 text-white rounded-xl px-3.5 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] rounded-md px-3 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Assigned Plan Tier</label>
+                <label className="block text-[#111111] font-medium mb-1">Assigned Plan Tier</label>
                 <select
                   value={selectedBiz.plan?.toLowerCase() || 'starter'}
                   onChange={(e) => setSelectedBiz({ ...selectedBiz, plan: e.target.value })}
-                  className="w-full bg-slate-950 text-white rounded-xl px-3 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] rounded-md px-2.5 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 >
                   <option value="free">Free Tier</option>
                   <option value="starter">Starter Plan</option>
@@ -1446,17 +1421,17 @@ export const AdminDashboard = () => {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2.5 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowEditBizModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                  className="px-3.5 py-1.5 rounded-md text-[#666666] hover:text-[#111111]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold shadow-glow"
+                  className="px-4 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold shadow-xs"
                 >
                   Save Changes
                 </button>
@@ -1466,115 +1441,113 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL: EDIT PLAN PARAMETERS */}
-      {/* ========================================================================= */}
       {showEditPlanModal && selectedPlan && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-lg p-6 rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Configure Plan: {selectedPlan.name}</h3>
-              <button onClick={() => setShowEditPlanModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg p-6 rounded-lg border border-[#e5e5e5] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
+              <h3 className="text-sm font-semibold text-[#111111]">Configure Plan: {selectedPlan.name}</h3>
+              <button onClick={() => setShowEditPlanModal(false)} className="text-[#666666] hover:text-[#111111]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdatePlan} className="mt-4 space-y-3.5 text-xs">
+            <form onSubmit={handleUpdatePlan} className="mt-4 space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Display Name</label>
+                  <label className="block text-[#111111] font-medium mb-1">Display Name</label>
                   <input
                     type="text"
                     value={selectedPlan.name}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, name: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Badge Tag</label>
+                  <label className="block text-[#111111] font-medium mb-1">Badge Tag</label>
                   <input
                     type="text"
                     value={selectedPlan.badge || ''}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, badge: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Description</label>
+                <label className="block text-[#111111] font-medium mb-1">Description</label>
                 <input
                   type="text"
                   value={selectedPlan.description || ''}
                   onChange={(e) => setSelectedPlan({ ...selectedPlan, description: e.target.value })}
-                  className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Monthly Price ($)</label>
+                  <label className="block text-[#111111] font-medium mb-1">Monthly Price ($)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={selectedPlan.monthly_price}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, monthly_price: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Annual Price ($)</label>
+                  <label className="block text-[#111111] font-medium mb-1">Annual Price ($)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={selectedPlan.annual_price}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, annual_price: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Max Users</label>
+                  <label className="block text-[#111111] font-medium mb-1">Max Users</label>
                   <input
                     type="number"
                     value={selectedPlan.max_users}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, max_users: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Max AI Reqs</label>
+                  <label className="block text-[#111111] font-medium mb-1">Max AI Reqs</label>
                   <input
                     type="number"
                     value={selectedPlan.max_ai_requests}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, max_ai_requests: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Max API Calls</label>
+                  <label className="block text-[#111111] font-medium mb-1">Max API Calls</label>
                   <input
                     type="number"
                     value={selectedPlan.max_api_requests}
                     onChange={(e) => setSelectedPlan({ ...selectedPlan, max_api_requests: e.target.value })}
-                    className="w-full bg-slate-950 text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-white text-[#111111] rounded-md px-3 py-1.5 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2.5 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowEditPlanModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                  className="px-3.5 py-1.5 rounded-md text-[#666666] hover:text-[#111111]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold shadow-glow"
+                  className="px-4 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold shadow-xs"
                 >
                   Update Plan
                 </button>
@@ -1584,48 +1557,46 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL: RESET USER PASSWORD */}
-      {/* ========================================================================= */}
       {showResetPwdModal && selectedUser && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-sm p-6 rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Reset User Password</h3>
-              <button onClick={() => setShowResetPwdModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm p-6 rounded-lg border border-[#e5e5e5] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
+              <h3 className="text-sm font-semibold text-[#111111]">Reset User Password</h3>
+              <button onClick={() => setShowResetPwdModal(false)} className="text-[#666666] hover:text-[#111111]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleResetPassword} className="mt-4 space-y-4 text-xs">
-              <p className="text-slate-400">
-                Enter a new temporary or permanent password for{' '}
-                <span className="text-white font-semibold">{selectedUser.email}</span>.
+            <form onSubmit={handleResetPassword} className="mt-4 space-y-3.5 text-xs">
+              <p className="text-[#666666]">
+                Enter a new password for{' '}
+                <span className="text-[#111111] font-semibold">{selectedUser.email}</span>.
               </p>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">New Password</label>
+                <label className="block text-[#111111] font-medium mb-1">New Password</label>
                 <input
                   type="password"
                   required
                   placeholder="Min 6 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-slate-950 text-white rounded-xl px-3.5 py-2.5 border border-slate-800 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white text-[#111111] rounded-md px-3 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowResetPwdModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                  className="px-3.5 py-1.5 rounded-md text-[#666666] hover:text-[#111111]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold"
+                  className="px-4 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold shadow-xs"
                 >
                   Set Password
                 </button>
@@ -1635,43 +1606,41 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL: AUDIT LOG DETAIL */}
-      {/* ========================================================================= */}
       {showLogDetailModal && selectedLog && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Audit Event Details</h3>
-              <button onClick={() => setShowLogDetailModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg border border-[#e5e5e5] shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
+              <h3 className="text-sm font-semibold text-[#111111]">Audit Event Details</h3>
+              <button onClick={() => setShowLogDetailModal(false)} className="text-[#666666] hover:text-[#111111]">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="mt-4 space-y-3 text-xs">
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Action Event</span>
-                <p className="font-bold text-white">{selectedLog.action}</p>
+                <span className="text-[10px] text-[#8a8a8a] uppercase font-semibold">Action Event</span>
+                <p className="font-semibold text-[#111111]">{selectedLog.action}</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Actor / Initiator</span>
-                <p className="text-slate-200">{selectedLog.user_name} ({selectedLog.user_email || 'Service User'})</p>
+                <span className="text-[10px] text-[#8a8a8a] uppercase font-semibold">Actor / Initiator</span>
+                <p className="text-[#111111]">{selectedLog.user_name} ({selectedLog.user_email || 'Service User'})</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Tenant Organization</span>
-                <p className="text-slate-200">{selectedLog.organization_name || 'Global'}</p>
+                <span className="text-[10px] text-[#8a8a8a] uppercase font-semibold">Tenant Organization</span>
+                <p className="text-[#111111]">{selectedLog.organization_name || 'Global'}</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Target Resource</span>
-                <p className="font-mono text-brand-300">{selectedLog.resource}</p>
+                <span className="text-[10px] text-[#8a8a8a] uppercase font-semibold">Target Resource</span>
+                <p className="font-mono text-[#111111]">{selectedLog.resource}</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Details / Payload</span>
-                <p className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-[11px] break-words">
+                <span className="text-[10px] text-[#8a8a8a] uppercase font-semibold">Details / Payload</span>
+                <p className="p-2.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] text-[#111111] font-mono text-[11px] break-words">
                   {selectedLog.details}
                 </p>
               </div>
-              <div className="flex justify-between pt-2 text-[10px] text-slate-500 font-mono">
+              <div className="flex justify-between pt-2 text-[10px] text-[#8a8a8a] font-mono border-t border-[#e5e5e5]">
                 <span>IP: {selectedLog.ip_address}</span>
                 <span>{new Date(selectedLog.created_at).toLocaleString()}</span>
               </div>

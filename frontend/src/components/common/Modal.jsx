@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export const Modal = ({ isOpen, onClose, title, children }) => {
+export const Modal = ({ isOpen, onClose, title, description, children }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -20,21 +20,24 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Subtle Backdrop Overlay */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <h3 className="text-lg font-semibold text-white tracking-tight">{title}</h3>
+      <div className="relative w-full max-w-lg rounded-lg bg-white border border-[#E5E5E5] shadow-modal p-6 z-10 text-[#111111] animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-start justify-between pb-4 border-b border-[#EBEBEB]">
+          <div>
+            <h3 className="text-base font-semibold text-[#111111] tracking-tight">{title}</h3>
+            {description && <p className="text-xs text-[#666666] mt-0.5">{description}</p>}
+          </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1 rounded-md text-[#8A8A8A] hover:text-[#111111] hover:bg-[#F7F7F7] transition"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
         <div className="mt-4">{children}</div>

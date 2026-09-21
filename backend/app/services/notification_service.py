@@ -116,15 +116,17 @@ def dispatch_invoice_processed(
     invoice_number: str,
     customer_name: str,
     total_amount: float,
+    confidence: Optional[float] = None,
     invoice_id: Optional[str] = None,
 ) -> Notification:
     """Trigger notification for Invoice Processing Completed."""
+    conf_str = f" with {confidence:.1f}% OCR confidence" if confidence is not None else ""
     return create_notification(
         db=db,
         org_id=org_id,
         notif_type="INVOICE_PROCESSED",
         title=f"Invoice Processed: {invoice_number}",
-        message=f"Document parsed for {customer_name}. Total: ${total_amount:,.2f} extracted with 98.4% OCR confidence.",
+        message=f"Document parsed for {customer_name}. Total: ${total_amount:,.2f} extracted{conf_str}.",
         link_url=f"/invoices?invoice_id={invoice_id}" if invoice_id else "/invoices",
     )
 

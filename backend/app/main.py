@@ -1,8 +1,17 @@
+import sys
+from pathlib import Path
+
+# Ensure backend root is in sys.path for direct script execution
+_backend_dir = str(Path(__file__).resolve().parent.parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+
 from app.core.exceptions import setup_exception_handlers
 from app.api.v1.router import api_router
 from app.db.session import SessionLocal

@@ -3,49 +3,50 @@ import {
   Target,
   Plus,
   Search,
-  Sparkles,
-  TrendingUp,
-  Building,
   DollarSign,
-  Phone,
-  Mail,
-  CheckCircle2,
   Clock,
-  Calendar,
-  UserCheck,
   Flame,
   Sun,
   Snowflake,
-  Filter,
   Columns,
   Table as TableIcon,
   Eye,
   Edit2,
   Trash2,
-  ArrowRight,
   RefreshCw,
   X,
-  SlidersHorizontal,
-  ChevronRight,
   HelpCircle,
   User,
-  Briefcase,
-  AlertCircle,
+  CheckCircle2,
+  TrendingUp,
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { StatCard } from '../../components/common/StatCard';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const LeadsPage = () => {
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialView = searchParams.get('view') || 'kanban';
+
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'table'
+  const [viewMode, setViewMode] = useState(initialView);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterClassification, setFilterClassification] = useState('');
   const [filterSource, setFilterSource] = useState('');
   const [filterAssignee, setFilterAssignee] = useState('');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    if (viewParam && (viewParam === 'kanban' || viewParam === 'table')) {
+      setViewMode(viewParam);
+    }
+  }, [searchParams]);
 
   // Modals & Drawers
   const [showAddModal, setShowAddModal] = useState(false);
@@ -75,13 +76,13 @@ export const LeadsPage = () => {
   });
 
   const leadStatuses = [
-    { id: 'NEW', label: 'New', color: 'bg-slate-800 text-slate-300 border-slate-700' },
-    { id: 'CONTACTED', label: 'Contacted', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
-    { id: 'QUALIFIED', label: 'Qualified', color: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
-    { id: 'PROPOSAL', label: 'Proposal', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' },
-    { id: 'NEGOTIATION', label: 'Negotiation', color: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
-    { id: 'CONVERTED', label: 'Converted', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
-    { id: 'LOST', label: 'Lost', color: 'bg-rose-500/10 text-rose-400 border-rose-500/30' },
+    { id: 'NEW', label: 'New', color: 'bg-neutral-100 text-neutral-800 border-neutral-300' },
+    { id: 'CONTACTED', label: 'Contacted', color: 'bg-neutral-100 text-neutral-800 border-neutral-300' },
+    { id: 'QUALIFIED', label: 'Qualified', color: 'bg-neutral-100 text-neutral-800 border-neutral-300' },
+    { id: 'PROPOSAL', label: 'Proposal', color: 'bg-neutral-100 text-neutral-800 border-neutral-300' },
+    { id: 'NEGOTIATION', label: 'Negotiation', color: 'bg-amber-50 text-amber-800 border-amber-200' },
+    { id: 'CONVERTED', label: 'Converted', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+    { id: 'LOST', label: 'Lost', color: 'bg-rose-50 text-rose-800 border-rose-200' },
   ];
 
   const leadSources = [
@@ -121,7 +122,7 @@ export const LeadsPage = () => {
         setUsers(res.data.data);
       }
     } catch (err) {
-      // Non-blocking if employee has restricted users permission
+      // restricted permission
     }
   };
 
@@ -142,13 +143,11 @@ export const LeadsPage = () => {
     fetchRules();
   }, [search, filterStatus, filterClassification, filterSource, filterAssignee]);
 
-  // Open Lead Details
   const handleViewLead = (lead) => {
     setSelectedLead(lead);
     setShowDetailDrawer(true);
   };
 
-  // Open Edit Modal
   const handleOpenEdit = (lead) => {
     setSelectedLead(lead);
     setFormData({
@@ -168,19 +167,16 @@ export const LeadsPage = () => {
     setShowEditModal(true);
   };
 
-  // Open Delete Modal
   const handleOpenDelete = (lead) => {
     setSelectedLead(lead);
     setShowDeleteModal(true);
   };
 
-  // Open Convert Modal
   const handleOpenConvert = (lead) => {
     setSelectedLead(lead);
     setShowConvertModal(true);
   };
 
-  // Submit Add Lead
   const handleCreateLead = async (e) => {
     e.preventDefault();
     try {
@@ -218,7 +214,6 @@ export const LeadsPage = () => {
     }
   };
 
-  // Submit Edit Lead
   const handleUpdateLead = async (e) => {
     e.preventDefault();
     if (!selectedLead) return;
@@ -244,7 +239,6 @@ export const LeadsPage = () => {
     }
   };
 
-  // Submit Delete Lead
   const handleDeleteLead = async () => {
     if (!selectedLead) return;
     try {
@@ -264,18 +258,17 @@ export const LeadsPage = () => {
     }
   };
 
-  // Submit Convert Lead to Customer
   const handleConvertLead = async () => {
     if (!selectedLead) return;
     try {
       setSubmitting(true);
-      const res = await api.post(`/leads/${selectedLead.id}/convert`, {
+      await api.post(`/leads/${selectedLead.id}/convert`, {
         tier: 'Enterprise',
         notes: `Converted from lead pipeline. Deal: $${selectedLead.deal_value?.toLocaleString()}`,
       });
       setShowConvertModal(false);
       if (showDetailDrawer) setShowDetailDrawer(false);
-      setMessage(`🎉 Successfully converted '${selectedLead.company}' to active Customer!`);
+      setMessage(`Successfully converted '${selectedLead.company}' to active Customer!`);
       setTimeout(() => setMessage(''), 5000);
       fetchLeads();
     } catch (err) {
@@ -285,7 +278,6 @@ export const LeadsPage = () => {
     }
   };
 
-  // Quick drag or click status change
   const handleMoveStatus = async (lead, newStatus) => {
     try {
       await api.put(`/leads/${lead.id}`, { status: newStatus });
@@ -297,11 +289,9 @@ export const LeadsPage = () => {
     }
   };
 
-  // Pipeline Aggregates
   const totalPipeline = leads.reduce((sum, l) => sum + (l.deal_value || 0), 0);
   const hotLeads = leads.filter((l) => l.classification === 'HOT');
   const warmLeads = leads.filter((l) => l.classification === 'WARM');
-  const coldLeads = leads.filter((l) => l.classification === 'COLD');
   const convertedCount = leads.filter((l) => l.status === 'CONVERTED').length;
   const winRate = leads.length > 0 ? ((convertedCount / leads.length) * 100).toFixed(1) : '24.6';
 
@@ -309,22 +299,22 @@ export const LeadsPage = () => {
     switch (cls) {
       case 'HOT':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-sm">
-            <Flame className="w-3 h-3 text-rose-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-800 border border-rose-200">
+            <Flame className="w-3 h-3 text-rose-600" />
             HOT
           </span>
         );
       case 'WARM':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-            <Sun className="w-3 h-3 text-amber-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+            <Sun className="w-3 h-3 text-amber-600" />
             WARM
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-500/15 text-sky-400 border border-sky-500/30">
-            <Snowflake className="w-3 h-3 text-sky-400" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-300">
+            <Snowflake className="w-3 h-3 text-neutral-600" />
             COLD
           </span>
         );
@@ -332,40 +322,49 @@ export const LeadsPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Top Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-6 rounded-lg border border-[#E5E5E5] shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="p-1.5 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
-              <Target className="w-4 h-4" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
-              Phase 4 CRM • AI Lead Pipeline
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#666666]">
+              {user?.role === 'EMPLOYEE'
+                ? 'My Workspace • Assigned Leads'
+                : user?.role === 'SALES_MANAGER'
+                ? 'Sales Operations • Pipeline Funnel'
+                : 'CRM • Lead Pipeline'}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Leads Pipeline & Automatic Scoring
+          <h1 className="text-2xl font-semibold text-[#111111] tracking-tight">
+            {user?.role === 'EMPLOYEE'
+              ? 'My Assigned Leads'
+              : user?.role === 'SALES_MANAGER' && viewMode === 'kanban'
+              ? 'Sales Pipeline & Kanban Board'
+              : 'Leads Pipeline & Scoring'}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Automated lead qualification into Hot, Warm, and Cold tiers with follow-up scheduling and conversion.
+          <p className="text-xs text-[#666666] mt-1">
+            {user?.role === 'EMPLOYEE'
+              ? 'Leads assigned to your portfolio for qualification, follow-ups, and deal progression.'
+              : 'Automated lead qualification into Hot, Warm, and Cold tiers with follow-up scheduling and conversion.'}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            id="view-rules-btn"
-            onClick={() => setShowRulesModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/90 hover:bg-slate-800 border border-slate-700 transition"
-          >
-            <HelpCircle className="w-4 h-4 text-brand-400" />
-            <span>Classification Rules</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {user?.role !== 'EMPLOYEE' && (
+            <button
+              id="view-rules-btn"
+              onClick={() => setShowRulesModal(true)}
+              className="btn-secondary"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Rules</span>
+            </button>
+          )}
 
           <button
             id="add-lead-btn"
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition"
+            className="btn-primary"
           >
             <Plus className="w-4 h-4" />
             <span>Add Lead</span>
@@ -373,17 +372,17 @@ export const LeadsPage = () => {
 
           <button
             onClick={fetchLeads}
-            className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-slate-300 transition"
+            className="btn-secondary"
             title="Refresh Leads"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-brand-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#111111]' : ''}`} />
           </button>
         </div>
       </div>
 
       {message && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2 shadow-glow">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-3 rounded-md bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
           <span>{message}</span>
         </div>
       )}
@@ -397,7 +396,6 @@ export const LeadsPage = () => {
           trend="up"
           subtext="estimated active ARR"
           icon={DollarSign}
-          color="indigo"
         />
         <StatCard
           label="Hot Opportunities"
@@ -406,7 +404,6 @@ export const LeadsPage = () => {
           trend="up"
           subtext="priority high-value leads"
           icon={Flame}
-          color="rose"
         />
         <StatCard
           label="Warm Opportunities"
@@ -415,7 +412,6 @@ export const LeadsPage = () => {
           trend="up"
           subtext="active engagement cycle"
           icon={Sun}
-          color="amber"
         />
         <StatCard
           label="Pipeline Win Rate"
@@ -424,21 +420,20 @@ export const LeadsPage = () => {
           trend="up"
           subtext="lead-to-deal ratio"
           icon={TrendingUp}
-          color="emerald"
         />
       </div>
 
       {/* Search, Filter & View Controls */}
-      <div className="glass-panel p-4 rounded-2xl border border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-lg border border-[#E5E5E5] shadow-subtle flex flex-col lg:flex-row items-center justify-between gap-4">
         <div className="relative w-full lg:w-72">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8A8A8A]" />
           <input
             id="search-lead-input"
             type="text"
             placeholder="Search leads, company, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] placeholder-[#8A8A8A] focus:border-[#111111] focus:outline-none"
           />
         </div>
 
@@ -448,12 +443,12 @@ export const LeadsPage = () => {
             id="filter-classification-select"
             value={filterClassification}
             onChange={(e) => setFilterClassification(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-300 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            className="px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
           >
             <option value="">All Tiers (Hot/Warm/Cold)</option>
-            <option value="HOT">🔥 Hot Leads</option>
-            <option value="WARM">☀️ Warm Leads</option>
-            <option value="COLD">❄️ Cold Leads</option>
+            <option value="HOT">Hot Leads</option>
+            <option value="WARM">Warm Leads</option>
+            <option value="COLD">Cold Leads</option>
           </select>
 
           {/* Source Filter */}
@@ -461,7 +456,7 @@ export const LeadsPage = () => {
             id="filter-source-select"
             value={filterSource}
             onChange={(e) => setFilterSource(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-300 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            className="px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
           >
             <option value="">All Sources</option>
             {leadSources.map((s) => (
@@ -476,7 +471,7 @@ export const LeadsPage = () => {
             id="filter-status-select"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-300 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            className="px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
           >
             <option value="">All Statuses</option>
             {leadStatuses.map((st) => (
@@ -487,14 +482,17 @@ export const LeadsPage = () => {
           </select>
 
           {/* View Toggle */}
-          <div className="flex items-center p-1 rounded-xl bg-slate-950 border border-slate-800">
+          <div className="flex items-center p-0.5 rounded-md bg-[#F3F3F3] border border-[#E5E5E5]">
             <button
               id="view-toggle-kanban"
-              onClick={() => setViewMode('kanban')}
-              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${
+              onClick={() => {
+                setViewMode('kanban');
+                setSearchParams({ view: 'kanban' });
+              }}
+              className={`p-1 rounded text-xs font-medium flex items-center gap-1 transition ${
                 viewMode === 'kanban'
-                  ? 'bg-brand-600 text-white shadow-glow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white text-[#111111] shadow-subtle border border-[#D9D9D9]'
+                  : 'text-[#666666] hover:text-[#111111]'
               }`}
               title="Kanban Board View"
             >
@@ -503,11 +501,14 @@ export const LeadsPage = () => {
             </button>
             <button
               id="view-toggle-table"
-              onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${
+              onClick={() => {
+                setViewMode('table');
+                setSearchParams({ view: 'table' });
+              }}
+              className={`p-1 rounded text-xs font-medium flex items-center gap-1 transition ${
                 viewMode === 'table'
-                  ? 'bg-brand-600 text-white shadow-glow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white text-[#111111] shadow-subtle border border-[#D9D9D9]'
+                  : 'text-[#666666] hover:text-[#111111]'
               }`}
               title="Table Ledger View"
             >
@@ -530,25 +531,25 @@ export const LeadsPage = () => {
                 <div
                   key={st.id}
                   id={`kanban-col-${st.id.toLowerCase()}`}
-                  className="w-72 flex-shrink-0 flex flex-col rounded-3xl bg-slate-900/50 border border-slate-800/80 p-3.5"
+                  className="w-72 flex-shrink-0 flex flex-col rounded-lg bg-[#FAFAFA] border border-[#E5E5E5] p-3"
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.color}`}>
+                  <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#EBEBEB]">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${st.color}`}>
                         {st.label}
                       </span>
-                      <span className="text-xs font-bold text-slate-400">({columnLeads.length})</span>
+                      <span className="text-xs font-medium text-[#8A8A8A]">({columnLeads.length})</span>
                     </div>
-                    <span className="text-[11px] font-mono text-slate-400 font-semibold">
+                    <span className="text-[11px] text-[#666666] font-medium">
                       ${(colValue / 1000).toFixed(0)}k
                     </span>
                   </div>
 
                   {/* Cards Container */}
-                  <div className="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1">
+                  <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[600px] pr-1">
                     {columnLeads.length === 0 ? (
-                      <div className="py-8 text-center text-[11px] text-slate-600 border border-dashed border-slate-800 rounded-2xl">
+                      <div className="py-8 text-center text-[11px] text-[#8A8A8A] border border-dashed border-[#E5E5E5] rounded-md bg-white">
                         No leads in {st.label}
                       </div>
                     ) : (
@@ -557,37 +558,35 @@ export const LeadsPage = () => {
                           key={lead.id}
                           id={`lead-card-${lead.id}`}
                           onClick={() => handleViewLead(lead)}
-                          className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-brand-500/40 hover:-translate-y-0.5 cursor-pointer transition shadow-sm space-y-2.5 group"
+                          className="p-3.5 rounded-md bg-white border border-[#E5E5E5] hover:border-[#D4D4D4] cursor-pointer transition shadow-subtle space-y-2 group"
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-bold text-white group-hover:text-brand-300 transition line-clamp-1">
+                            <span className="text-xs font-semibold text-[#111111] line-clamp-1">
                               {lead.company}
                             </span>
                             {getClassificationBadge(lead.classification)}
                           </div>
 
-                          <div className="text-[11px] text-slate-400 space-y-1">
-                            <p className="font-medium text-slate-300">{lead.contact_name}</p>
-                            <div className="flex items-center justify-between text-[10px] text-slate-500">
-                              <span>Source: {lead.source || 'Website'}</span>
-                              <span className="font-bold text-emerald-400 text-xs">
+                          <div className="text-[11px] text-[#666666] space-y-0.5">
+                            <p className="font-normal text-[#111111]">{lead.contact_name}</p>
+                            <div className="flex items-center justify-between text-[10px] text-[#8A8A8A]">
+                              <span>{lead.source || 'Website'}</span>
+                              <span className="font-semibold text-[#111111] text-xs">
                                 ${(lead.deal_value || 0).toLocaleString()}
                               </span>
                             </div>
                           </div>
 
-                          {/* Follow-up date badge */}
                           {lead.follow_up_date && (
-                            <div className="flex items-center gap-1 text-[10px] text-amber-400 font-medium pt-1 border-t border-slate-800/60">
-                              <Clock className="w-3 h-3" />
+                            <div className="flex items-center gap-1 text-[10px] text-amber-700 font-medium pt-1.5 border-t border-[#F0F0F0]">
+                              <Clock className="w-3 h-3 text-amber-600" />
                               <span>Follow-up: {new Date(lead.follow_up_date).toLocaleDateString()}</span>
                             </div>
                           )}
 
-                          {/* Assignee & Actions */}
-                          <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-                            <span className="text-slate-400 flex items-center gap-1 truncate max-w-[120px]">
-                              <User className="w-3 h-3 text-slate-500" />
+                          <div className="pt-2 border-t border-[#F0F0F0] flex items-center justify-between text-[10px]">
+                            <span className="text-[#8A8A8A] flex items-center gap-1 truncate max-w-[120px]">
+                              <User className="w-3 h-3 text-[#8A8A8A]" />
                               {lead.assignee_name || 'Unassigned'}
                             </span>
 
@@ -598,7 +597,7 @@ export const LeadsPage = () => {
                                     e.stopPropagation();
                                     handleOpenConvert(lead);
                                   }}
-                                  className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-[9px] font-bold"
+                                  className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-semibold hover:bg-emerald-100"
                                   title="Convert to Customer"
                                 >
                                   Convert
@@ -609,7 +608,7 @@ export const LeadsPage = () => {
                                   e.stopPropagation();
                                   handleOpenEdit(lead);
                                 }}
-                                className="p-1 text-slate-400 hover:text-white"
+                                className="p-0.5 text-[#666666] hover:text-[#111111]"
                                 title="Edit"
                               >
                                 <Edit2 className="w-3 h-3" />
@@ -629,52 +628,52 @@ export const LeadsPage = () => {
 
       {/* VIEW 2: TABLE LEDGER VIEW */}
       {viewMode === 'table' && (
-        <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden">
+        <div className="bg-white rounded-lg border border-[#E5E5E5] shadow-subtle overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider text-[10px] font-semibold border-b border-slate-800">
+            <table className="w-full text-left text-xs text-[#111111]">
+              <thead className="bg-[#F9FAFB] text-[#666666] font-medium border-b border-[#E5E5E5]">
                 <tr>
-                  <th className="px-6 py-4">Lead & Contact</th>
-                  <th className="px-6 py-4">Classification</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Source</th>
-                  <th className="px-6 py-4">Deal Value</th>
-                  <th className="px-6 py-4">Follow-Up</th>
-                  <th className="px-6 py-4">Assigned To</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-5 py-3">Lead & Contact</th>
+                  <th className="px-5 py-3">Classification</th>
+                  <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Source</th>
+                  <th className="px-5 py-3">Deal Value</th>
+                  <th className="px-5 py-3">Follow-Up</th>
+                  <th className="px-5 py-3">Assigned To</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#F0F0F0]">
                 {loading ? (
                   <tr>
-                    <td colSpan="8" className="py-12 text-center text-slate-500">
-                      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <td colSpan="8" className="py-12 text-center text-[#8A8A8A]">
+                      <div className="w-6 h-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                       Loading pipeline...
                     </td>
                   </tr>
                 ) : leads.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="py-12 text-center text-slate-500">
+                    <td colSpan="8" className="py-12 text-center text-[#8A8A8A]">
                       No leads match current filter criteria.
                     </td>
                   </tr>
                 ) : (
                   leads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-slate-800/30 transition">
-                      <td className="px-6 py-4 font-semibold text-white">
+                    <tr key={lead.id} className="hover:bg-[#F9FAFB] transition">
+                      <td className="px-5 py-3 font-semibold text-[#111111]">
                         <div>
-                          <p className="font-bold text-white text-xs">{lead.company}</p>
-                          <p className="text-[11px] text-slate-400">{lead.contact_name} • {lead.email}</p>
+                          <p className="font-semibold text-[#111111] text-xs">{lead.company}</p>
+                          <p className="text-[11px] text-[#666666] font-normal">{lead.contact_name} • {lead.email}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3">
                         {getClassificationBadge(lead.classification)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3">
                         <select
                           value={lead.status}
                           onChange={(e) => handleMoveStatus(lead, e.target.value)}
-                          className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none cursor-pointer"
+                          className="px-2 py-0.5 rounded text-[11px] font-medium bg-white border border-[#D9D9D9] text-[#111111] focus:outline-none cursor-pointer"
                         >
                           {leadStatuses.map((st) => (
                             <option key={st.id} value={st.id}>
@@ -683,32 +682,32 @@ export const LeadsPage = () => {
                           ))}
                         </select>
                       </td>
-                      <td className="px-6 py-4 text-slate-300">
+                      <td className="px-5 py-3 text-[#666666]">
                         {lead.source || 'Website'}
                       </td>
-                      <td className="px-6 py-4 font-extrabold text-white text-sm">
+                      <td className="px-5 py-3 font-semibold text-[#111111]">
                         ${(lead.deal_value || 0).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-slate-400">
+                      <td className="px-5 py-3 text-[#666666]">
                         {lead.follow_up_date ? (
-                          <span className="flex items-center gap-1 text-amber-400 text-[11px]">
-                            <Clock className="w-3.5 h-3.5" />
+                          <span className="flex items-center gap-1 text-amber-700 text-[11px]">
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
                             {new Date(lead.follow_up_date).toLocaleDateString()}
                           </span>
                         ) : (
-                          <span className="text-slate-600">None</span>
+                          <span className="text-[#8A8A8A]">None</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-300">
+                      <td className="px-5 py-3 text-[#666666]">
                         {lead.assignee_name || 'Unassigned'}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           {lead.status !== 'CONVERTED' && (
                             <button
                               id={`convert-lead-btn-${lead.id}`}
                               onClick={() => handleOpenConvert(lead)}
-                              className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white transition text-[10px] font-bold"
+                              className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 text-[10px] font-medium transition"
                               title="Convert to Customer"
                             >
                               Convert
@@ -717,7 +716,7 @@ export const LeadsPage = () => {
                           <button
                             id={`view-lead-btn-${lead.id}`}
                             onClick={() => handleViewLead(lead)}
-                            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                            className="p-1.5 rounded-md hover:bg-[#F3F3F3] text-[#666666] hover:text-[#111111]"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -725,19 +724,21 @@ export const LeadsPage = () => {
                           <button
                             id={`edit-lead-btn-${lead.id}`}
                             onClick={() => handleOpenEdit(lead)}
-                            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                            className="p-1.5 rounded-md hover:bg-[#F3F3F3] text-[#666666] hover:text-[#111111]"
                             title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button
-                            id={`delete-lead-btn-${lead.id}`}
-                            onClick={() => handleOpenDelete(lead)}
-                            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {user?.role !== 'EMPLOYEE' && (
+                            <button
+                              id={`delete-lead-btn-${lead.id}`}
+                              onClick={() => handleOpenDelete(lead)}
+                              className="p-1.5 rounded-md hover:bg-[#FEF2F2] text-[#666666] hover:text-[#DC2626]"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -751,137 +752,136 @@ export const LeadsPage = () => {
 
       {/* Lead Details Drawer */}
       {showDetailDrawer && selectedLead && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-xl bg-slate-900 border-l border-slate-800 h-full overflow-y-auto p-6 flex flex-col justify-between shadow-2xl">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 animate-in fade-in">
+          <div className="w-full max-w-xl bg-white border-l border-[#E5E5E5] h-full overflow-y-auto p-6 flex flex-col justify-between shadow-modal text-[#111111]">
             <div>
-              <div className="flex items-start justify-between pb-6 border-b border-slate-800">
+              <div className="flex items-start justify-between pb-4 border-b border-[#EBEBEB]">
                 <div>
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex items-center gap-2 mb-1">
                     {getClassificationBadge(selectedLead.classification)}
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#F3F3F3] text-[#111111] border border-[#D9D9D9]">
                       Status: {selectedLead.status}
                     </span>
                   </div>
-                  <h2 className="text-xl font-extrabold text-white">{selectedLead.company}</h2>
-                  <p className="text-xs text-slate-400">Primary Contact: {selectedLead.contact_name}</p>
+                  <h2 className="text-lg font-semibold text-[#111111]">{selectedLead.company}</h2>
+                  <p className="text-xs text-[#666666]">Primary Contact: {selectedLead.contact_name}</p>
                 </div>
                 <button
                   onClick={() => setShowDetailDrawer(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
+                  className="p-1.5 rounded-md text-[#8A8A8A] hover:text-[#111111] hover:bg-[#F7F7F7]"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Automatic Classification & AI Intelligence Card */}
-              <div className="my-6 p-4 rounded-2xl bg-gradient-to-tr from-slate-950 to-slate-900 border border-slate-800 space-y-3">
+              {/* Automatic Classification & AI Card */}
+              <div className="my-5 p-4 rounded-md bg-[#F9FAFB] border border-[#E5E5E5] space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Sparkles className="w-4 h-4 text-brand-400" />
-                    <span>AI Lead Intelligence & Scoring</span>
-                  </div>
+                  <span className="text-xs font-semibold text-[#111111]">
+                    AI Lead Intelligence
+                  </span>
                   {selectedLead.sales_priority && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-white text-[#111111] border border-[#D9D9D9]">
                       {selectedLead.sales_priority}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-300">
-                  Reason: <span className="font-semibold text-brand-300">{selectedLead.classification_reason || 'Evaluated against configurable business rules.'}</span>
+                <p className="text-xs text-[#666666]">
+                  Reason: <span className="font-medium text-[#111111]">{selectedLead.classification_reason || 'Evaluated against configurable business rules.'}</span>
                 </p>
                 {selectedLead.recommended_action && (
-                  <div className="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-xs">
-                    <span className="text-[10px] uppercase font-bold text-brand-300 block mb-0.5">Recommended Next Action:</span>
-                    <span className="text-white font-medium">{selectedLead.recommended_action}</span>
+                  <div className="p-2.5 rounded-md bg-white border border-[#E5E5E5] text-xs">
+                    <span className="text-[10px] uppercase font-semibold text-[#8A8A8A] block mb-0.5">Recommended Next Action:</span>
+                    <span className="text-[#111111] font-medium">{selectedLead.recommended_action}</span>
                   </div>
                 )}
                 {selectedLead.ai_score !== undefined && (
-                  <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between text-xs text-[#666666] pt-2 border-t border-[#EBEBEB]">
                     <span>AI Conversion Probability:</span>
-                    <span className="font-bold text-emerald-400 text-sm">{selectedLead.ai_score}/100</span>
+                    <span className="font-semibold text-[#111111] text-sm">{selectedLead.ai_score}/100</span>
                   </div>
                 )}
               </div>
 
-
               {/* Fields Matrix */}
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs mb-6">
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-md bg-[#FAFAFA] border border-[#E5E5E5] text-xs mb-5">
                 <div>
-                  <p className="text-[10px] uppercase font-semibold text-slate-500">Email Address</p>
-                  <p className="text-slate-200 font-medium truncate">{selectedLead.email}</p>
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Email Address</p>
+                  <p className="text-[#111111] font-medium truncate">{selectedLead.email}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-semibold text-slate-500">Phone Number</p>
-                  <p className="text-slate-200 font-medium">{selectedLead.phone || 'N/A'}</p>
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Phone Number</p>
+                  <p className="text-[#111111] font-medium">{selectedLead.phone || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-semibold text-slate-500">Deal Estimated Value</p>
-                  <p className="text-emerald-400 font-extrabold text-sm">${(selectedLead.deal_value || 0).toLocaleString()}</p>
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Deal Estimated Value</p>
+                  <p className="text-[#111111] font-semibold">${(selectedLead.deal_value || 0).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-semibold text-slate-500">Lead Source</p>
-                  <p className="text-slate-200 font-medium">{selectedLead.source || 'Website'}</p>
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Lead Source</p>
+                  <p className="text-[#111111] font-medium">{selectedLead.source || 'Website'}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-semibold text-slate-500">Scheduled Follow-up</p>
-                  <p className="text-amber-400 font-medium">
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Scheduled Follow-up</p>
+                  <p className="text-amber-700 font-medium">
                     {selectedLead.follow_up_date ? new Date(selectedLead.follow_up_date).toLocaleDateString() : 'None'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-semibold text-slate-500">Assigned Employee</p>
-                  <p className="text-slate-200 font-medium">{selectedLead.assignee_name || 'Unassigned'}</p>
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Assigned Employee</p>
+                  <p className="text-[#111111] font-medium">{selectedLead.assignee_name || 'Unassigned'}</p>
                 </div>
               </div>
 
               {/* AI Strategic Summary */}
               {selectedLead.ai_summary && (
-                <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800 mb-6">
-                  <p className="text-[10px] uppercase font-semibold text-slate-400 mb-1">AI Intent Analysis</p>
-                  <p className="text-xs text-slate-300 leading-relaxed">{selectedLead.ai_summary}</p>
+                <div className="p-3.5 rounded-md bg-white border border-[#E5E5E5] mb-4">
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A] mb-1">AI Intent Analysis</p>
+                  <p className="text-xs text-[#666666] leading-relaxed">{selectedLead.ai_summary}</p>
                 </div>
               )}
 
               {/* Notes */}
               {selectedLead.notes && (
-                <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800">
-                  <p className="text-[10px] uppercase font-semibold text-slate-400 mb-1">Conversation Notes</p>
-                  <p className="text-xs text-slate-300 leading-relaxed">{selectedLead.notes}</p>
+                <div className="p-3.5 rounded-md bg-white border border-[#E5E5E5]">
+                  <p className="text-[10px] uppercase font-semibold text-[#8A8A8A] mb-1">Conversation Notes</p>
+                  <p className="text-xs text-[#666666] leading-relaxed">{selectedLead.notes}</p>
                 </div>
               )}
             </div>
 
-            <div className="pt-6 border-t border-slate-800 flex items-center justify-between gap-3">
+            <div className="pt-4 border-t border-[#EBEBEB] flex items-center justify-between gap-2">
               {selectedLead.status !== 'CONVERTED' && (
                 <button
                   onClick={() => handleOpenConvert(selectedLead)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-glow transition"
+                  className="btn-primary"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Convert to Customer</span>
                 </button>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 ml-auto">
                 <button
                   onClick={() => {
                     handleOpenEdit(selectedLead);
                     setShowDetailDrawer(false);
                   }}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white"
+                  className="btn-secondary"
                   title="Edit Lead"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => {
                     handleOpenDelete(selectedLead);
                     setShowDetailDrawer(false);
                   }}
-                  className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400"
+                  className="btn-danger"
                   title="Delete Lead"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -891,91 +891,91 @@ export const LeadsPage = () => {
 
       {/* Add / Edit Lead Modal */}
       {(showAddModal || showEditModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-xl p-6 sm:p-8 rounded-3xl border border-slate-700 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white w-full max-w-xl p-6 rounded-lg border border-[#E5E5E5] shadow-modal relative max-h-[90vh] overflow-y-auto text-[#111111]">
             <button
               onClick={() => {
                 setShowAddModal(false);
                 setShowEditModal(false);
               }}
-              className="absolute top-6 right-6 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 text-[#8A8A8A] hover:text-[#111111]"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <h3 className="text-lg font-bold text-white mb-1">
+            <h3 className="text-base font-semibold text-[#111111] mb-0.5">
               {showAddModal ? 'Add New Business Lead' : 'Edit Lead Details'}
             </h3>
-            <p className="text-xs text-slate-400 mb-6">
+            <p className="text-xs text-[#666666] mb-5">
               Automatic classification (Hot/Warm/Cold) will run upon saving.
             </p>
 
-            <form onSubmit={showAddModal ? handleCreateLead : handleUpdateLead} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={showAddModal ? handleCreateLead : handleUpdateLead} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Company Name *</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Company Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     placeholder="e.g. Acme Corporation"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Contact Name *</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Contact Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.contact_name}
                     onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
                     placeholder="e.g. Jane Doe"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address *</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="e.g. jane@acme.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Phone Number</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="e.g. +1 (555) 019-2834"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Deal Value ($) *</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Deal Value ($) *</label>
                   <input
                     type="number"
                     required
                     value={formData.deal_value}
                     onChange={(e) => setFormData({ ...formData, deal_value: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Lead Source</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Lead Source</label>
                   <select
                     value={formData.source}
                     onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   >
                     {leadSources.map((s) => (
                       <option key={s} value={s}>
@@ -985,11 +985,11 @@ export const LeadsPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Pipeline Status</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Pipeline Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   >
                     {leadStatuses.map((st) => (
                       <option key={st.id} value={st.id}>
@@ -1000,22 +1000,22 @@ export const LeadsPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Follow-Up Date</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Follow-Up Date</label>
                   <input
                     type="date"
                     value={formData.follow_up_date}
                     onChange={(e) => setFormData({ ...formData, follow_up_date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Assigned Employee</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Assigned Employee</label>
                   <select
                     value={formData.assigned_to}
                     onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   >
                     <option value="">Unassigned</option>
                     {users.map((u) => (
@@ -1028,31 +1028,31 @@ export const LeadsPage = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Notes & Context</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Notes & Context</label>
                 <textarea
                   rows="2"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Key discovery notes or requirements..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] placeholder-[#8A8A8A] focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EBEBEB]">
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
                     setShowEditModal(false);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition flex items-center gap-2"
+                  className="btn-primary"
                 >
                   {submitting && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   <span>{showAddModal ? 'Save & Classify Lead' : 'Update Lead'}</span>
@@ -1065,21 +1065,21 @@ export const LeadsPage = () => {
 
       {/* Convert Lead to Customer Modal */}
       {showConvertModal && selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-emerald-500/30 shadow-2xl relative">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg border border-[#E5E5E5] shadow-modal text-[#111111]">
+            <h3 className="text-base font-semibold text-[#111111] mb-2 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
               <span>Convert Lead to Customer</span>
             </h3>
-            <p className="text-xs text-slate-300 mb-6 leading-relaxed">
-              This will convert <span className="font-bold text-white">{selectedLead.company}</span> into an active customer account with lifetime value of <span className="font-bold text-emerald-400">${(selectedLead.deal_value || 0).toLocaleString()}</span> and log the conversion event in the customer timeline.
+            <p className="text-xs text-[#666666] mb-5 leading-relaxed">
+              This will convert <span className="font-semibold text-[#111111]">{selectedLead.company}</span> into an active customer account with lifetime value of <span className="font-semibold text-[#111111]">${(selectedLead.deal_value || 0).toLocaleString()}</span> and log the conversion event in the customer timeline.
             </p>
 
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowConvertModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="btn-secondary"
               >
                 Cancel
               </button>
@@ -1087,7 +1087,7 @@ export const LeadsPage = () => {
                 type="button"
                 disabled={submitting}
                 onClick={handleConvertLead}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-glow transition flex items-center gap-2"
+                className="btn-primary"
               >
                 {submitting && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 <span>Confirm Conversion</span>
@@ -1099,18 +1099,18 @@ export const LeadsPage = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-rose-500/30 shadow-2xl relative">
-            <h3 className="text-lg font-bold text-white mb-2">Delete Lead Opportunity</h3>
-            <p className="text-xs text-slate-300 mb-6 leading-relaxed">
-              Are you sure you want to delete lead <span className="font-bold text-white">{selectedLead.company}</span>? This action cannot be undone.
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg border border-[#E5E5E5] shadow-modal text-[#111111]">
+            <h3 className="text-base font-semibold text-[#111111] mb-2">Delete Lead Opportunity</h3>
+            <p className="text-xs text-[#666666] mb-5 leading-relaxed">
+              Are you sure you want to delete lead <span className="font-semibold text-[#111111]">{selectedLead.company}</span>? This action cannot be undone.
             </p>
 
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="btn-secondary"
               >
                 Cancel
               </button>
@@ -1118,9 +1118,9 @@ export const LeadsPage = () => {
                 type="button"
                 disabled={submitting}
                 onClick={handleDeleteLead}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-glow transition flex items-center gap-2"
+                className="btn-danger"
               >
-                {submitting && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {submitting && <div className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />}
                 <span>Confirm Delete</span>
               </button>
             </div>
@@ -1130,29 +1130,26 @@ export const LeadsPage = () => {
 
       {/* Classification Rules Modal */}
       {showRulesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-slate-700 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white w-full max-w-lg p-6 rounded-lg border border-[#E5E5E5] shadow-modal relative text-[#111111]">
             <button
               onClick={() => setShowRulesModal(false)}
-              className="absolute top-6 right-6 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 text-[#8A8A8A] hover:text-[#111111]"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-brand-400" />
-              <h3 className="text-base font-bold text-white">Configurable Classification Rules</h3>
-            </div>
-            <p className="text-xs text-slate-400 mb-6">
-              How the Upteky engine automatically determines Hot, Warm, and Cold tiers:
+            <h3 className="text-base font-semibold text-[#111111] mb-1">Configurable Classification Rules</h3>
+            <p className="text-xs text-[#666666] mb-5">
+              How the engine automatically determines Hot, Warm, and Cold tiers:
             </p>
 
-            <div className="space-y-4 text-xs">
-              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30">
-                <div className="flex items-center gap-2 text-rose-400 font-bold mb-1">
-                  <Flame className="w-4 h-4" />
+            <div className="space-y-3 text-xs">
+              <div className="p-3 rounded-md bg-rose-50 border border-rose-200">
+                <div className="flex items-center gap-1.5 text-rose-800 font-semibold mb-1">
+                  <Flame className="w-3.5 h-3.5 text-rose-600" />
                   <span>HOT Tier Conditions</span>
                 </div>
-                <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
+                <ul className="list-disc list-inside text-rose-900 space-y-0.5 text-[11px]">
                   <li>Estimated Deal Value &ge; ${activeRules?.hot_deal_value_min?.toLocaleString() || '20,000'}</li>
                   <li>Status in Qualified / Proposal / Negotiation with Deal &ge; $10,000</li>
                   <li>Referral, Partner, or Inbound Demo with AI Score &ge; 75</li>
@@ -1160,12 +1157,12 @@ export const LeadsPage = () => {
                 </ul>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
-                <div className="flex items-center gap-2 text-amber-400 font-bold mb-1">
-                  <Sun className="w-4 h-4" />
+              <div className="p-3 rounded-md bg-amber-50 border border-amber-200">
+                <div className="flex items-center gap-1.5 text-amber-800 font-semibold mb-1">
+                  <Sun className="w-3.5 h-3.5 text-amber-600" />
                   <span>WARM Tier Conditions</span>
                 </div>
-                <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
+                <ul className="list-disc list-inside text-amber-900 space-y-0.5 text-[11px]">
                   <li>Scheduled follow-up outreach within {activeRules?.follow_up_window_days || '7'} days</li>
                   <li>Deal Value between $5,000 and $20,000</li>
                   <li>Active pipeline stage (New, Contacted, Qualified, Proposal)</li>
@@ -1173,12 +1170,12 @@ export const LeadsPage = () => {
                 </ul>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30">
-                <div className="flex items-center gap-2 text-sky-400 font-bold mb-1">
-                  <Snowflake className="w-4 h-4" />
+              <div className="p-3 rounded-md bg-neutral-50 border border-neutral-200">
+                <div className="flex items-center gap-1.5 text-neutral-800 font-semibold mb-1">
+                  <Snowflake className="w-3.5 h-3.5 text-neutral-600" />
                   <span>COLD Tier Conditions</span>
                 </div>
-                <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
+                <ul className="list-disc list-inside text-neutral-700 space-y-0.5 text-[11px]">
                   <li>Opportunity status marked as Lost</li>
                   <li>Deal Value &lt; $5,000 with no imminent follow-up outreach</li>
                   <li>Low engagement profile and score &lt; 55%</li>
@@ -1186,10 +1183,10 @@ export const LeadsPage = () => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-5 mt-5 border-t border-slate-800">
+            <div className="flex justify-end pt-4 mt-4 border-t border-[#EBEBEB]">
               <button
                 onClick={() => setShowRulesModal(false)}
-                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 transition"
+                className="btn-primary"
               >
                 Close
               </button>

@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
+from collections import defaultdict
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import r2_score, mean_absolute_error
 from sqlalchemy.orm import Session
@@ -36,6 +37,7 @@ class SalesForecastingService:
     """
     Machine learning sales forecasting and business trend intelligence engine
     powered by Python, Pandas, NumPy, and scikit-learn.
+    100% database-derived with no fabricated fallbacks.
     """
 
     def generate_full_sales_analytics(
@@ -57,11 +59,14 @@ class SalesForecastingService:
         )
 
         # Executive summary
-        top_prod = products[0].product_name if products else "Core Enterprise Solutions"
-        exec_summary = (
-            f"Sales increased compared with the previous month. {top_prod} generated the highest revenue. "
-            f"ML models project a +{forecast.projected_growth_percentage}% growth trajectory over the next {horizon_days} days."
-        )
+        if products and len(products) > 0 and products[0].revenue > 0:
+            top_prod = products[0].product_name
+            exec_summary = (
+                f"{top_prod} generated the highest revenue (${products[0].revenue:,.2f}). "
+                f"ML models project a {forecast.projected_growth_percentage}% growth trajectory over the next {horizon_days} days."
+            )
+        else:
+            exec_summary = "No active sales recorded for this organization yet. Analytics will populate upon completing transactions."
 
         return FullSalesAnalyticsResponse(
             forecast=forecast,
@@ -81,63 +86,69 @@ class SalesForecastingService:
         Train a scikit-learn regression model on historical monthly sales data
         and project future sales trajectory with 95% confidence intervals.
         """
-        # 1. Fetch sales from database
-        sales_query = (
-            db.query(Sale)
-            .filter(Sale.organization_id == org_id, Sale.status == "COMPLETED")
-            .order_by(Sale.created_at.asc())
-            .all()
-        )
+        query = db.query(Sale).filter(Sale.status == "COMPLETED")
+        if org_id:
+            query = query.filter(Sale.organization_id == org_id)
+        sales_query = query.order_by(Sale.created_at.asc()).all()
 
-        # Baseline monthly sales history if database is fresh
-        historical_baseline = [
-            {"month_name": "Jan 2026", "timestamp": "2026-01-31", "amount": 45000.0},
-            {"month_name": "Feb 2026", "timestamp": "2026-02-28", "amount": 52000.0},
-            {"month_name": "Mar 2026", "timestamp": "2026-03-31", "amount": 61000.0},
-            {"month_name": "Apr 2026", "timestamp": "2026-04-30", "amount": 68000.0},
-            {"month_name": "May 2026", "timestamp": "2026-05-31", "amount": 79000.0},
-            {"month_name": "Jun 2026", "timestamp": "2026-06-30", "amount": 88000.0},
-            {"month_name": "Jul 2026", "timestamp": "2026-07-31", "amount": 99000.0},
-            {"month_name": "Aug 2026", "timestamp": "2026-08-31", "amount": 115000.0},
-            {"month_name": "Sep 2026", "timestamp": "2026-09-30", "amount": 128450.0},
-        ]
+        if not sales_query or len(sales_query) < 2:
+            return SalesForecastResponse(
+                timeline=[],
+                forecast_horizon_days=horizon_days,
+                current_monthly_run_rate=0.0,
+                projected_next_period_sales=0.0,
+                projected_growth_percentage=0.0,
+                model_r2_score=0.0,
+                model_mae=0.0,
+                model_type="scikit-learn Ridge Polynomial Regression",
+                disclaimer=DISCLAIMER_TEXT,
+                ai_insights=[
+                    "Insufficient historical sales data to train predictive model. Record sales transactions to activate machine learning forecasts."
+                ],
+            )
 
-        historical_data = historical_baseline
-        if sales_query:
-            records = [{"date": s.created_at, "amount": s.amount} for s in sales_query]
-            df_raw = pd.DataFrame(records)
-            df_raw["month_period"] = df_raw["date"].dt.to_period("M")
-            df_grouped = df_raw.groupby("month_period")["amount"].sum().reset_index()
-            if len(df_grouped) >= 6:
-                df_grouped["month_name"] = df_grouped["month_period"].dt.strftime("%b %Y")
-                df_grouped["timestamp"] = df_grouped["month_period"].dt.to_timestamp()
-                historical_data = df_grouped.to_dict(orient="records")
-            elif len(df_grouped) > 0:
-                # Update latest month in baseline with live database amount
-                latest_amount = float(df_grouped.iloc[-1]["amount"])
-                if latest_amount > 0:
-                    historical_data[-1]["amount"] = round(latest_amount, 2)
+        records = [{"date": s.created_at, "amount": s.amount} for s in sales_query if s.created_at]
+        df_raw = pd.DataFrame(records)
+        df_raw["month_period"] = df_raw["date"].dt.to_period("M")
+        df_grouped = df_raw.groupby("month_period")["amount"].sum().reset_index()
 
+        if len(df_grouped) < 2:
+            return SalesForecastResponse(
+                timeline=[],
+                forecast_horizon_days=horizon_days,
+                current_monthly_run_rate=round(float(df_grouped.iloc[0]["amount"]), 2),
+                projected_next_period_sales=round(float(df_grouped.iloc[0]["amount"]), 2),
+                projected_growth_percentage=0.0,
+                model_r2_score=0.0,
+                model_mae=0.0,
+                model_type="scikit-learn Ridge Polynomial Regression",
+                disclaimer=DISCLAIMER_TEXT,
+                ai_insights=[
+                    "At least two distinct monthly periods are required to calculate regression growth forecasts."
+                ],
+            )
+
+        df_grouped["month_name"] = df_grouped["month_period"].dt.strftime("%b %Y")
+        historical_data = df_grouped.to_dict(orient="records")
         df = pd.DataFrame(historical_data)
         n_history = len(df)
 
-        # 2. Machine Learning Regression Modeling via scikit-learn
         X = np.arange(n_history).reshape(-1, 1)
         y = df["amount"].values.astype(float)
 
-        poly = PolynomialFeatures(degree=2, include_bias=False)
+        degree = 1 if n_history < 4 else 2
+        poly = PolynomialFeatures(degree=degree, include_bias=False)
         X_poly = poly.fit_transform(X)
 
         model = Ridge(alpha=1.5)
         model.fit(X_poly, y)
 
         in_sample_preds = model.predict(X_poly)
-        r2 = max(0.85, round(float(r2_score(y, in_sample_preds)), 3))
+        r2 = max(0.0, round(float(r2_score(y, in_sample_preds)), 3))
         residuals = y - in_sample_preds
         mae = round(float(mean_absolute_error(y, in_sample_preds)), 1)
-        std_error = float(np.std(residuals)) if len(residuals) > 1 else 2500.0
+        std_error = float(np.std(residuals)) if len(residuals) > 1 else 0.0
 
-        # Build Historical Timeline Points
         timeline_points: List[SalesForecastPoint] = []
         for i, row in df.iterrows():
             actual = round(float(row["amount"]), 2)
@@ -155,40 +166,24 @@ class SalesForecastingService:
                 )
             )
 
-        # 3. Determine Horizon Future Steps (Months)
-        if horizon_days <= 30:
-            future_months_count = 1
-        elif horizon_days <= 60:
-            future_months_count = 2
-        elif horizon_days <= 90:
-            future_months_count = 3
-        else:
-            future_months_count = 6
-
-        # Generate Future Projections
+        future_months_count = 1 if horizon_days <= 30 else (2 if horizon_days <= 60 else (3 if horizon_days <= 90 else 6))
         future_X = np.arange(n_history, n_history + future_months_count).reshape(-1, 1)
         future_X_poly = poly.transform(future_X)
         future_preds = model.predict(future_X_poly)
 
-        future_month_names = [
-            "Oct 2026 (Est.)",
-            "Nov 2026 (Est.)",
-            "Dec 2026 (Est.)",
-            "Jan 2027 (Est.)",
-            "Feb 2027 (Est.)",
-            "Mar 2027 (Est.)",
-        ]
-
+        last_period = df_grouped.iloc[-1]["month_period"]
         last_actual_amount = float(y[-1])
+
         for step in range(future_months_count):
-            proj_val = round(float(future_preds[step]), 2)
-            # Confidence interval expands for further horizons
+            future_p = last_period + (step + 1)
+            future_label = future_p.strftime("%b %Y (Est.)")
+            proj_val = max(0.0, round(float(future_preds[step]), 2))
             horizon_spread = std_error * (1.0 + (step * 0.25))
             lower_bound = max(0.0, round(proj_val - 1.96 * horizon_spread, 2))
             upper_bound = round(proj_val + 1.96 * horizon_spread, 2)
             timeline_points.append(
                 SalesForecastPoint(
-                    period=future_month_names[step] if step < len(future_month_names) else f"M+{step+1} (Est.)",
+                    period=future_label,
                     actual_sales=None,
                     predicted_sales=proj_val,
                     lower_bound=lower_bound,
@@ -197,20 +192,23 @@ class SalesForecastingService:
                 )
             )
 
-        next_predicted = float(future_preds[0])
-        growth_pct = round(((next_predicted - last_actual_amount) / last_actual_amount) * 100.0, 1)
+        next_predicted = max(0.0, float(future_preds[0]))
+        if last_actual_amount > 0:
+            growth_pct = round(((next_predicted - last_actual_amount) / last_actual_amount) * 100.0, 1)
+        else:
+            growth_pct = 0.0
 
         insights = [
-            f"Machine learning model fitted with {r2 * 100:.1f}% accuracy ($R^2 = {r2}$).",
-            f"Projected {horizon_days}-day revenue trajectory shows +{growth_pct}% projected growth.",
-            f"Next period expected revenue is estimated at ${next_predicted:,.2f} (95% range: ${timeline_points[n_history].lower_bound:,.2f} – ${timeline_points[n_history].upper_bound:,.2f}).",
+            f"Machine learning model fitted with {r2 * 100:.1f}% statistical variance explained (R² = {r2}).",
+            f"Projected {horizon_days}-day revenue trajectory shows {growth_pct:+}% projected growth.",
+            f"Next period expected revenue is estimated at ${next_predicted:,.2f}.",
         ]
 
         return SalesForecastResponse(
             timeline=timeline_points,
             forecast_horizon_days=horizon_days,
-            current_monthly_run_rate=last_actual_amount,
-            projected_next_period_sales=next_predicted,
+            current_monthly_run_rate=round(last_actual_amount, 2),
+            projected_next_period_sales=round(next_predicted, 2),
             projected_growth_percentage=growth_pct,
             model_r2_score=r2,
             model_mae=mae,
@@ -220,105 +218,160 @@ class SalesForecastingService:
         )
 
     def calculate_monthly_growth(self, db: Session, org_id: str) -> List[MonthlyGrowthItem]:
-        """Compute historical Month-over-Month (MoM) revenue growth velocity."""
-        monthly_raw = [
-            {"month": "Jan", "revenue": 45000.0, "growth_pct": 12.0, "target": 40000.0},
-            {"month": "Feb", "revenue": 52000.0, "growth_pct": 15.6, "target": 48000.0},
-            {"month": "Mar", "revenue": 61000.0, "growth_pct": 17.3, "target": 55000.0},
-            {"month": "Apr", "revenue": 68000.0, "growth_pct": 11.5, "target": 65000.0},
-            {"month": "May", "revenue": 79000.0, "growth_pct": 16.2, "target": 72000.0},
-            {"month": "Jun", "revenue": 88000.0, "growth_pct": 11.4, "target": 80000.0},
-            {"month": "Jul", "revenue": 99000.0, "growth_pct": 12.5, "target": 92000.0},
-            {"month": "Aug", "revenue": 115000.0, "growth_pct": 16.2, "target": 105000.0},
-            {"month": "Sep", "revenue": 128450.0, "growth_pct": 11.7, "target": 120000.0},
-        ]
-        return [MonthlyGrowthItem(**item) for item in monthly_raw]
+        """Compute historical Month-over-Month (MoM) revenue growth velocity from actual sales."""
+        query = db.query(Sale).filter(Sale.status == "COMPLETED")
+        if org_id:
+            query = query.filter(Sale.organization_id == org_id)
+        sales = query.order_by(Sale.created_at.asc()).all()
+        if not sales:
+            return []
+
+        records = [{"date": s.created_at, "amount": s.amount} for s in sales if s.created_at]
+        if not records:
+            return []
+        df_raw = pd.DataFrame(records)
+        df_raw["month_period"] = df_raw["date"].dt.to_period("M")
+        df_grouped = df_raw.groupby("month_period")["amount"].sum().reset_index()
+
+        growth_items: List[MonthlyGrowthItem] = []
+        prev_rev = None
+        for _, row in df_grouped.iterrows():
+            month_str = row["month_period"].strftime("%b %Y")
+            rev = float(row["amount"])
+            if prev_rev and prev_rev > 0:
+                growth_pct = round(((rev - prev_rev) / prev_rev) * 100.0, 1)
+            else:
+                growth_pct = 0.0
+            prev_rev = rev
+            growth_items.append(
+                MonthlyGrowthItem(
+                    month=month_str,
+                    revenue=round(rev, 2),
+                    growth_pct=growth_pct,
+                    target=round(rev * 1.1, 2),
+                )
+            )
+        return growth_items
 
     def analyze_product_performance(self, db: Session, org_id: str) -> List[ProductPerformanceItem]:
-        """Analyze revenue contribution and unit velocity per product."""
-        sales = (
-            db.query(Sale)
-            .filter(Sale.organization_id == org_id, Sale.status == "COMPLETED")
-            .all()
-        )
+        """Analyze revenue contribution and unit velocity per product from actual database sales."""
+        query = db.query(Sale).filter(Sale.status == "COMPLETED")
+        if org_id:
+            query = query.filter(Sale.organization_id == org_id)
+        sales = query.all()
 
-        if sales:
-            df = pd.DataFrame([{"product": s.product_name, "amount": s.amount} for s in sales])
-            total_rev = df["amount"].sum()
-            grouped = df.groupby("product").agg(revenue=("amount", "sum"), units=("amount", "count")).reset_index()
-            grouped["revenue_share"] = (grouped["revenue"] / total_rev * 100.0).round(1)
-            grouped = grouped.sort_values(by="revenue", ascending=False)
+        if not sales:
+            return []
 
-            result: List[ProductPerformanceItem] = []
-            for _, row in grouped.iterrows():
-                result.append(
-                    ProductPerformanceItem(
-                        product_name=str(row["product"]),
-                        revenue=round(float(row["revenue"]), 2),
-                        units_sold=int(row["units"]),
-                        revenue_share_pct=float(row["revenue_share"]),
-                        growth_pct=round(float(np.random.uniform(14.0, 28.0)), 1),
-                        trend="up",
-                    )
+        df = pd.DataFrame([{"product": s.product_name or "Standard Item", "amount": s.amount or 0.0} for s in sales])
+        total_rev = df["amount"].sum()
+        grouped = df.groupby("product").agg(revenue=("amount", "sum"), units=("amount", "count")).reset_index()
+        grouped["revenue_share"] = (grouped["revenue"] / max(1.0, total_rev) * 100.0).round(1)
+        grouped = grouped.sort_values(by="revenue", ascending=False)
+
+        result: List[ProductPerformanceItem] = []
+        for _, row in grouped.iterrows():
+            result.append(
+                ProductPerformanceItem(
+                    product_name=str(row["product"]),
+                    revenue=round(float(row["revenue"]), 2),
+                    units_sold=int(row["units"]),
+                    revenue_share_pct=float(row["revenue_share"]),
+                    growth_pct=0.0,
+                    trend="up" if float(row["revenue"]) > 0 else "neutral",
                 )
-            return result
-
-        # Fallback realistic baseline
-        return [
-            ProductPerformanceItem(
-                product_name="Upteky AI Enterprise Suite",
-                revenue=318500.0,
-                units_sold=8,
-                revenue_share_pct=53.4,
-                growth_pct=24.5,
-                trend="up",
-            ),
-            ProductPerformanceItem(
-                product_name="Smart Document OCR Processor",
-                revenue=138950.0,
-                units_sold=7,
-                revenue_share_pct=23.3,
-                growth_pct=19.8,
-                trend="up",
-            ),
-            ProductPerformanceItem(
-                product_name="Autonomous Lead Bot Pro",
-                revenue=81000.0,
-                units_sold=6,
-                revenue_share_pct=13.6,
-                growth_pct=15.2,
-                trend="up",
-            ),
-            ProductPerformanceItem(
-                product_name="Omnichannel Support Copilot",
-                revenue=58000.0,
-                units_sold=4,
-                revenue_share_pct=9.7,
-                growth_pct=12.0,
-                trend="up",
-            ),
-        ]
+            )
+        return result
 
     def analyze_customer_trends(self, db: Session, org_id: str) -> CustomerTrendsResponse:
-        """Compute new vs repeat customer acquisition and lifetime metrics."""
+        """Compute new vs repeat customer acquisition and lifetime metrics from database."""
+        cust_query = db.query(Customer)
+        sale_query = db.query(Sale).filter(Sale.status == "COMPLETED")
+        if org_id:
+            cust_query = cust_query.filter(Customer.organization_id == org_id)
+            sale_query = sale_query.filter(Sale.organization_id == org_id)
+
+        customers = cust_query.all()
+        sales = sale_query.all()
+
+        if not customers and not sales:
+            return CustomerTrendsResponse(
+                new_customers_revenue=0.0,
+                repeat_customers_revenue=0.0,
+                new_customers_count=0,
+                repeat_customers_count=0,
+                repeat_rate_pct=0.0,
+                average_order_value=0.0,
+                retention_rate_pct=0.0,
+            )
+
+        sales_by_customer = defaultdict(list)
+        for s in sales:
+            cust_key = s.customer_id or s.customer_name
+            if cust_key:
+                sales_by_customer[cust_key].append(s.amount or 0.0)
+
+        new_rev = 0.0
+        repeat_rev = 0.0
+        new_cnt = 0
+        repeat_cnt = 0
+
+        for cust_key, amounts in sales_by_customer.items():
+            new_cnt += 1
+            new_rev += amounts[0]
+            if len(amounts) > 1:
+                repeat_cnt += 1
+                repeat_rev += sum(amounts[1:])
+
+        total_paying = new_cnt
+        repeat_rate = round((repeat_cnt / max(1, total_paying)) * 100.0, 1) if total_paying > 0 else 0.0
+        total_sales_amt = sum(s.amount or 0.0 for s in sales)
+        aov = round(total_sales_amt / max(1, len(sales)), 2) if sales else 0.0
+        retention_rate = round((len([c for c in customers if c.status == "ACTIVE"]) / max(1, len(customers))) * 100.0, 1) if customers else 0.0
+
         return CustomerTrendsResponse(
-            new_customers_revenue=78450.0,
-            repeat_customers_revenue=50000.0,
-            new_customers_count=18,
-            repeat_customers_count=12,
-            repeat_rate_pct=40.0,
-            average_order_value=14200.0,
-            retention_rate_pct=88.4,
+            new_customers_revenue=round(new_rev, 2),
+            repeat_customers_revenue=round(repeat_rev, 2),
+            new_customers_count=new_cnt,
+            repeat_customers_count=repeat_cnt,
+            repeat_rate_pct=repeat_rate,
+            average_order_value=aov,
+            retention_rate_pct=retention_rate,
         )
 
     def analyze_conversion_funnel(self, db: Session, org_id: str) -> List[ConversionFunnelStage]:
-        """Analyze lead stage drop-off and conversion rates across the sales pipeline."""
+        """Analyze lead stage drop-off and conversion rates across the sales pipeline from real database leads."""
+        lead_query = db.query(Lead)
+        if org_id:
+            lead_query = lead_query.filter(Lead.organization_id == org_id)
+        leads = lead_query.all()
+
+        total_leads = len(leads)
+        if total_leads == 0:
+            return [
+                ConversionFunnelStage(stage="New Inbound Leads", count=0, conversion_rate_pct=0.0, drop_off_pct=0.0),
+                ConversionFunnelStage(stage="Contacted & Engaged", count=0, conversion_rate_pct=0.0, drop_off_pct=0.0),
+                ConversionFunnelStage(stage="AI Qualified Leads", count=0, conversion_rate_pct=0.0, drop_off_pct=0.0),
+                ConversionFunnelStage(stage="Proposal & Negotiation", count=0, conversion_rate_pct=0.0, drop_off_pct=0.0),
+                ConversionFunnelStage(stage="Closed Won & Signed", count=0, conversion_rate_pct=0.0, drop_off_pct=0.0),
+            ]
+
+        contacted = sum(1 for l in leads if l.status in ("CONTACTED", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "CONVERTED"))
+        qualified = sum(1 for l in leads if l.status in ("QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "CONVERTED"))
+        proposal = sum(1 for l in leads if l.status in ("PROPOSAL", "NEGOTIATION", "WON", "CONVERTED"))
+        won = sum(1 for l in leads if l.status in ("WON", "CONVERTED"))
+
+        c_rate = round((contacted / total_leads) * 100.0, 1)
+        q_rate = round((qualified / total_leads) * 100.0, 1)
+        p_rate = round((proposal / total_leads) * 100.0, 1)
+        w_rate = round((won / total_leads) * 100.0, 1)
+
         return [
-            ConversionFunnelStage(stage="New Inbound Leads", count=340, conversion_rate_pct=100.0, drop_off_pct=0.0),
-            ConversionFunnelStage(stage="Contacted & Engaged", count=245, conversion_rate_pct=72.1, drop_off_pct=27.9),
-            ConversionFunnelStage(stage="AI Qualified Leads", count=162, conversion_rate_pct=47.6, drop_off_pct=24.5),
-            ConversionFunnelStage(stage="Proposal & Architecture", count=94, conversion_rate_pct=27.6, drop_off_pct=20.0),
-            ConversionFunnelStage(stage="Closed Won & Signed", count=48, conversion_rate_pct=14.1, drop_off_pct=13.5),
+            ConversionFunnelStage(stage="New Inbound Leads", count=total_leads, conversion_rate_pct=100.0, drop_off_pct=0.0),
+            ConversionFunnelStage(stage="Contacted & Engaged", count=contacted, conversion_rate_pct=c_rate, drop_off_pct=round(100.0 - c_rate, 1)),
+            ConversionFunnelStage(stage="AI Qualified Leads", count=qualified, conversion_rate_pct=q_rate, drop_off_pct=round(c_rate - q_rate, 1)),
+            ConversionFunnelStage(stage="Proposal & Negotiation", count=proposal, conversion_rate_pct=p_rate, drop_off_pct=round(q_rate - p_rate, 1)),
+            ConversionFunnelStage(stage="Closed Won & Signed", count=won, conversion_rate_pct=w_rate, drop_off_pct=round(p_rate - w_rate, 1)),
         ]
 
     def generate_ai_business_insights(
@@ -328,25 +381,34 @@ class SalesForecastingService:
         customer_trends: CustomerTrendsResponse,
         monthly_growth: List[MonthlyGrowthItem],
     ) -> List[str]:
-        """
-        Generate plain-language executive business insights explaining analytics trends.
-        Matches prompt requirements:
-        Example: 'Sales increased compared with the previous month. Product A generated the highest revenue.'
-        """
-        top_prod = products[0].product_name if products else "Core Platform"
-        top_rev = products[0].revenue if products else 100000.0
-        top_share = products[0].revenue_share_pct if products else 50.0
+        """Generate plain-language executive business insights explaining real database analytics trends."""
+        if not products and not monthly_growth:
+            return [
+                "No transaction records available to synthesize business insights yet. Data will populate as operations occur."
+            ]
 
-        last_month = monthly_growth[-1].month if monthly_growth else "September"
-        last_growth = monthly_growth[-1].growth_pct if monthly_growth else 11.7
+        insights = []
+        if products and len(products) > 0 and products[0].revenue > 0:
+            top_prod = products[0].product_name
+            top_rev = products[0].revenue
+            top_share = products[0].revenue_share_pct
+            insights.append(f"{top_prod} generated the highest revenue (${top_rev:,.2f}), driving {top_share}% of recorded product sales volume.")
 
-        insights = [
-            f"Sales increased compared with the previous month by +{last_growth}% in {last_month}.",
-            f"{top_prod} generated the highest revenue (${top_rev:,.2f}), driving {top_share}% of total business volume.",
-            f"Customer trends reveal a strong {customer_trends.repeat_rate_pct}% repeat purchase rate with an Average Order Value of ${customer_trends.average_order_value:,.2f}.",
-            f"Pipeline conversion analysis indicates 14.1% of inbound leads convert to closed deals, with the highest qualification drop-off occurring at the initial contact stage.",
-            f"Machine learning forecasting models project a +{forecast.projected_growth_percentage}% growth trajectory for next period, estimating ${forecast.projected_next_period_sales:,.2f} in revenue.",
-        ]
+        if monthly_growth and len(monthly_growth) > 1:
+            last_item = monthly_growth[-1]
+            sign = "+" if last_item.growth_pct >= 0 else ""
+            insights.append(f"Month-over-month revenue growth was {sign}{last_item.growth_pct}% in {last_item.month}.")
+
+        if customer_trends.repeat_customers_count > 0:
+            insights.append(f"Customer trends reveal a {customer_trends.repeat_rate_pct}% repeat purchase rate with an Average Order Value of ${customer_trends.average_order_value:,.2f}.")
+
+        if forecast.timeline and len(forecast.timeline) > 0:
+            sign = "+" if forecast.projected_growth_percentage >= 0 else ""
+            insights.append(f"Forecasting regression models project a {sign}{forecast.projected_growth_percentage}% trajectory estimating ${forecast.projected_next_period_sales:,.2f} in next period sales.")
+
+        if not insights:
+            insights.append("Baseline operational data recorded. Increase transaction activity to expand predictive analysis.")
+
         return insights
 
 

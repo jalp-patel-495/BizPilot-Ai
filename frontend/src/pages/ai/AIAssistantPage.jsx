@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
 import {
   Bot,
-  Sparkles,
   Send,
-  Zap,
-  TrendingUp,
-  DollarSign,
-  Users,
-  Target,
   ArrowRight,
-  CheckCircle2,
   Lightbulb,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,7 +14,7 @@ export const AIAssistantPage = () => {
     {
       id: 1,
       sender: 'ai',
-      text: `Hello ${user?.full_name?.split(' ')[0] || 'there'}! I am your Upteky AI Business Copilot. I analyze real-time data across your revenue streams, customer accounts, sales pipeline, and products. What strategic question can I help you with today?`,
+      text: `Hello ${user?.full_name?.split(' ')[0] || 'there'}! I am your AI Business Copilot. I analyze real-time data across your revenue streams, customer accounts, sales pipeline, and products. What strategic question can I help you with today?`,
       time: 'Just now',
       suggestions: [
         "Analyze this month's revenue trajectory",
@@ -41,7 +34,7 @@ export const AIAssistantPage = () => {
     leads:
       'You currently have 26 pending follow-ups requiring attention. In particular, 3 high-ARR opportunities (Apex Financial Solutions - $48,500, NexusTech - $32,000, and BioCare Health - $65,000) have AI scores above 90/100 and have been awaiting contact for over 48 hours.',
     forecast:
-      'Our Scikit-learn predictive forecasting model projects Q4 revenue between $380,000 and $415,000 based on your current 24.6% lead conversion rate and 14.2-day average deal cycle. Accelerating lead response time by 20% could lift gross revenue by an additional $34,000.',
+      'Our predictive forecasting model projects Q4 revenue between $380,000 and $415,000 based on your current 24.6% lead conversion rate and 14.2-day average deal cycle. Accelerating lead response time by 20% could lift gross revenue by an additional $34,000.',
   };
 
   const handleSend = (queryText) => {
@@ -81,122 +74,125 @@ export const AIAssistantPage = () => {
       };
       setMessages((prev) => [...prev, aiMsg]);
       setTyping(false);
-    }, 1000);
+    }, 800);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Top Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-6 rounded-lg border border-[#E5E5E5] shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="p-1.5 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
-              <Bot className="w-4 h-4" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#666666]">
               AI Strategic Advisor
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#111111] tracking-tight">
             AI Business Operations Copilot
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#666666] mt-1">
             Query your business intelligence data in natural language for deep insights and actionable guidance.
           </p>
         </div>
       </div>
 
       {/* Main Chat Interface */}
-      <div className="glass-panel rounded-3xl border border-slate-800 flex flex-col h-[650px] overflow-hidden">
+      <div className="bg-white rounded-lg border border-[#E5E5E5] shadow-subtle flex flex-col h-[650px] overflow-hidden">
         {/* Messages Stream */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+        <div className="flex-1 p-5 overflow-y-auto space-y-4">
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`flex gap-3 max-w-3xl ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
+              className={`flex gap-3 max-w-2xl ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
             >
               <div
-                className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-bold text-xs ${
+                className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
                   m.sender === 'user'
-                    ? 'bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-glow'
-                    : 'bg-slate-800 border border-brand-500/30 text-brand-400'
+                    ? 'bg-[#111111] text-white'
+                    : 'bg-[#F3F3F3] border border-[#E5E5E5] text-[#111111]'
                 }`}
               >
                 {m.sender === 'user' ? user?.full_name?.charAt(0) || 'U' : <Bot className="w-4 h-4" />}
               </div>
 
               <div
-                className={`p-4 rounded-2xl text-xs leading-relaxed ${
+                className={`p-3.5 rounded-lg text-xs leading-relaxed ${
                   m.sender === 'user'
-                    ? 'bg-brand-600 text-white shadow-glow'
-                    : 'bg-slate-900 border border-slate-800 text-slate-200'
+                    ? 'bg-[#111111] text-white'
+                    : 'bg-[#F9FAFB] border border-[#E5E5E5] text-[#111111]'
                 }`}
               >
                 <p>{m.text}</p>
 
                 {m.suggestions && (
-                  <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-2">
-                    <p className="text-[10px] uppercase font-semibold text-slate-400 flex items-center gap-1">
-                      <Lightbulb className="w-3 h-3 text-amber-400" />
-                      Suggested Business Queries:
+                  <div className="mt-3 pt-3 border-t border-[#EBEBEB] space-y-1.5">
+                    <p className="text-[10px] uppercase font-semibold text-[#666666] flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3 text-[#111111]" />
+                      Suggested Queries:
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {m.suggestions.map((s, idx) => (
                         <button
                           key={idx}
                           onClick={() => handleSend(s)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-brand-500/40 text-[11px] text-slate-300 hover:text-white transition flex items-center gap-1"
+                          className="px-2.5 py-1 rounded bg-white border border-[#D9D9D9] hover:bg-[#F3F3F3] text-[11px] text-[#111111] font-medium transition flex items-center gap-1 text-left"
                         >
                           <span>{s}</span>
-                          <ArrowRight className="w-3 h-3 text-brand-400" />
+                          <ArrowRight className="w-3 h-3 text-[#666666]" />
                         </button>
                       ))}
                     </div>
                   </div>
                 )}
 
-                <span className="block text-[9px] text-slate-400 mt-2 text-right">{m.time}</span>
+                <span
+                  className={`block text-[9px] mt-2 text-right ${
+                    m.sender === 'user' ? 'text-[#8A8A8A]' : 'text-[#8A8A8A]'
+                  }`}
+                >
+                  {m.time}
+                </span>
               </div>
             </div>
           ))}
 
           {typing && (
             <div className="flex gap-3 max-w-xl">
-              <div className="w-9 h-9 rounded-2xl bg-slate-800 border border-brand-500/30 flex items-center justify-center text-brand-400">
-                <Bot className="w-4 h-4 animate-pulse" />
+              <div className="w-7 h-7 rounded-md bg-[#F3F3F3] border border-[#E5E5E5] flex items-center justify-center text-[#111111]">
+                <Bot className="w-4 h-4" />
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-brand-400 animate-bounce" />
-                <div className="w-2 h-2 rounded-full bg-brand-400 animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 rounded-full bg-brand-400 animate-bounce [animation-delay:0.4s]" />
-                <span className="text-[11px] text-slate-400 ml-1">Analyzing database records...</span>
+              <div className="p-3 rounded-lg bg-[#F9FAFB] border border-[#E5E5E5] flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#111111] animate-bounce" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#111111] animate-bounce [animation-delay:0.2s]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#111111] animate-bounce [animation-delay:0.4s]" />
+                <span className="text-[11px] text-[#666666] ml-1">Analyzing database records...</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-slate-950/80 border-t border-slate-800">
+        <div className="p-3.5 bg-white border-t border-[#E5E5E5]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2"
           >
             <input
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               placeholder="Ask about revenue trends, margin by product, leads, or churn forecast..."
-              className="flex-1 px-4 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="flex-1 px-3 py-2 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] placeholder-[#8A8A8A] focus:outline-none focus:border-[#111111]"
             />
             <button
               type="submit"
               disabled={!inputQuery.trim() || typing}
-              className="px-5 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-bold text-xs shadow-glow transition flex items-center gap-2"
+              className="btn-primary py-2"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Ask Copilot</span>
             </button>
           </form>

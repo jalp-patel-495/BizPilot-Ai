@@ -11,10 +11,13 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # Security & Tokens
-    JWT_SECRET: str = "upteky-ai-ultra-secure-production-jwt-secret-key-change-in-prod-2026"
+    JWT_SECRET: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 120
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Seed data setting
+    SEED_DEMO_DATA: bool = False
 
     # Database
     DATABASE_URL: str = "sqlite:///./upteky.db"
@@ -37,6 +40,23 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:8000",
     ]
+
+    @field_validator("JWT_SECRET", mode="before")
+    @classmethod
+    def validate_jwt_secret(cls, v: str, info) -> str:
+        env = os.getenv("ENVIRONMENT", "development").lower()
+        default_insecure = "dev-insecure-jwt-secret-key-for-local-development-only-2026"
+        if env == "production":
+            if not v or len(v.strip()) < 32 or "change-in-prod" in v.lower() or "dev-insecure" in v.lower():
+                raise ValueError(
+                    "CRITICAL SECURITY CONFIGURATION ERROR: A secure, high-entropy JWT_SECRET "
+                    "(minimum 32 characters) must be explicitly configured in the environment for production."
+                )
+            return v
+        # In non-production (development, test)
+        if not v or not v.strip():
+            return default_insecure
+        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",

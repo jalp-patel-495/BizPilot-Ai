@@ -83,25 +83,25 @@ export const AnalyticsPage = () => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0]?.payload;
       return (
-        <div className="glass-panel p-4 rounded-2xl border border-slate-700 shadow-2xl text-xs space-y-2 max-w-xs">
-          <p className="font-extrabold text-white text-sm pb-1 border-b border-slate-800">
-            {label} {dataPoint?.is_forecast && <span className="text-amber-400 text-[10px] uppercase font-bold ml-1.5">(ML Forecast)</span>}
+        <div className="bg-white p-3.5 rounded-lg border border-[#e5e5e5] shadow-md text-xs space-y-1.5 max-w-xs">
+          <p className="font-bold text-[#111111] text-xs pb-1 border-b border-[#e5e5e5]">
+            {label} {dataPoint?.is_forecast && <span className="text-[#666666] text-[10px] uppercase font-semibold ml-1">(Forecast)</span>}
           </p>
 
           {dataPoint?.actual_sales !== null && dataPoint?.actual_sales !== undefined && (
-            <div className="flex justify-between items-center text-cyan-300">
-              <span>Actual Sales:</span>
-              <span className="font-mono font-bold">${dataPoint.actual_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <div className="flex justify-between items-center text-[#111111]">
+              <span className="text-[#666666]">Actual Sales:</span>
+              <span className="font-mono font-semibold">${dataPoint.actual_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
           )}
 
-          <div className="flex justify-between items-center text-amber-400">
-            <span>{dataPoint?.is_forecast ? 'ML Predicted Sales:' : 'Model Fit:'}</span>
-            <span className="font-mono font-bold">${dataPoint.predicted_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          <div className="flex justify-between items-center text-[#111111]">
+            <span className="text-[#666666]">{dataPoint?.is_forecast ? 'Predicted Sales:' : 'Model Fit:'}</span>
+            <span className="font-mono font-semibold">${dataPoint.predicted_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
 
-          <div className="flex justify-between items-center text-slate-400 pt-1 border-t border-slate-800 text-[10px]">
-            <span>95% Confidence Band:</span>
+          <div className="flex justify-between items-center text-[#8a8a8a] pt-1 border-t border-[#e5e5e5] text-[10px]">
+            <span>95% Range:</span>
             <span className="font-mono">${dataPoint.lower_bound?.toLocaleString()} – ${dataPoint.upper_bound?.toLocaleString()}</span>
           </div>
         </div>
@@ -111,45 +111,45 @@ export const AnalyticsPage = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 pb-16">
+    <div className="space-y-6 pb-16">
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/20 flex items-center gap-1.5">
-              <Brain className="w-3 h-3" />
-              <span>Phase 8: Machine Learning Sales Analytics</span>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-800 border border-neutral-200 flex items-center gap-1">
+              <Brain className="w-3 h-3 text-neutral-600" />
+              <span>ML Sales Analytics</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>scikit-learn Regression Active</span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              <span>scikit-learn Active</span>
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            AI Sales Analytics & ML Forecasting Hub
+          <h1 className="text-2xl font-bold text-[#111111] tracking-tight">
+            AI Sales Analytics & Forecasting
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs text-[#666666] mt-0.5">
             Statistical regression forecasting, product contribution matrix, customer trends, and plain-language AI business insights.
           </p>
         </div>
 
         {/* Controls: Horizon Selector & Refresh */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 p-1 bg-slate-900 rounded-xl border border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1 p-0.5 bg-[#f3f3f3] rounded-md border border-[#e5e5e5] text-xs">
             {[
-              { label: 'Next 30 Days', days: 30 },
-              { label: 'Next 60 Days', days: 60 },
-              { label: 'Next 90 Days (Quarter)', days: 90 },
-              { label: 'Next 180 Days (Half-Year)', days: 180 },
+              { label: '30 Days', days: 30 },
+              { label: '60 Days', days: 60 },
+              { label: '90 Days (Quarter)', days: 90 },
+              { label: '180 Days (Half-Year)', days: 180 },
             ].map((h) => (
               <button
                 key={h.days}
                 id={`horizon-btn-${h.days}`}
                 onClick={() => setHorizonDays(h.days)}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+                className={`px-2.5 py-1 rounded text-xs font-medium transition ${
                   horizonDays === h.days
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-white text-[#111111] shadow-xs'
+                    : 'text-[#666666] hover:text-[#111111]'
                 }`}
               >
                 {h.label}
@@ -161,21 +161,20 @@ export const AnalyticsPage = () => {
             id="refresh-analytics-btn"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#111111] bg-white hover:bg-[#f7f7f7] border border-[#d9d9d9] transition shadow-xs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-brand-400 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Re-training ML...' : 'Refresh'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-[#666666] ${refreshing ? 'animate-spin' : ''}`} />
+            <span>{refreshing ? 'Calculating...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
       {/* 4 Core ML & Sales StatCards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Current Monthly Run-Rate"
           value={`$${(forecast?.current_monthly_run_rate || 128450).toLocaleString()}`}
           icon={DollarSign}
-          color="cyan"
           subtitle="September closed sales"
           trend="+11.7% MoM velocity"
         />
@@ -183,7 +182,6 @@ export const AnalyticsPage = () => {
           title="Projected Next Period Revenue"
           value={`$${(forecast?.projected_next_period_sales || 146800).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           icon={TrendingUp}
-          color="amber"
           subtitle="scikit-learn ML model estimate"
           trend={`+${forecast?.projected_growth_percentage || 14.3}% Projected`}
         />
@@ -191,7 +189,6 @@ export const AnalyticsPage = () => {
           title="Model Quality & Fit"
           value={`R² = ${forecast?.model_r2_score || 0.94}`}
           icon={Brain}
-          color="brand"
           subtitle={`MAE ±$${(forecast?.model_mae || 3200).toLocaleString()}`}
           trend="High confidence regression"
         />
@@ -199,113 +196,101 @@ export const AnalyticsPage = () => {
           title="Lead Conversion Win Rate"
           value="14.1%"
           icon={Target}
-          color="emerald"
           subtitle="48 closed-won enterprise deals"
           trend="Avg cycle 14.2 days"
         />
       </div>
 
-      {/* AI Business Insight Generator Card (Plain-Language Explanations) */}
-      <div className="glass-panel p-6 rounded-3xl border border-brand-500/30 bg-gradient-to-tr from-slate-950 via-slate-900 to-brand-950/20 shadow-2xl relative overflow-hidden">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
+      {/* AI Business Insight Generator Card */}
+      <div className="bg-white p-5 rounded-lg border border-[#e5e5e5] shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#e5e5e5]">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-brand-500/20 text-brand-400">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-1.5 rounded-md bg-[#f3f3f3] text-[#111111]">
+              <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-white">AI Executive Business Insights</h2>
-              <p className="text-xs text-slate-400">
-                Synthesized by the ML analytics engine in natural business language.
+              <h2 className="text-sm font-semibold text-[#111111]">Executive Business Insights</h2>
+              <p className="text-xs text-[#666666]">
+                Synthesized by the ML analytics engine in plain business language.
               </p>
             </div>
           </div>
 
-          <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-[10px] font-bold bg-brand-500/15 text-brand-300 border border-brand-500/30">
-            Automated Intelligence Digest
+          <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-800 border border-neutral-200">
+            Intelligence Digest
           </span>
         </div>
 
         {/* Narrative Bullets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {aiInsights.map((insight, idx) => (
             <div
               key={idx}
-              className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-3"
+              className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5] flex items-start gap-2.5"
             >
-              <div className="w-2 h-2 rounded-full bg-brand-400 mt-1.5 shrink-0 shadow-glow" />
-              <p className="text-xs text-slate-200 leading-relaxed font-medium">{insight}</p>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#111111] mt-1.5 shrink-0" />
+              <p className="text-xs text-[#111111] leading-relaxed font-normal">{insight}</p>
             </div>
           ))}
         </div>
 
         {/* Required Disclaimer Banner */}
-        <div className="mt-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-amber-200/90 leading-relaxed">
+        <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5] flex items-start gap-2 text-xs">
+          <AlertCircle className="w-3.5 h-3.5 text-[#666666] shrink-0 mt-0.5" />
+          <p className="text-[11px] text-[#666666] leading-relaxed">
             {forecast?.disclaimer || analyticsData?.disclaimer}
           </p>
         </div>
       </div>
 
       {/* Main Forecast Chart: Actual Sales vs ML Predicted Sales */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-lg border border-[#e5e5e5] shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5" />
-                <span>Time-Series Machine Learning Model</span>
-              </span>
-            </div>
-            <h2 className="text-lg font-extrabold text-white">
-              Sales Forecasting & Confidence Interval Projection
+            <h2 className="text-base font-semibold text-[#111111]">
+              Sales Forecasting & Confidence Projection
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#666666]">
               Historical actual sales vs polynomial regression trajectory for the {horizonDays}-day horizon.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-cyan-400 inline-block" />
-              <span className="text-slate-300">Actual Sales</span>
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#111111] inline-block" />
+              <span className="text-[#666666]">Actual Sales</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-400 inline-block" />
-              <span className="text-slate-300">ML Predicted (Est.)</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-0.5 bg-[#737373] inline-block" />
+              <span className="text-[#666666]">Predicted (Est.)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded bg-amber-400/20 border border-amber-400/40 inline-block" />
-              <span className="text-slate-400">95% Range</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2 rounded bg-[#f3f3f3] border border-[#d9d9d9] inline-block" />
+              <span className="text-[#8a8a8a]">95% Range</span>
             </div>
           </div>
         </div>
 
         {/* Recharts ComposedChart */}
-        <div className="h-80 w-full">
+        <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={forecast?.timeline || []}
-              margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+              margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
             >
-              <defs>
-                <linearGradient id="forecastBandGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
               <XAxis
                 dataKey="period"
-                stroke="#64748b"
-                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                stroke="#8a8a8a"
+                tick={{ fill: '#666666', fontSize: 11 }}
                 tickLine={false}
               />
               <YAxis
-                stroke="#64748b"
-                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                stroke="#8a8a8a"
+                tick={{ fill: '#666666', fontSize: 11 }}
                 tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
                 tickLine={false}
+                axisLine={false}
                 domain={['auto', 'auto']}
               />
               <Tooltip content={<CustomForecastTooltip />} />
@@ -315,30 +300,30 @@ export const AnalyticsPage = () => {
                 type="monotone"
                 dataKey="upper_bound"
                 stroke="none"
-                fill="url(#forecastBandGrad)"
+                fill="#f7f7f7"
                 name="Upper Bound (95%)"
               />
 
-              {/* Actual Sales Line (Solid Cyan) */}
+              {/* Actual Sales Line (Solid Black) */}
               <Line
                 type="monotone"
                 dataKey="actual_sales"
-                stroke="#06b6d4"
-                strokeWidth={3}
-                dot={{ fill: '#06b6d4', r: 4 }}
-                activeDot={{ r: 6 }}
+                stroke="#111111"
+                strokeWidth={2.5}
+                dot={{ fill: '#111111', r: 3 }}
+                activeDot={{ r: 5 }}
                 name="Actual Sales"
                 connectNulls={false}
               />
 
-              {/* ML Predicted Sales Line (Dashed Amber) */}
+              {/* ML Predicted Sales Line (Dashed Gray) */}
               <Line
                 type="monotone"
                 dataKey="predicted_sales"
-                stroke="#f59e0b"
-                strokeWidth={2.5}
-                strokeDasharray="5 5"
-                dot={{ fill: '#f59e0b', r: 4 }}
+                stroke="#737373"
+                strokeWidth={2}
+                strokeDasharray="4 4"
+                dot={{ fill: '#737373', r: 3 }}
                 name="Predicted Sales"
               />
             </ComposedChart>
@@ -347,40 +332,47 @@ export const AnalyticsPage = () => {
       </div>
 
       {/* 2-Column Section: Product Performance & Customer Trends */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column: Product Performance Breakdown */}
-        <div className="lg:col-span-7 glass-panel p-6 rounded-3xl border border-slate-800 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="lg:col-span-7 bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2.5 border-b border-[#e5e5e5]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-brand-400" />
+              <h3 className="text-sm font-semibold text-[#111111] flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-[#111111]" />
                 <span>Product Performance Analysis</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#666666] mt-0.5">
                 Revenue contribution and unit volumes per product line.
               </p>
             </div>
-            <span className="text-xs font-bold text-brand-300">
+            <span className="text-xs font-semibold text-[#111111]">
               Top: {products[0]?.product_name || 'Enterprise Suite'}
             </span>
           </div>
 
           {/* Product Mini Bar Chart */}
-          <div className="h-44 w-full">
+          <div className="h-40 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={products} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="product_name" tick={false} stroke="#64748b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
+                <XAxis dataKey="product_name" tick={false} stroke="#8a8a8a" />
                 <YAxis
-                  stroke="#64748b"
-                  tick={{ fill: '#94a3b8', fontSize: 10 }}
+                  stroke="#8a8a8a"
+                  tick={{ fill: '#666666', fontSize: 10 }}
                   tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                  tickLine={false}
+                  axisLine={false}
                 />
                 <Tooltip
                   formatter={(val) => [`$${val?.toLocaleString()}`, 'Revenue']}
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '1rem', fontSize: '12px' }}
+                  contentStyle={{
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#E5E5E5',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                  }}
                 />
-                <Bar dataKey="revenue" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="revenue" fill="#111111" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -389,22 +381,22 @@ export const AnalyticsPage = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-[10px] font-extrabold uppercase text-slate-400">
+                <tr className="border-b border-[#e5e5e5] text-[10px] font-semibold uppercase text-[#666666]">
                   <th className="pb-2">Product</th>
                   <th className="pb-2">Revenue</th>
                   <th className="pb-2">Share</th>
                   <th className="pb-2 text-right">Growth</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#e5e5e5]">
                 {products.map((prod, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/30 transition">
-                    <td className="py-2.5 font-semibold text-white">{prod.product_name}</td>
-                    <td className="py-2.5 font-mono text-emerald-400 font-bold">
+                  <tr key={idx} className="hover:bg-[#f8f8f8] transition">
+                    <td className="py-2.5 font-medium text-[#111111]">{prod.product_name}</td>
+                    <td className="py-2.5 font-mono text-[#111111] font-semibold">
                       ${prod.revenue?.toLocaleString()}
                     </td>
-                    <td className="py-2.5 text-slate-300">{prod.revenue_share_pct}%</td>
-                    <td className="py-2.5 text-right font-semibold text-brand-300">
+                    <td className="py-2.5 text-[#666666]">{prod.revenue_share_pct}%</td>
+                    <td className="py-2.5 text-right font-medium text-emerald-700">
                       +{prod.growth_pct}%
                     </td>
                   </tr>
@@ -415,52 +407,52 @@ export const AnalyticsPage = () => {
         </div>
 
         {/* Right Column: Customer Trends & Cohorts */}
-        <div className="lg:col-span-5 glass-panel p-6 rounded-3xl border border-slate-800 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="lg:col-span-5 bg-white p-5 rounded-lg border border-[#e5e5e5] space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2.5 border-b border-[#e5e5e5]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-cyan-400" />
-                <span>Customer Trends & Repeat Behavior</span>
+              <h3 className="text-sm font-semibold text-[#111111] flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-[#111111]" />
+                <span>Customer Retention & Acquisition</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#666666] mt-0.5">
                 New vs repeat buyer distribution and lifetime metrics.
               </p>
             </div>
           </div>
 
           {/* New vs Repeat Visual Split */}
-          <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+          <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] space-y-3.5">
             <div className="flex justify-between text-xs">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">New Customer Sales</span>
-                <span className="text-base font-extrabold text-white">
+                <span className="text-[10px] uppercase font-semibold text-[#666666] block">New Customers</span>
+                <span className="text-base font-bold text-[#111111]">
                   ${(customerTrends?.new_customers_revenue || 78450).toLocaleString()}
                 </span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">18 new logos signed</span>
+                <span className="text-[10px] text-[#8a8a8a] block mt-0.5">18 new logos</span>
               </div>
 
               <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Repeat Customer Sales</span>
-                <span className="text-base font-extrabold text-emerald-400">
+                <span className="text-[10px] uppercase font-semibold text-[#666666] block">Repeat Customers</span>
+                <span className="text-base font-bold text-[#111111]">
                   ${(customerTrends?.repeat_customers_revenue || 50000).toLocaleString()}
                 </span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">12 expansion orders</span>
+                <span className="text-[10px] text-[#8a8a8a] block mt-0.5">12 expansions</span>
               </div>
             </div>
 
             {/* Split Bar */}
-            <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
-              <div className="h-full bg-brand-500" style={{ width: '60%' }} title="New Customers (60%)" />
-              <div className="h-full bg-emerald-400" style={{ width: '40%' }} title="Repeat Customers (40%)" />
+            <div className="w-full h-2 rounded-full bg-[#e5e5e5] overflow-hidden flex">
+              <div className="h-full bg-[#111111]" style={{ width: '60%' }} title="New Customers (60%)" />
+              <div className="h-full bg-[#737373]" style={{ width: '40%' }} title="Repeat Customers (40%)" />
             </div>
 
-            <div className="flex justify-between text-[11px] text-slate-400">
+            <div className="flex justify-between text-[11px] text-[#666666]">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-brand-500" />
+                <span className="w-2 h-2 rounded-full bg-[#111111]" />
                 <span>New Acquisition (60%)</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="w-2 h-2 rounded-full bg-[#737373]" />
                 <span>Repeat Expansion (40%)</span>
               </span>
             </div>
@@ -468,38 +460,38 @@ export const AnalyticsPage = () => {
 
           {/* Secondary Metric Badges */}
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800">
-              <span className="text-[10px] font-bold uppercase text-slate-500 block">Average Order Value</span>
-              <span className="text-base font-extrabold text-white mt-1 block">
+            <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+              <span className="text-[10px] font-semibold uppercase text-[#666666] block">Average Order Value</span>
+              <span className="text-base font-bold text-[#111111] mt-0.5 block">
                 ${(customerTrends?.average_order_value || 14200).toLocaleString()}
               </span>
-              <span className="text-[10px] text-emerald-400 font-medium">+18.5% deal size</span>
+              <span className="text-[10px] text-emerald-700 font-medium">+18.5% deal size</span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800">
-              <span className="text-[10px] font-bold uppercase text-slate-500 block">Retention Rate</span>
-              <span className="text-base font-extrabold text-cyan-400 mt-1 block">
+            <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
+              <span className="text-[10px] font-semibold uppercase text-[#666666] block">Retention Rate</span>
+              <span className="text-base font-bold text-[#111111] mt-0.5 block">
                 {customerTrends?.retention_rate_pct || 88.4}%
               </span>
-              <span className="text-[10px] text-slate-400">Enterprise cohort benchmark</span>
+              <span className="text-[10px] text-[#8a8a8a]">Enterprise cohort</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom Section: Conversion Funnel Analysis */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+      <div className="bg-white p-5 sm:p-6 rounded-lg border border-[#e5e5e5] shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e5e5e5]">
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Target className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-semibold text-[#111111] flex items-center gap-1.5">
+              <Target className="w-4 h-4 text-[#111111]" />
               <span>Conversion Funnel & Pipeline Velocity</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-[#666666] mt-0.5">
               Inbound lead stage drop-off and progression towards closed-won deals.
             </p>
           </div>
-          <span className="text-xs font-bold text-emerald-400">
+          <span className="text-xs font-semibold text-[#111111]">
             Overall Win Rate: 14.1%
           </span>
         </div>
@@ -509,21 +501,21 @@ export const AnalyticsPage = () => {
           {conversionFunnel.map((stage, i) => (
             <div
               key={i}
-              className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between space-y-2 relative overflow-hidden group hover:border-slate-700 transition"
+              className="p-3.5 rounded-md bg-[#fafafa] border border-[#e5e5e5] flex flex-col justify-between space-y-2 hover:border-[#d9d9d9] transition"
             >
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8a8a8a] block">
                   Stage {i + 1}
                 </span>
-                <p className="font-bold text-white text-xs mt-0.5">{stage.stage}</p>
+                <p className="font-semibold text-[#111111] text-xs mt-0.5">{stage.stage}</p>
               </div>
 
               <div>
-                <div className="text-xl font-black text-white font-mono">{stage.count}</div>
-                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
-                  <span className="text-brand-300 font-bold">{stage.conversion_rate_pct}% Conv.</span>
+                <div className="text-lg font-bold text-[#111111] font-mono">{stage.count}</div>
+                <div className="flex items-center justify-between text-[10px] text-[#666666] mt-1">
+                  <span className="font-semibold text-[#111111]">{stage.conversion_rate_pct}% Conv.</span>
                   {stage.drop_off_pct > 0 && (
-                    <span className="text-rose-400 font-semibold">-{stage.drop_off_pct}%</span>
+                    <span className="text-rose-700">-{stage.drop_off_pct}%</span>
                   )}
                 </div>
               </div>

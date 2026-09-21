@@ -1,8 +1,9 @@
 from typing import Any, Optional, List
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_user
-from app.schemas.analytics import RoleAnalytics, BusinessDashboardResponse
+from app.api.deps import get_db, require_roles
+from app.core.rbac import UserRole
+from app.schemas.analytics import BusinessDashboardResponse
 from app.schemas.common import APIResponse
 from app.schemas.sales_analytics import (
     SalesForecastResponse,
@@ -13,20 +14,19 @@ from app.schemas.sales_analytics import (
 )
 from app.models.user import User
 from app.services.data_service import data_service
-from app.services.ai_service import ai_service
 from app.services.sales_forecasting_service import sales_forecasting_service
 
 router = APIRouter()
 
 
 # ==============================================================================
-# Phase 8: AI Sales Analytics & ML Forecasting Endpoints
+# Phase 8: AI Sales Analytics & ML Forecasting Endpoints (Admins + Sales Managers)
 # ==============================================================================
 
 @router.get("/sales-forecast", response_model=APIResponse[SalesForecastResponse])
 def get_sales_forecast(
     horizon_days: int = Query(90, description="Forecast horizon in days: 30, 60, 90, 180"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -43,7 +43,7 @@ def get_sales_forecast(
 
 @router.get("/product-performance", response_model=APIResponse[List[ProductPerformanceItem]])
 def get_product_performance(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Analyze historical product performance, revenue contribution, and volume breakdown."""
@@ -56,7 +56,7 @@ def get_product_performance(
 
 @router.get("/customer-trends", response_model=APIResponse[CustomerTrendsResponse])
 def get_customer_trends(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Analyze new vs repeat customer volume, repeat rate %, and average order values."""
@@ -69,7 +69,7 @@ def get_customer_trends(
 
 @router.get("/conversion-analysis", response_model=APIResponse[List[ConversionFunnelStage]])
 def get_conversion_analysis(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Analyze sales conversion funnel stages from new inbound leads to closed-won deals."""
@@ -82,7 +82,7 @@ def get_conversion_analysis(
 
 @router.get("/ai-insights", response_model=APIResponse[List[str]])
 def get_ai_business_insights(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Synthesize plain-language executive business insights explaining sales trends."""
@@ -96,7 +96,7 @@ def get_ai_business_insights(
 @router.get("/comprehensive-sales-analytics", response_model=APIResponse[FullSalesAnalyticsResponse])
 def get_comprehensive_sales_analytics(
     horizon_days: int = Query(90, description="Forecast horizon in days: 30, 60, 90, 180"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -112,7 +112,7 @@ def get_comprehensive_sales_analytics(
 
 
 # ==============================================================================
-# Phase 3 & Foundational Dashboard Endpoints
+# Phase 3 & Foundational Dashboard Endpoints (Role-Protected)
 # ==============================================================================
 
 @router.get("/business-dashboard", response_model=APIResponse[BusinessDashboardResponse])
@@ -120,12 +120,13 @@ async def get_business_dashboard(
     range_type: str = Query("this_month", description="today, this_week, this_month, this_year, custom"),
     start_date: Optional[str] = Query(None, description="YYYY-MM-DD for custom range"),
     end_date: Optional[str] = Query(None, description="YYYY-MM-DD for custom range"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN])),
     db: Session = Depends(get_db),
 ) -> Any:
     """
-    Retrieve Phase 3 Business Management Dashboard metrics.
+    Retrieve Business Management Dashboard metrics.
     Includes the 8 core widgets, 5 Recharts data streams, and dynamic date filtering.
+    Restricted to Super Admin and Business Admin.
     """
     data = data_service.get_business_dashboard(
         range_type=range_type,
@@ -137,22 +138,28 @@ async def get_business_dashboard(
     return APIResponse(data=data)
 
 
-@router.get("/dashboard", response_model=APIResponse[RoleAnalytics])
-async def get_dashboard_analytics(
-    current_user: User = Depends(get_current_user),
+@router.get("/sales-manager-dashboard", response_model=APIResponse[dict])
+def get_sales_manager_dashboard(
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Retrieve role-tailored dashboard metrics, revenue trends, and AI insights."""
-    raw_data = data_service.get_role_dashboard_metrics(role=current_user.role)
-    ai_insights = await ai_service.generate_business_insights(raw_data["overview"])
-
-    payload = RoleAnalytics(
-        role=current_user.role,
-        overview=raw_data["overview"],
-        kpis=raw_data["kpis"],
-        revenue_trends=raw_data["revenue_trends"],
-        pipeline_funnel=raw_data["pipeline_funnel"],
-        ai_insights=ai_insights,
+    """Retrieve comprehensive sales pipeline, team performance, and lead KPIs."""
+    data = data_service.get_sales_manager_dashboard(
+        db=db,
+        org_id=current_user.organization_id,
     )
+    return APIResponse(data=data)
 
-    return APIResponse(data=payload)
+
+@router.get("/employee-dashboard", response_model=APIResponse[dict])
+def get_employee_dashboard(
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER, UserRole.EMPLOYEE])),
+    db: Session = Depends(get_db),
+) -> Any:
+    """Retrieve personal operational workspace data for the authenticated employee."""
+    data = data_service.get_employee_dashboard(
+        db=db,
+        org_id=current_user.organization_id,
+        user_id=current_user.id,
+    )
+    return APIResponse(data=data)

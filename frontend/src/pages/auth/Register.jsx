@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, Building, User, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Sparkles, User, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const Register = () => {
@@ -8,135 +8,138 @@ export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [title, setTitle] = useState('');
-  const [role, setRole] = useState('BUSINESS_ADMIN');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register, login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     setLoading(true);
 
-    const res = await register({
-      full_name: fullName,
-      email,
-      password,
-      role,
-      title: title || 'Operations Specialist',
-    });
+    try {
+      const res = await register({
+        full_name: fullName.trim(),
+        email: email.trim(),
+        password,
+        title: title.trim() || 'Operations Specialist',
+      });
 
-    if (res.success) {
+      if (res.success) {
+        // Account created AND the user is now actually logged in as
+        // themselves (see AuthContext.register), so it's safe to go
+        // straight to the dashboard — no email verification step.
+        navigate('/dashboard', { replace: true });
+      } else {
+        setError(res.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+    } finally {
       setLoading(false);
-      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
-    } else {
-      setLoading(false);
-      setError(res.error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="w-full max-w-lg z-10 space-y-6">
+    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6">
+      <div className="w-full max-w-lg space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-cyan-400 p-0.5 shadow-glow mb-1">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-brand-400" />
-            </div>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-[8px] bg-[#111111] text-white mb-1 shadow-sm">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">Create Tenant Account</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-2xl font-bold tracking-tight text-[#111111]">Create Tenant Account</h1>
+          <p className="text-xs text-[#666666]">
             Join the Upteky AI Intelligent Business Platform
           </p>
         </div>
 
-        <div className="glass-panel p-8 rounded-3xl border border-slate-800 shadow-2xl backdrop-blur-2xl">
+        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">
+            <div className="mb-4 p-3 rounded-[6px] bg-rose-50 border border-rose-200 text-xs text-rose-700">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+              <label htmlFor="full_name" className="block text-xs font-semibold text-[#111111] mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-[#666666] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
+                  id="full_name"
+                  name="full_name"
                   type="text"
+                  autoComplete="name"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jordan Miller"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition"
+                  className="w-full bg-white border border-[#D9D9D9] rounded-[6px] pl-10 pr-4 py-2 text-sm text-[#111111] placeholder:text-[#8A8A8A] focus:outline-none focus:border-[#111111] focus:ring-1 focus:ring-[#111111] transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+              <label htmlFor="email" className="block text-xs font-semibold text-[#111111] mb-1">
                 Work Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-[#666666] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
+                  id="email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jordan@company.com"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                  Role
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition"
-                >
-                  <option value="BUSINESS_ADMIN">Business Admin</option>
-                  <option value="SALES_MANAGER">Sales Manager</option>
-                  <option value="EMPLOYEE">Employee</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                  Job Title
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="VP of Growth"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition"
+                  className="w-full bg-white border border-[#D9D9D9] rounded-[6px] pl-10 pr-4 py-2 text-sm text-[#111111] placeholder:text-[#8A8A8A] focus:outline-none focus:border-[#111111] focus:ring-1 focus:ring-[#111111] transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+              <label htmlFor="title" className="block text-xs font-semibold text-[#111111] mb-1">
+                Job Title
+              </label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                autoComplete="organization-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Operations Specialist"
+                className="w-full bg-white border border-[#D9D9D9] rounded-[6px] px-3 py-2 text-sm text-[#111111] placeholder:text-[#8A8A8A] focus:outline-none focus:border-[#111111] focus:ring-1 focus:ring-[#111111] transition"
+              />
+            </div>
+
+            <p className="text-[11px] text-[#8A8A8A] -mt-1">
+              New self-service accounts are created with <span className="font-semibold text-[#666666]">Employee</span> access.
+              An admin can upgrade your role later from the Users page.
+            </p>
+
+            <div>
+              <label htmlFor="password" className="block text-xs font-semibold text-[#111111] mb-1">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#666666] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
+                  id="password"
+                  name="password"
                   type="password"
+                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create secure password"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition"
+                  className="w-full bg-white border border-[#D9D9D9] rounded-[6px] pl-10 pr-4 py-2 text-sm text-[#111111] placeholder:text-[#8A8A8A] focus:outline-none focus:border-[#111111] focus:ring-1 focus:ring-[#111111] transition"
                 />
               </div>
             </div>
@@ -144,10 +147,10 @@ export const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 text-white font-semibold text-sm shadow-glow transition duration-200 flex items-center justify-center gap-2 mt-4"
+              className="w-full py-2.5 px-4 rounded-[6px] bg-[#111111] hover:bg-[#222222] text-white font-medium text-sm transition duration-150 flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Create Account</span>
@@ -157,9 +160,9 @@ export const Register = () => {
             </button>
           </form>
 
-          <p className="mt-4 text-center text-xs text-slate-500">
+          <p className="mt-4 text-center text-xs text-[#666666]">
             Already have an account?{' '}
-            <Link to="/login" className="text-brand-400 hover:underline font-medium">
+            <Link to="/login" className="text-[#111111] font-semibold hover:underline">
               Sign in
             </Link>
           </p>

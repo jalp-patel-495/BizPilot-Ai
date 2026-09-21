@@ -59,10 +59,69 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (formData) => {
     try {
+      // Always clear any existing session BEFORE creating the new account.
+      // Without this, a stale session (e.g. from a previous demo login)
+      // stays in localStorage/state and the app ends up showing the OLD
+      // user's dashboard after registration instead of the new account's.
+      logout();
+
       const res = await api.post('/auth/register', formData);
-      return { success: true, data: res.data };
+
+      // The backend never returns a token from /register (it only creates
+      // the row), so we immediately log in with the same credentials to
+      // establish a real, correct session for the account that was just
+      // created. This is what actually lands the user on the dashboard
+      // that matches THEIR role, not whatever was cached before.
+      const loginResult = await login(formData.email, formData.password);
+      if (!loginResult.success) {
+        // Account was created but auto-login failed for some reason
+        // (e.g. backend hiccup) — surface that clearly instead of
+        // silently leaving them in a half-signed-in state.
+        return {
+          success: true,
+          data: res.data,
+          autoLoginFailed: true,
+          error: loginResult.error,
+        };
+      }
+
+      return { success: true, data: res.data, user: loginResult.user };
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.detail || 'Registration failed';
+      let msg = 'Registration failed';
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (typeof data.message === 'string' && data.message.trim()) {
+          msg = data.message;
+          if (Array.isArray(data.errors) && data.errors.length > 0) {
+            const fieldErrors = data.errors
+              .map((e) => {
+                const field = Array.isArray(e.loc) ? e.loc[e.loc.length - 1] : '';
+                return field ? `${field}: ${e.msg}` : e.msg;
+              })
+              .filter(Boolean)
+              .join('; ');
+            if (fieldErrors) {
+              msg = `${data.message} (${fieldErrors})`;
+            }
+          }
+        } else if (typeof data.detail === 'string' && data.detail.trim()) {
+          msg = data.detail;
+        } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+          msg = data.detail
+            .map((e) => {
+              const field = Array.isArray(e.loc) ? e.loc[e.loc.length - 1] : '';
+              return field ? `${field}: ${e.msg}` : (e.msg || JSON.stringify(e));
+            })
+            .filter(Boolean)
+            .join('; ');
+        }
+      } else if (err.message) {
+        if (err.message === 'Network Error') {
+          msg = 'Unable to connect to the backend server. Please check that the server is running.';
+        } else {
+          msg = err.message;
+        }
+      }
       return { success: false, error: msg };
     }
   };
@@ -96,16 +155,6 @@ export const AuthProvider = ({ children }) => {
       return { success: true, data: res.data };
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to reset password';
-      return { success: false, error: msg };
-    }
-  };
-
-  const verifyEmail = async (email, code) => {
-    try {
-      const res = await api.post('/auth/verify-email', { email, code });
-      return { success: true, data: res.data };
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid or expired verification code';
       return { success: false, error: msg };
     }
   };
@@ -145,7 +194,6 @@ export const AuthProvider = ({ children }) => {
         demoLogin,
         forgotPassword,
         resetPassword,
-        verifyEmail,
         updateProfile,
         hasRole,
       }}
@@ -169,7 +217,6 @@ export const useAuth = () => {
       demoLogin: async () => ({ success: false }),
       forgotPassword: async () => ({ success: false }),
       resetPassword: async () => ({ success: false }),
-      verifyEmail: async () => ({ success: false }),
       updateProfile: async () => ({ success: false }),
       hasRole: () => false,
     };

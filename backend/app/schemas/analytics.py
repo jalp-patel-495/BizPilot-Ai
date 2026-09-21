@@ -67,17 +67,4 @@ class BusinessDashboardResponse(BaseModel):
     ai_insights: List[str] = []
 
 
-# Retain backwards compatibility for role dashboard
-class FunnelStage(BaseModel):
-    stage: str
-    count: int
-    conversion_rate: float
 
-
-class RoleAnalytics(BaseModel):
-    role: str
-    overview: Dict[str, Any]
-    kpis: List[MetricStat]
-    revenue_trends: List[Dict[str, Any]]
-    pipeline_funnel: List[FunnelStage]
-    ai_insights: List[str]

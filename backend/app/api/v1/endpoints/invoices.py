@@ -9,7 +9,8 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, require_roles
+from app.core.rbac import UserRole
 from app.models.user import User
 from app.models.invoice import Invoice
 from app.schemas.common import APIResponse
@@ -68,7 +69,7 @@ def _format_invoice_response(inv: Invoice) -> InvoiceResponse:
 @router.post("/upload", response_model=APIResponse[InvoiceResponse])
 async def upload_and_process_invoice(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN])),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -160,7 +161,7 @@ def list_invoices(
     date_to: Optional[datetime] = Query(None, description="Filter invoices created before date"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve filtered list of invoices for the current organization."""
@@ -197,7 +198,7 @@ def list_invoices(
 
 @router.get("/stats", response_model=APIResponse[InvoiceStatsResponse])
 def get_invoice_stats(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Get aggregated metrics and OCR accuracy statistics."""
@@ -210,10 +211,10 @@ def get_invoice_stats(
     avg_confidence = (
         round(sum(inv.ocr_confidence or 0.0 for inv in invoices) / total_invoices, 1)
         if total_invoices > 0
-        else 98.5
+        else 0.0
     )
     verification_rate = (
-        round((verified_count / total_invoices) * 100.0, 1) if total_invoices > 0 else 100.0
+        round((verified_count / total_invoices) * 100.0, 1) if total_invoices > 0 else 0.0
     )
 
     stats = InvoiceStatsResponse(
@@ -234,7 +235,7 @@ def get_invoice_stats(
 @router.get("/{invoice_id}", response_model=APIResponse[InvoiceResponse])
 def get_invoice(
     invoice_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve full structured invoice details by ID."""
@@ -259,7 +260,7 @@ def get_invoice(
 def update_invoice(
     invoice_id: str,
     payload: InvoiceUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Edit any incorrect OCR values on an existing invoice record."""
@@ -318,7 +319,7 @@ def update_invoice(
 def verify_invoice(
     invoice_id: str,
     payload: Optional[InvoiceUpdate] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN])),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -378,7 +379,7 @@ def verify_invoice(
 @router.delete("/{invoice_id}", response_model=APIResponse[dict])
 def delete_invoice(
     invoice_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Delete an invoice record."""
@@ -410,7 +411,7 @@ def delete_invoice(
 def download_invoice(
     invoice_id: str,
     export_format: str = Query("json", description="Export format: json or csv"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Download invoice record in structured JSON or CSV format."""

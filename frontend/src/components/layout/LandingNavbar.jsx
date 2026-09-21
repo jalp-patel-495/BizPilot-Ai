@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Menu, X, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sparkles, Menu, X, ArrowRight } from 'lucide-react';
 
 export const LandingNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -27,28 +27,26 @@ export const LandingNavbar = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
         scrolled
-          ? 'bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 py-3 shadow-2xl'
-          : 'bg-transparent py-5'
+          ? 'bg-white border-b border-[#E5E5E5] py-3 shadow-subtle'
+          : 'bg-white/95 border-b border-[#F0F0F0] py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Brand */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-cyan-400 p-0.5 shadow-glow flex items-center justify-center transition-transform group-hover:scale-105">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-brand-400" />
-            </div>
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-[#111111] text-white flex items-center justify-center font-bold">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-white text-lg tracking-tight">Upteky AI</span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+              <span className="font-semibold text-[#111111] text-base tracking-tight">Upteky AI</span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#F3F3F3] text-[#111111] border border-[#E5E5E5]">
                 SaaS
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium">Business Automation & Analytics</p>
+            <p className="text-[10px] text-[#8A8A8A]">Business Automation & Analytics</p>
           </div>
         </Link>
 
@@ -58,7 +56,7 @@ export const LandingNavbar = () => {
             <a
               key={link.name}
               href={link.href}
-              className="text-xs font-medium text-slate-300 hover:text-white transition-colors"
+              className="text-xs font-medium text-[#666666] hover:text-[#111111] transition-colors"
             >
               {link.name}
             </a>
@@ -66,16 +64,16 @@ export const LandingNavbar = () => {
         </nav>
 
         {/* Actions */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5">
           <Link
             to="/login"
-            className="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition"
+            className="px-3.5 py-1.5 text-xs font-medium text-[#111111] hover:bg-[#F7F7F7] border border-[#D9D9D9] rounded-md transition"
           >
             Sign In
           </Link>
           <Link
             to="/register"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#111111] hover:bg-[#262626] text-white font-medium text-xs transition"
           >
             <span>Start Free Trial</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -85,7 +83,7 @@ export const LandingNavbar = () => {
         {/* Mobile menu button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+          className="lg:hidden p-1.5 rounded-md bg-white border border-[#D9D9D9] text-[#666666] hover:text-[#111111]"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -93,29 +91,29 @@ export const LandingNavbar = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-slate-950/95 backdrop-blur-2xl border-b border-slate-800 px-6 py-6 space-y-4 animate-in fade-in duration-200">
-          <div className="flex flex-col space-y-3">
+        <div className="lg:hidden bg-white border-b border-[#E5E5E5] px-6 py-5 space-y-4 animate-in fade-in duration-150">
+          <div className="flex flex-col space-y-2.5">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-300 hover:text-brand-400 py-1"
+                className="text-xs font-medium text-[#666666] hover:text-[#111111] py-1"
               >
                 {link.name}
               </a>
             ))}
           </div>
-          <div className="pt-4 border-t border-slate-800 flex flex-col gap-2">
+          <div className="pt-3 border-t border-[#E5E5E5] flex flex-col gap-2">
             <Link
               to="/login"
-              className="w-full text-center py-2.5 rounded-xl bg-slate-900 text-xs font-semibold text-slate-200"
+              className="w-full text-center py-2 rounded-md bg-white border border-[#D9D9D9] text-xs font-medium text-[#111111]"
             >
               Sign In
             </Link>
             <Link
               to="/register"
-              className="w-full text-center py-2.5 rounded-xl bg-brand-600 text-xs font-semibold text-white shadow-glow"
+              className="w-full text-center py-2 rounded-md bg-[#111111] text-xs font-medium text-white"
             >
               Start Free Trial
             </Link>

@@ -3,9 +3,10 @@ from typing import Any, List, Optional
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, require_roles
+from app.core.rbac import UserRole
 from app.models.user import User
 from app.models.lead import Lead
 from app.models.automation_rule import AutomationRule
@@ -69,7 +70,7 @@ def dispatch_async(task_func, *args, **kwargs):
 
 @router.get("/dashboard", response_model=APIResponse[AutomationDashboardMetrics])
 def get_automation_dashboard(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve full metrics for the AI Automation Dashboard."""
@@ -115,19 +116,19 @@ def get_automation_dashboard(
 
     log_responses = [AutomationLogResponse.model_validate(l) for l in logs[:20]]
 
-    # Derived metrics
-    total_evals = max(1, completed_count + failed_count)
-    accuracy = round((completed_count / total_evals) * 100, 1)
-    estimated_hours = f"{round((completed_count * 0.25) + 14.5, 1)}h"
+    # Derived metrics - genuine counts directly from DB records
+    total_evals = completed_count + failed_count
+    accuracy = round((completed_count / total_evals) * 100, 1) if total_evals > 0 else 0.0
+    estimated_hours = f"{round(completed_count * 0.25, 1)}h"
 
     dashboard_data = AutomationDashboardMetrics(
         active_automations=active_count,
-        completed_automations=completed_count or 142,
+        completed_automations=completed_count,
         failed_automations=failed_count,
         pending_tasks_count=pending_tasks_count,
-        total_executions=total_executions or 142,
+        total_executions=total_executions,
         estimated_hours_saved=estimated_hours,
-        execution_accuracy=accuracy if completed_count > 0 else 99.4,
+        execution_accuracy=accuracy,
         rules=rule_responses,
         recent_tasks=task_responses,
         recent_logs=log_responses,
@@ -142,7 +143,7 @@ def get_automation_dashboard(
 
 @router.get("/rules", response_model=APIResponse[List[AutomationRuleResponse]])
 def list_rules(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """List configured event-driven automation rules."""
@@ -155,7 +156,7 @@ def list_rules(
 @router.post("/rules", response_model=APIResponse[AutomationRuleResponse], status_code=status.HTTP_201_CREATED)
 def create_rule(
     payload: AutomationRuleCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Create a new automation rule."""
@@ -178,7 +179,7 @@ def create_rule(
 @router.put("/rules/{rule_id}/toggle", response_model=APIResponse[AutomationRuleResponse])
 def toggle_rule(
     rule_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """Toggle an automation rule active/paused state."""
@@ -204,7 +205,7 @@ def toggle_rule(
 
 @router.post("/run-scan", response_model=APIResponse[dict])
 def trigger_automation_scan(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -238,6 +239,9 @@ def list_tasks(
 ) -> Any:
     """List pending and completed automation tasks."""
     query = db.query(AutomationTask).filter(AutomationTask.organization_id == current_user.organization_id)
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(AutomationTask.assigned_to == current_user.id)
+
     if status and status.upper() != "ALL":
         query = query.filter(AutomationTask.status == status.upper())
 
@@ -273,12 +277,18 @@ def complete_task(
     db: Session = Depends(get_db),
 ) -> Any:
     """Mark an automation task as completed."""
-    task = db.query(AutomationTask).filter(
+    query = db.query(AutomationTask).filter(
         AutomationTask.id == task_id,
         AutomationTask.organization_id == current_user.organization_id,
-    ).first()
+    )
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(AutomationTask.assigned_to == current_user.id)
+    task = query.first()
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID '{task_id}' not found or unauthorized.",
+        )
 
     task.status = "COMPLETED"
     task.completed_at = datetime.now(timezone.utc)
@@ -328,6 +338,8 @@ def ai_analyze_lead(
     ).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+    if current_user.role == UserRole.EMPLOYEE.value and lead.assigned_to != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access to unassigned lead is restricted")
 
     analysis = lead_automation_service.analyze_and_score_lead(lead)
 
@@ -373,6 +385,8 @@ def generate_lead_message(
     ).first()
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
+    if current_user.role == UserRole.EMPLOYEE.value and lead.assigned_to != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access to unassigned lead is restricted")
 
     msg = lead_automation_service.generate_followup_message(lead, tone=payload.tone or "professional")
     lead.ai_follow_up_message = msg
@@ -400,6 +414,10 @@ def list_notifications(
 ) -> Any:
     """List system and automation notifications."""
     query = db.query(Notification).filter(Notification.organization_id == current_user.organization_id)
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(
+            or_(Notification.user_id == current_user.id, Notification.user_id.is_(None))
+        )
     if unread_only:
         query = query.filter(Notification.is_read == False)
 
@@ -414,10 +432,15 @@ def mark_notification_read(
     db: Session = Depends(get_db),
 ) -> Any:
     """Mark notification as read."""
-    notif = db.query(Notification).filter(
+    query = db.query(Notification).filter(
         Notification.id == notif_id,
         Notification.organization_id == current_user.organization_id,
-    ).first()
+    )
+    if current_user.role == UserRole.EMPLOYEE.value:
+        query = query.filter(
+            or_(Notification.user_id == current_user.id, Notification.user_id.is_(None))
+        )
+    notif = query.first()
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
 

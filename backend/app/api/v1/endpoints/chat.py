@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
 
-from app.api.deps import get_db, get_current_user_optional, get_current_user
+from app.api.deps import get_db, get_current_user_optional, get_current_user, require_roles
+from app.core.rbac import UserRole
 from app.models.conversation import Conversation
 from app.models.chat_message import ChatMessage
 from app.models.knowledge_item import KnowledgeItem
@@ -421,7 +422,7 @@ def list_knowledge_items(
 def create_knowledge_item(
     payload: KnowledgeItemCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
 ) -> Any:
     """Add a new business knowledge base article."""
     item = KnowledgeItem(
@@ -470,7 +471,7 @@ def update_knowledge_item(
     item_id: str,
     payload: KnowledgeItemUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
 ) -> Any:
     """Update an existing knowledge base article."""
     item = db.query(KnowledgeItem).filter(
@@ -509,7 +510,7 @@ def update_knowledge_item(
 def delete_knowledge_item(
     item_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
 ) -> Any:
     """Delete a knowledge item."""
     item = db.query(KnowledgeItem).filter(

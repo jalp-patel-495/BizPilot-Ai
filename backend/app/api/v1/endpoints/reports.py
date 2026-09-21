@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, require_roles
+from app.core.rbac import UserRole
 from app.models.user import User
 from app.schemas.report import (
     BusinessReportResponse,
@@ -17,58 +18,12 @@ from app.services.business_report_service import BusinessReportService
 
 router = APIRouter()
 
-# Static library of pre-generated reports for archive view
-MOCK_REPORTS = [
-    ReportMetadata(
-        id="rep-101",
-        title="Executive Business Health & Revenue Summary",
-        report_type="Executive Summary",
-        date_range="This Month",
-        generated_at=datetime.now(timezone.utc),
-        record_count=1420,
-        status="READY",
-        file_size="2.4 MB",
-        download_url="/api/v1/reports/monthly/export?format=pdf",
-    ),
-    ReportMetadata(
-        id="rep-102",
-        title="Sales Velocity & Quota Performance Report",
-        report_type="Sales Performance",
-        date_range="Last 30 Days",
-        generated_at=datetime.now(timezone.utc),
-        record_count=384,
-        status="READY",
-        file_size="1.1 MB",
-        download_url="/api/v1/reports/sales/export?format=pdf",
-    ),
-    ReportMetadata(
-        id="rep-103",
-        title="Lead Conversion Funnel & Channel Attribution",
-        report_type="Lead Analytics",
-        date_range="Quarter to Date",
-        generated_at=datetime.now(timezone.utc),
-        record_count=892,
-        status="READY",
-        file_size="3.8 MB",
-        download_url="/api/v1/reports/lead/export?format=pdf",
-    ),
-    ReportMetadata(
-        id="rep-104",
-        title="Customer Cohort Retention & Churn Analysis",
-        report_type="Customer Intelligence",
-        date_range="Year to Date",
-        generated_at=datetime.now(timezone.utc),
-        record_count=650,
-        status="READY",
-        file_size="4.2 MB",
-        download_url="/api/v1/reports/customer/export?format=pdf",
-    ),
-]
+REPORT_ROLES = [UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER]
 
 
 @router.get("/catalog", response_model=APIResponse[List[ReportCatalogItem]])
 def get_report_catalog(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(REPORT_ROLES)),
     db: Session = Depends(get_db),
 ) -> Any:
     """List the 7 available automated business report modules."""
@@ -80,7 +35,7 @@ def get_report_catalog(
 @router.get("/data/{report_type}", response_model=APIResponse[BusinessReportResponse])
 def get_business_report(
     report_type: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(REPORT_ROLES)),
     db: Session = Depends(get_db),
 ) -> Any:
     """Generate dynamic business report with metrics, charts, trends, changes, and AI summary."""
@@ -101,7 +56,7 @@ def get_business_report(
 def export_business_report(
     report_type: str,
     format: str = Query("pdf", description="Export format: pdf or csv"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(REPORT_ROLES)),
     db: Session = Depends(get_db),
 ) -> Any:
     """Export any of the 7 business reports as a genuine PDF binary or structured CSV."""
@@ -148,38 +103,78 @@ def export_business_report(
         )
 
 
-# Legacy endpoints for backward compatibility
 @router.get("", response_model=APIResponse[List[ReportMetadata]])
 def list_reports(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(REPORT_ROLES)),
     db: Session = Depends(get_db),
 ) -> Any:
-    """List available business and executive report library."""
-    return APIResponse(data=MOCK_REPORTS)
+    """List available business and executive report library dynamically computed from database."""
+    service = BusinessReportService(db=db, org_id=current_user.organization_id)
+    catalog = service.get_catalog()
+
+    result: List[ReportMetadata] = []
+    for item in catalog:
+        try:
+            rep = service.generate_report(item.report_type)
+            rec_count = len(rep.chart_data) + len(rep.key_metrics)
+            result.append(
+                ReportMetadata(
+                    id=f"rep-{item.report_type}",
+                    title=item.title,
+                    report_type=item.report_type.capitalize(),
+                    date_range=item.cadence,
+                    generated_at=rep.generated_at,
+                    record_count=rec_count,
+                    status="READY",
+                    file_size="Dynamic",
+                    download_url=f"/api/v1/reports/{item.report_type}/export?format=pdf",
+                )
+            )
+        except Exception as e:
+            logger.warning("Could not generate metadata for report %s: %s", item.report_type, e)
+
+    return APIResponse(data=result)
 
 
 @router.post("/export", response_model=APIResponse[ReportMetadata], status_code=status.HTTP_201_CREATED)
 def trigger_report_export(
     export_req: ExportReportRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(REPORT_ROLES)),
     db: Session = Depends(get_db),
 ) -> Any:
-    """Generate and export on-demand analytics report record."""
-    clean_type = export_req.report_type.lower()
-    if clean_type in {"daily", "weekly", "monthly", "sales", "lead", "customer", "revenue"}:
-        download_url = f"/api/v1/reports/{clean_type}/export?format={export_req.format}"
+    """Generate and export on-demand analytics report record with genuine calculated metadata."""
+    clean_type = export_req.report_type.lower().strip()
+    valid_types = {"daily", "weekly", "monthly", "sales", "lead", "customer", "revenue"}
+    if clean_type not in valid_types:
+        clean_type = "monthly"
+
+    service = BusinessReportService(db=db, org_id=current_user.organization_id)
+    report = service.generate_report(clean_type)
+
+    if export_req.format.lower() == "pdf":
+        raw_bytes = service.export_pdf(report)
+        size_bytes = len(raw_bytes)
     else:
-        download_url = f"/api/v1/reports/monthly/export?format={export_req.format}"
+        raw_csv = service.export_csv(report)
+        size_bytes = len(raw_csv.encode("utf-8"))
+
+    if size_bytes >= 1024 * 1024:
+        file_size_str = f"{size_bytes / (1024 * 1024):.1f} MB"
+    else:
+        file_size_str = f"{max(1, size_bytes // 1024)} KB"
+
+    record_count = len(report.chart_data) + len(report.key_metrics) + len(report.important_changes)
+    download_url = f"/api/v1/reports/{clean_type}/export?format={export_req.format.lower()}"
 
     new_report = ReportMetadata(
         id=f"rep-{str(uuid.uuid4())[:8]}",
-        title=f"{export_req.report_type.replace('_', ' ').title()} ({export_req.date_range.replace('_', ' ').title()})",
-        report_type=export_req.report_type.replace('_', ' ').title(),
+        title=f"{report.title} ({export_req.date_range.replace('_', ' ').title()})",
+        report_type=clean_type.capitalize(),
         date_range=export_req.date_range.replace('_', ' ').title(),
         generated_at=datetime.now(timezone.utc),
-        record_count=524,
+        record_count=record_count,
         status="READY",
-        file_size="2.8 MB" if export_req.format == "pdf" else "48 KB",
+        file_size=file_size_str,
         download_url=download_url,
     )
     return APIResponse(message="Report compiled successfully", data=new_report)

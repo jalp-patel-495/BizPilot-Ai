@@ -3,14 +3,11 @@ import {
   Layers,
   DollarSign,
   Plus,
-  Search,
   CheckCircle2,
   Package,
   TrendingUp,
   RefreshCw,
   X,
-  Tag,
-  ArrowUpRight,
 } from 'lucide-react';
 import api from '../../services/api';
 import { StatCard } from '../../components/common/StatCard';
@@ -75,7 +72,6 @@ export const ProductsPage = () => {
     }
   };
 
-  // Aggregated Stats
   const totalItems = products.length;
   const totalUnits = products.reduce((sum, p) => sum + (p.units_sold || 0), 0);
   const totalRevenue = products.reduce((sum, p) => sum + (p.revenue || 0), 0);
@@ -90,47 +86,44 @@ export const ProductsPage = () => {
       : '82.5';
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Top Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-6 rounded-lg border border-[#E5E5E5] shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="p-1.5 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
-              <Layers className="w-4 h-4" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-teal-400">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#666666]">
               Product & Subscription Catalog
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl font-semibold text-[#111111] tracking-tight">
             Products & Service Tiers
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#666666] mt-1">
             Manage software SKUs, pricing schedules, unit cost structures, and sales performance.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition"
+            className="btn-primary"
           >
             <Plus className="w-4 h-4" />
             <span>Add Product</span>
           </button>
           <button
             onClick={fetchProducts}
-            className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-slate-300 transition"
+            className="btn-secondary"
             title="Refresh Products"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-brand-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#111111]' : ''}`} />
           </button>
         </div>
       </div>
 
       {message && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-3 rounded-md bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
           <span>{message}</span>
         </div>
       )}
@@ -144,7 +137,6 @@ export const ProductsPage = () => {
           trend="up"
           subtext="active product lines"
           icon={Package}
-          color="teal"
         />
         <StatCard
           label="Total Units Sold"
@@ -153,7 +145,6 @@ export const ProductsPage = () => {
           trend="up"
           subtext="cumulative licenses"
           icon={TrendingUp}
-          color="cyan"
         />
         <StatCard
           label="Gross Product Revenue"
@@ -162,7 +153,6 @@ export const ProductsPage = () => {
           trend="up"
           subtext="all-time catalog yield"
           icon={DollarSign}
-          color="indigo"
         />
         <StatCard
           label="Average Gross Margin"
@@ -171,37 +161,36 @@ export const ProductsPage = () => {
           trend="up"
           subtext="software profitability"
           icon={CheckCircle2}
-          color="emerald"
         />
       </div>
 
       {/* Products Table */}
-      <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden">
+      <div className="bg-white rounded-lg border border-[#E5E5E5] shadow-subtle overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider text-[10px] font-semibold border-b border-slate-800">
+          <table className="w-full text-left text-xs text-[#111111]">
+            <thead className="bg-[#F9FAFB] text-[#666666] font-medium border-b border-[#E5E5E5]">
               <tr>
-                <th className="px-6 py-4">Product Name & SKU</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Price / Mo</th>
-                <th className="px-6 py-4">Cost</th>
-                <th className="px-6 py-4">Margin %</th>
-                <th className="px-6 py-4">Units Sold</th>
-                <th className="px-6 py-4">Revenue</th>
-                <th className="px-6 py-4">Status</th>
+                <th className="px-5 py-3">Product Name & SKU</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Price / Mo</th>
+                <th className="px-5 py-3">Cost</th>
+                <th className="px-5 py-3">Margin %</th>
+                <th className="px-5 py-3">Units Sold</th>
+                <th className="px-5 py-3">Revenue</th>
+                <th className="px-5 py-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-[#F0F0F0]">
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="py-12 text-center text-slate-500">
-                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  <td colSpan="8" className="py-12 text-center text-[#8A8A8A]">
+                    <div className="w-6 h-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                     Loading products catalog...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="py-12 text-center text-slate-500">
+                  <td colSpan="8" className="py-12 text-center text-[#8A8A8A]">
                     No products in catalog.
                   </td>
                 </tr>
@@ -209,36 +198,35 @@ export const ProductsPage = () => {
                 products.map((p) => {
                   const marginPct = p.price > 0 ? (((p.price - (p.cost || 0)) / p.price) * 100).toFixed(0) : 80;
                   return (
-                    <tr key={p.id} className="hover:bg-slate-800/30 transition">
-                      <td className="px-6 py-4 font-semibold text-white">
+                    <tr key={p.id} className="hover:bg-[#F9FAFB] transition">
+                      <td className="px-5 py-3 font-semibold text-[#111111]">
                         <div>
-                          <p className="font-bold text-white text-xs">{p.name}</p>
-                          <p className="text-[10px] font-mono text-brand-400">{p.sku}</p>
+                          <p className="font-semibold text-[#111111] text-xs">{p.name}</p>
+                          <p className="text-[10px] font-mono text-[#8A8A8A] font-normal">{p.sku}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                      <td className="px-5 py-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#F3F3F3] text-[#111111] border border-[#E5E5E5]">
                           {p.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-white">
+                      <td className="px-5 py-3 font-semibold text-[#111111]">
                         ${p.price?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-slate-400">
+                      <td className="px-5 py-3 text-[#666666]">
                         ${p.cost?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 font-bold text-emerald-400">
+                      <td className="px-5 py-3 font-medium text-emerald-800">
                         {marginPct}%
                       </td>
-                      <td className="px-6 py-4 text-slate-300 font-semibold">
+                      <td className="px-5 py-3 text-[#111111]">
                         {p.units_sold || 0}
                       </td>
-                      <td className="px-6 py-4 font-extrabold text-white text-sm">
+                      <td className="px-5 py-3 font-semibold text-[#111111]">
                         ${(p.revenue || (p.price * (p.units_sold || 1))).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <td className="px-5 py-3">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
                           {p.status}
                         </span>
                       </td>
@@ -253,47 +241,47 @@ export const ProductsPage = () => {
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-slate-700 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white w-full max-w-lg p-6 rounded-lg border border-[#E5E5E5] shadow-modal relative text-[#111111]">
             <button
               onClick={() => setShowAddModal(false)}
-              className="absolute top-6 right-6 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 text-[#8A8A8A] hover:text-[#111111]"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <h3 className="text-lg font-bold text-white mb-1">Add Product or Service Tier</h3>
-            <p className="text-xs text-slate-400 mb-6">Create a new SKU in the product catalog</p>
+            <h3 className="text-base font-semibold text-[#111111] mb-0.5">Add Product or Service Tier</h3>
+            <p className="text-xs text-[#666666] mb-5">Create a new SKU in the product catalog</p>
 
-            <form onSubmit={handleCreateProduct} className="space-y-4">
+            <form onSubmit={handleCreateProduct} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Product Name</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Product Name</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Autonomous Customer Support AI"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">SKU Code</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">SKU Code</label>
                   <input
                     type="text"
                     required
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs font-mono text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Category</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Category</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   >
                     <option value="Subscription">Subscription</option>
                     <option value="Software">Software</option>
@@ -305,51 +293,51 @@ export const ProductsPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Retail Price ($)</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Retail Price ($)</label>
                   <input
                     type="number"
                     required
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Unit Cost ($)</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Unit Cost ($)</label>
                   <input
                     type="number"
                     value={formData.cost}
                     onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] focus:border-[#111111] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Description</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Description</label>
                 <textarea
                   rows="2"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Key features and specifications..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-1.5 rounded-md bg-white border border-[#D9D9D9] text-xs text-[#111111] placeholder-[#8A8A8A] focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EBEBEB]">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-glow transition flex items-center gap-2"
+                  className="btn-primary"
                 >
                   {submitting && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   <span>Save Product</span>

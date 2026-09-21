@@ -2,7 +2,9 @@ from typing import Any, List, Optional
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, require_roles
+from app.core.rbac import UserRole
+from app.models.lead import Lead
 from app.models.user import User
 from app.models.customer import Customer
 from app.models.customer_activity import CustomerActivity
@@ -19,6 +21,18 @@ from app.schemas.common import APIResponse
 router = APIRouter()
 
 
+def _is_customer_accessible_by_user(customer: Customer, user: User, db: Session) -> bool:
+    if user.role != UserRole.EMPLOYEE.value:
+        return True
+    assigned_leads = db.query(Lead).filter(Lead.assigned_to == user.id).all()
+    target_names = {l.company for l in assigned_leads if l.company} | {l.contact_name for l in assigned_leads if l.contact_name} | {l.email for l in assigned_leads if l.email}
+    return (
+        customer.company in target_names
+        or customer.name in target_names
+        or customer.email in target_names
+    )
+
+
 @router.get("", response_model=APIResponse[List[CustomerResponse]])
 def list_customers(
     q: Optional[str] = Query(None, description="Search by name, company, email, phone, or industry"),
@@ -29,7 +43,16 @@ def list_customers(
 ) -> Any:
     """List customer directory for organization with search and filters."""
     query = db.query(Customer).filter(Customer.organization_id == current_user.organization_id)
-    
+    if current_user.role == UserRole.EMPLOYEE.value:
+        # Employee sees customers associated with their assigned leads or directly managed
+        assigned_leads = db.query(Lead).filter(Lead.assigned_to == current_user.id).all()
+        target_names = {l.company for l in assigned_leads if l.company} | {l.contact_name for l in assigned_leads if l.contact_name} | {l.email for l in assigned_leads if l.email}
+        query = query.filter(
+            (Customer.company.in_(list(target_names)))
+            | (Customer.name.in_(list(target_names)))
+            | (Customer.email.in_(list(target_names)))
+        )
+
     if status_filter:
         query = query.filter(Customer.status == status_filter.upper())
     if industry:
@@ -114,7 +137,7 @@ def get_customer(
         .filter(Customer.id == customer_id, Customer.organization_id == current_user.organization_id)
         .first()
     )
-    if not customer:
+    if not customer or not _is_customer_accessible_by_user(customer, current_user, db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
 
     activities = (
@@ -160,7 +183,7 @@ def update_customer(
         .filter(Customer.id == customer_id, Customer.organization_id == current_user.organization_id)
         .first()
     )
-    if not customer:
+    if not customer or not _is_customer_accessible_by_user(customer, current_user, db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
 
     update_dict = customer_update.model_dump(exclude_unset=True)
@@ -191,9 +214,9 @@ def update_customer(
 def delete_customer(
     customer_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN, UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER])),
 ) -> Any:
-    """Delete customer account."""
+    """Delete customer account (Admins & Sales Managers only)."""
     customer = (
         db.query(Customer)
         .filter(Customer.id == customer_id, Customer.organization_id == current_user.organization_id)
@@ -219,7 +242,7 @@ def get_customer_history(
         .filter(Customer.id == customer_id, Customer.organization_id == current_user.organization_id)
         .first()
     )
-    if not customer:
+    if not customer or not _is_customer_accessible_by_user(customer, current_user, db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
 
     activities = (
@@ -244,7 +267,7 @@ def add_customer_activity(
         .filter(Customer.id == customer_id, Customer.organization_id == current_user.organization_id)
         .first()
     )
-    if not customer:
+    if not customer or not _is_customer_accessible_by_user(customer, current_user, db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
 
     activity = CustomerActivity(

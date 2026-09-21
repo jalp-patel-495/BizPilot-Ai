@@ -74,5 +74,16 @@ class MLService:
             "confidence_score": 0.88,
         }
 
+    def predict_lead_score(
+        self,
+        deal_value: float = 0.0,
+        industry: str = "Technology",
+        source: str = "Website",
+        **kwargs,
+    ) -> float:
+        """Convenience method returning the float lead score."""
+        res = self.predict_lead_conversion(deal_value=deal_value or 0.0, industry=industry or "Technology")
+        return float(res["lead_score"])
+
 
 ml_service = MLService()

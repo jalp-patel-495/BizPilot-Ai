@@ -1,11 +1,14 @@
+import logging
 from datetime import datetime, timezone, timedelta
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.api.deps import get_db, get_current_user
 from app.core.config import settings
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
 from app.core.exceptions import APIException, UnauthorizedException
+from app.core.rbac import UserRole
 from app.models.user import User
 from app.models.organization import Organization
 from app.schemas.token import (
@@ -20,6 +23,7 @@ from app.schemas.token import (
 from app.schemas.user import UserCreate, UserOut, UserProfile
 from app.schemas.common import APIResponse
 
+logger = logging.getLogger("upteky.auth")
 router = APIRouter()
 
 
@@ -60,37 +64,62 @@ def login(request_data: LoginRequest, db: Session = Depends(get_db)) -> Any:
 @router.post("/register", response_model=APIResponse[UserOut])
 def register(user_in: UserCreate, db: Session = Depends(get_db)) -> Any:
     """Register a new user and assign them to an initial organization."""
-    existing_user = db.query(User).filter(User.email == user_in.email.lower().strip()).first()
+    clean_email = user_in.email.lower().strip()
+    existing_user = db.query(User).filter(User.email == clean_email).first()
     if existing_user:
         raise APIException("An account with this email address already exists", status_code=400)
 
-    # Resolve or create organization
-    org_id = user_in.organization_id
-    if not org_id:
-        default_org = db.query(Organization).first()
-        if not default_org:
-            default_org = Organization(
-                name="Acme Enterprises",
-                slug="acme-enterprises",
-                plan="Enterprise Pro",
-            )
-            db.add(default_org)
-            db.commit()
-            db.refresh(default_org)
-        org_id = default_org.id
+    if not user_in.password or len(user_in.password.strip()) < 6:
+        raise APIException("Password must be at least 6 characters long", status_code=400)
 
-    new_user = User(
-        email=user_in.email.lower().strip(),
-        hashed_password=get_password_hash(user_in.password),
-        full_name=user_in.full_name,
-        role=user_in.role.value if hasattr(user_in.role, "value") else str(user_in.role),
-        title=user_in.title or "Specialist",
-        organization_id=org_id,
-        is_active=True,
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    # Resolve or create organization safely
+    org_id = None
+    if user_in.organization_id:
+        target_org = db.query(Organization).filter(Organization.id == user_in.organization_id).first()
+        if target_org and target_org.is_active:
+            org_id = target_org.id
+
+    if not org_id:
+        default_org = db.query(Organization).filter(Organization.slug == "upteky-corp").first() or db.query(Organization).first()
+        if not default_org:
+            try:
+                default_org = Organization(
+                    name="Upteky Technologies Inc.",
+                    slug="upteky-corp",
+                    plan="Enterprise AI Suite",
+                    status="ACTIVE",
+                    is_active=True,
+                )
+                db.add(default_org)
+                db.commit()
+                db.refresh(default_org)
+            except IntegrityError:
+                db.rollback()
+                default_org = db.query(Organization).first()
+        org_id = default_org.id if default_org else None
+
+    # For self-service public registration, privilege escalation is prohibited.
+    # New self-registered accounts are assigned EMPLOYEE role by default.
+    try:
+        new_user = User(
+            email=clean_email,
+            hashed_password=get_password_hash(user_in.password),
+            full_name=user_in.full_name.strip(),
+            role=UserRole.EMPLOYEE.value,
+            title=(user_in.title.strip() if user_in.title and user_in.title.strip() else "Operations Specialist"),
+            organization_id=org_id,
+            is_active=True,
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except IntegrityError:
+        db.rollback()
+        raise APIException("An account with this email address already exists", status_code=400)
+    except Exception as exc:
+        db.rollback()
+        logger.error(f"Error creating user account: {exc}")
+        raise APIException("Registration failed due to an unexpected error. Please try again later.", status_code=500)
 
     return APIResponse(
         message="Account created successfully",
