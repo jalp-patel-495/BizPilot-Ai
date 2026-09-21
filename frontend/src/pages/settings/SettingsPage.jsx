@@ -20,8 +20,8 @@ export const SettingsPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('organization');
   const [orgName, setOrgName] = useState(user?.organization_name || 'Upteky Technologies Inc.');
-  const [timezone, setTimezone] = useState('UTC-05:00 Eastern Time');
-  const [currency, setCurrency] = useState('USD ($)');
+  const [timezone, setTimezone] = useState('UTC+05:30 (IST - Indian Standard Time)');
+  const [currency, setCurrency] = useState('INR (Rs.)');
   const [apiKey, setApiKey] = useState('upt_live_9f88a218ecbc018247b99c68');
   const [copied, setCopied] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
@@ -142,10 +142,10 @@ export const SettingsPage = () => {
                   onChange={(e) => setTimezone(e.target.value)}
                   className="w-full bg-white border border-[#d9d9d9] rounded-md px-3 py-2 text-xs text-[#111111] focus:outline-none focus:border-[#111111] transition"
                 >
-                  <option value="UTC-05:00 Eastern Time">UTC-05:00 Eastern Time (US & Canada)</option>
-                  <option value="UTC-08:00 Pacific Time">UTC-08:00 Pacific Time (US & Canada)</option>
+                  <option value="UTC+05:30 (IST - Indian Standard Time)">UTC+05:30 (IST - Indian Standard Time, Asia/Kolkata)</option>
+                  <option value="UTC+05:30 New Delhi / Mumbai / Bengaluru">UTC+05:30 New Delhi / Mumbai / Bengaluru</option>
                   <option value="UTC+00:00 UTC London">UTC+00:00 UTC London</option>
-                  <option value="UTC+05:30 IST Mumbai">UTC+05:30 IST Mumbai</option>
+                  <option value="UTC-05:00 Eastern Time">UTC-05:00 Eastern Time (US & Canada)</option>
                 </select>
               </div>
 
@@ -158,10 +158,10 @@ export const SettingsPage = () => {
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-full bg-white border border-[#d9d9d9] rounded-md px-3 py-2 text-xs text-[#111111] focus:outline-none focus:border-[#111111] transition"
                 >
+                  <option value="INR (Rs.)">INR - Indian Rupee (Rs.)</option>
                   <option value="USD ($)">USD - US Dollar ($)</option>
                   <option value="EUR (€)">EUR - Euro (€)</option>
                   <option value="GBP (£)">GBP - British Pound (£)</option>
-                  <option value="CAD ($)">CAD - Canadian Dollar ($)</option>
                 </select>
               </div>
             </div>
@@ -193,8 +193,8 @@ export const SettingsPage = () => {
                 </span>
               </div>
               <p className="text-xs text-[#666666] mt-0.5">
-                Billed {subData?.subscription?.billing_cycle || 'monthly'} (${subData?.subscription?.monthly_price || subData?.plan?.monthly_price || 199}/mo).
-                {subData?.subscription?.current_period_end && ` Renews on ${new Date(subData.subscription.current_period_end).toLocaleDateString()}.`}
+                Billed {subData?.subscription?.billing_cycle || 'monthly'} (Rs. {subData?.subscription?.monthly_price || subData?.plan?.monthly_price || 199}/mo).
+                {subData?.subscription?.current_period_end && ` Renews on ${new Date(subData.subscription.current_period_end).toLocaleDateString('en-IN')}.`}
               </p>
             </div>
             <button className="px-3.5 py-1.5 rounded-md bg-[#111111] hover:bg-[#222222] text-white font-semibold text-xs transition shadow-xs">

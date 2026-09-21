@@ -386,7 +386,7 @@ export const AdminDashboard = () => {
           <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
             <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Platform MRR</span>
             <p className="text-lg font-bold text-[#111111] mt-0.5">
-              ${(dashboardData?.mrr || 4880).toLocaleString()}
+              Rs. {(dashboardData?.mrr || 4880).toLocaleString()}
             </p>
             <span className="text-[10px] text-emerald-700 font-medium flex items-center gap-0.5 mt-0.5">
               <TrendingUp className="w-3 h-3" /> +{dashboardData?.mrr_growth || 14.8}%
@@ -1165,7 +1165,7 @@ export const AdminDashboard = () => {
             </div>
             <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
               <span className="text-[10px] font-medium text-[#666666] uppercase tracking-wider">Estimated LLM Cost</span>
-              <p className="text-2xl font-bold text-emerald-700">${aiUsage?.estimated_cost_usd || 4.96}</p>
+              <p className="text-2xl font-bold text-emerald-700">Rs. {aiUsage?.estimated_cost_usd || 410.00}</p>
               <p className="text-[10px] text-[#8a8a8a]">Blended compute pricing</p>
             </div>
             <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] space-y-1 shadow-xs">
@@ -1327,10 +1327,10 @@ export const AdminDashboard = () => {
                     onChange={(e) => setNewBizForm({ ...newBizForm, plan_tier: e.target.value })}
                     className="w-full bg-white text-[#111111] rounded-md px-2.5 py-2 border border-[#d9d9d9] focus:outline-none focus:border-[#111111]"
                   >
-                    <option value="free">Free ($0/mo)</option>
-                    <option value="starter">Starter ($49/mo)</option>
-                    <option value="business">Business ($199/mo)</option>
-                    <option value="enterprise">Enterprise ($499/mo)</option>
+                    <option value="free">Free (Rs. 0/mo)</option>
+                    <option value="starter">Starter (Rs. 499/mo)</option>
+                    <option value="business">Business (Rs. 1,999/mo)</option>
+                    <option value="enterprise">Enterprise (Rs. 4,999/mo)</option>
                   </select>
                 </div>
               </div>
@@ -1486,7 +1486,7 @@ export const AdminDashboard = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#111111] font-medium mb-1">Monthly Price ($)</label>
+                  <label className="block text-[#111111] font-medium mb-1">Monthly Price (Rs.)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1496,7 +1496,7 @@ export const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[#111111] font-medium mb-1">Annual Price ($)</label>
+                  <label className="block text-[#111111] font-medium mb-1">Annual Price (Rs.)</label>
                   <input
                     type="number"
                     step="0.01"

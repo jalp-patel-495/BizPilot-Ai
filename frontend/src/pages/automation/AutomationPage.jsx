@@ -838,7 +838,7 @@ export const AutomationPage = () => {
               >
                 {leads.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.company} — {l.contact_name} (${(l.deal_value || 0).toLocaleString()})
+                    {l.company} — {l.contact_name} (Rs. ${(l.deal_value || 0).toLocaleString()})
                   </option>
                 ))}
               </select>
@@ -876,7 +876,7 @@ export const AutomationPage = () => {
                       <h3 className="text-base font-bold text-[#111111]">{aiAnalysis.company}</h3>
                       <p className="text-xs text-[#666666]">Contact: {aiAnalysis.contact_name}</p>
                       <p className="text-xs text-[#111111] font-semibold mt-0.5">
-                        Deal Value: ${(aiAnalysis.deal_value || 0).toLocaleString()}
+                        Deal Value: Rs. ${(aiAnalysis.deal_value || 0).toLocaleString()}
                       </p>
                     </div>
 

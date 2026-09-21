@@ -21,7 +21,7 @@ import {
   ChevronRight,
   Download,
   RefreshCw,
-  DollarSign,
+  IndianRupee,
   Check,
   File,
   Building,
@@ -418,10 +418,10 @@ Total Amount: 1203.60`;
         />
         <StatCard
           title="Total Value Processed"
-          value={`$${(stats.total_amount_processed || 0).toLocaleString(undefined, {
+          value={`Rs. ${(stats.total_amount_processed || 0).toLocaleString(undefined, {
             minimumFractionDigits: 2,
           })}`}
-          icon={DollarSign}
+          icon={IndianRupee}
           subtitle="Vendor payables reconciled"
           trend="+28.4% volume"
         />
@@ -632,12 +632,12 @@ Total Amount: 1203.60`;
 
                       <td className="py-3 px-4">
                         <div className="font-semibold text-[#111111] text-xs">
-                          ${(inv.total_amount || 0).toLocaleString(undefined, {
+                          Rs. {(inv.total_amount || 0).toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                           })}
                         </div>
                         <div className="text-[10px] text-[#8a8a8a]">
-                          Sub: ${(inv.subtotal || 0).toFixed(2)} | Tax: ${(inv.tax_amount || 0).toFixed(2)}
+                          Sub: Rs. ${(inv.subtotal || 0).toFixed(2)} | Tax: Rs. ${(inv.tax_amount || 0).toFixed(2)}
                         </div>
                       </td>
 
@@ -832,16 +832,16 @@ Total Amount: 1203.60`;
                     Currency
                   </label>
                   <select
-                    value={editingInvoice.currency || 'USD'}
+                    value={editingInvoice.currency || 'INR'}
                     onChange={(e) =>
                       setEditingInvoice({ ...editingInvoice, currency: e.target.value })
                     }
                     className="w-full px-3 py-1.5 rounded-md bg-white border border-[#d9d9d9] text-[#111111] text-xs focus:border-[#111111] focus:outline-none"
                   >
+                    <option value="INR">INR (Rs.)</option>
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="GBP">GBP (£)</option>
-                    <option value="INR">INR (₹)</option>
                   </select>
                 </div>
               </div>
@@ -867,8 +867,8 @@ Total Amount: 1203.60`;
                   <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold uppercase text-[#666666] px-1">
                     <div className="col-span-6">Description</div>
                     <div className="col-span-2">Qty</div>
-                    <div className="col-span-2">Unit Price ($)</div>
-                    <div className="col-span-2 text-right">Amount ($)</div>
+                    <div className="col-span-2">Unit Price (Rs.)</div>
+                    <div className="col-span-2 text-right">Amount (Rs.)</div>
                   </div>
 
                   {editingInvoice.items?.map((item, idx) => (
@@ -901,7 +901,7 @@ Total Amount: 1203.60`;
                       </div>
                       <div className="col-span-2 flex items-center justify-end gap-1.5">
                         <span className="font-mono text-[#111111] font-semibold text-xs">
-                          ${(parseFloat(item.amount) || 0).toFixed(2)}
+                          Rs. {(parseFloat(item.amount) || 0).toFixed(2)}
                         </span>
                         <button
                           type="button"
@@ -926,14 +926,14 @@ Total Amount: 1203.60`;
                   <div>
                     <span className="text-[#8a8a8a] block text-[10px] uppercase font-medium">Subtotal</span>
                     <span className="text-[#111111] font-bold font-mono">
-                      ${(editingInvoice.subtotal || 0).toFixed(2)}
+                      Rs. {(editingInvoice.subtotal || 0).toFixed(2)}
                     </span>
                   </div>
 
                   <div>
                     <span className="text-[#8a8a8a] block text-[10px] uppercase font-medium">Tax (18%)</span>
                     <span className="text-[#111111] font-bold font-mono">
-                      ${(editingInvoice.tax_amount || 0).toFixed(2)}
+                      Rs. {(editingInvoice.tax_amount || 0).toFixed(2)}
                     </span>
                   </div>
 
@@ -942,7 +942,7 @@ Total Amount: 1203.60`;
                       Grand Total
                     </span>
                     <span className="text-[#111111] font-black text-sm font-mono">
-                      ${(editingInvoice.total_amount || 0).toFixed(2)}
+                      Rs. {(editingInvoice.total_amount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -1045,11 +1045,11 @@ Total Amount: 1203.60`;
                         <div>
                           <p className="font-medium text-[#111111]">{it.description}</p>
                           <p className="text-[10px] text-[#666666]">
-                            Qty: {it.quantity} × ${it.unit_price?.toFixed(2)}
+                            Qty: {it.quantity} × Rs. {it.unit_price?.toFixed(2)}
                           </p>
                         </div>
                         <span className="font-mono font-semibold text-[#111111]">
-                          ${it.amount?.toFixed(2)}
+                          Rs. {it.amount?.toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -1060,18 +1060,18 @@ Total Amount: 1203.60`;
                 <div className="pt-2.5 border-t border-[#e5e5e5] space-y-1 text-xs">
                   <div className="flex justify-between text-[#666666]">
                     <span>Subtotal</span>
-                    <span className="font-mono text-[#111111]">${selectedInvoice.subtotal?.toFixed(2)}</span>
+                    <span className="font-mono text-[#111111]">Rs. {selectedInvoice.subtotal?.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-[#666666]">
                     <span>Tax (18% GST)</span>
                     <span className="font-mono text-[#111111]">
-                      ${selectedInvoice.tax_amount?.toFixed(2)}
+                      Rs. {selectedInvoice.tax_amount?.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs font-bold pt-2 border-t border-[#e5e5e5] text-[#111111]">
                     <span>Total Amount</span>
                     <span className="font-mono">
-                      ${selectedInvoice.total_amount?.toFixed(2)}
+                      Rs. {selectedInvoice.total_amount?.toFixed(2)}
                     </span>
                   </div>
                 </div>

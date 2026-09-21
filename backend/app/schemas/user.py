@@ -8,7 +8,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     role: UserRole = UserRole.EMPLOYEE
-    title: Optional[str] = "Operations Specialist"
+    title: Optional[str] = None
     organization_id: Optional[str] = None
 
 

@@ -51,7 +51,7 @@ export const SalesPipelineFunnel = ({ stages = [] }) => {
             </div>
             <div className="mt-2 pt-2 border-t border-[#EBEBEB]">
               <span className="text-[11px] font-medium text-[#444444]">
-                ${(st.value || 0).toLocaleString()}
+                Rs. {(st.value || 0).toLocaleString()}
               </span>
             </div>
           </div>

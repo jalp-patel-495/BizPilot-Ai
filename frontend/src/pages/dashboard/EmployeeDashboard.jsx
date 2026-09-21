@@ -5,7 +5,7 @@ import {
   Users,
   CheckCircle2,
   Clock,
-  DollarSign,
+  IndianRupee,
   Bot,
   TrendingUp,
   ArrowRight,
@@ -143,11 +143,11 @@ export const EmployeeDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPICard
           label="My Sales"
-          value={kpis.my_sales?.value ? (typeof kpis.my_sales.value === 'number' ? `$${kpis.my_sales.value.toLocaleString()}` : kpis.my_sales.value) : '$0'}
+          value={kpis.my_sales?.value ? (typeof kpis.my_sales.value === 'number' ? `Rs. ${kpis.my_sales.value.toLocaleString()}` : String(kpis.my_sales.value).replace(/\$/g, 'Rs. ')) : 'Rs. 0'}
           change={kpis.my_sales?.change ?? 0.0}
           trend={kpis.my_sales?.trend || 'neutral'}
           subtext={kpis.my_sales?.subtext || 'Closed deals revenue'}
-          icon={DollarSign}
+          icon={IndianRupee}
           onClick={() => navigate('/sales')}
         />
         <KPICard

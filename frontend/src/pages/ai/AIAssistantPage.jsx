@@ -28,13 +28,13 @@ export const AIAssistantPage = () => {
 
   const predefinedAnswers = {
     revenue:
-      'Based on the current billing cycle, total revenue stands at $149,200 (+21.4% YoY). Your monthly sales run-rate is outpacing quota by 108%. The largest growth contributor is the "Upteky AI Enterprise Suite", which contributed $89,400 with a 92% retention rate.',
+      'Based on the current billing cycle, total revenue stands at Rs. 1,49,200 (+21.4% YoY). Your monthly sales run-rate is outpacing quota by 108%. The largest growth contributor is the "Upteky AI Enterprise Suite", which contributed Rs. 89,400 with a 92% retention rate.',
     margin:
-      'Looking at your product catalog, "Autonomous Customer Support Copilot" delivers an 86.4% gross margin ($699 price vs $95 unit server cost). Overall catalog gross margin averages 82.5%, well above the SaaS industry benchmark of 75%.',
+      'Looking at your product catalog, "Autonomous Customer Support Copilot" delivers an 86.4% gross margin (Rs. 699 price vs Rs. 95 unit server cost). Overall catalog gross margin averages 82.5%, well above the SaaS industry benchmark of 75%.',
     leads:
-      'You currently have 26 pending follow-ups requiring attention. In particular, 3 high-ARR opportunities (Apex Financial Solutions - $48,500, NexusTech - $32,000, and BioCare Health - $65,000) have AI scores above 90/100 and have been awaiting contact for over 48 hours.',
+      'You currently have 26 pending follow-ups requiring attention. In particular, 3 high-ARR opportunities (Apex Financial Solutions - Rs. 48,500, NexusTech - Rs. 32,000, and BioCare Health - Rs. 65,000) have AI scores above 90/100 and have been awaiting contact for over 48 hours.',
     forecast:
-      'Our predictive forecasting model projects Q4 revenue between $380,000 and $415,000 based on your current 24.6% lead conversion rate and 14.2-day average deal cycle. Accelerating lead response time by 20% could lift gross revenue by an additional $34,000.',
+      'Our predictive forecasting model projects Q4 revenue between Rs. 3,80,000 and Rs. 4,15,000 based on your current 24.6% lead conversion rate and 14.2-day average deal cycle. Accelerating lead response time by 20% could lift gross revenue by an additional Rs. 34,000.',
   };
 
   const handleSend = (queryText) => {
@@ -45,7 +45,7 @@ export const AIAssistantPage = () => {
       id: Date.now(),
       sender: 'user',
       text: textToSend,
-      time: 'Just now',
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -54,7 +54,7 @@ export const AIAssistantPage = () => {
 
     setTimeout(() => {
       let replyText =
-        'I examined your current database metrics. Business operations are pacing strongly with a 24.6% lead conversion rate, $149,200 in monthly revenue, and 1,280 active customer accounts. No anomalous attrition detected.';
+        'I examined your current database metrics. Business operations are pacing strongly with a 24.6% lead conversion rate, Rs. 1,49,200 in monthly revenue, and 1,280 active customer accounts. No anomalous attrition detected.';
       const lower = textToSend.toLowerCase();
       if (lower.includes('revenue') || lower.includes('trajectory') || lower.includes('sales')) {
         replyText = predefinedAnswers.revenue;

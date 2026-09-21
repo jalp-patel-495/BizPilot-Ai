@@ -62,7 +62,7 @@ class SalesForecastingService:
         if products and len(products) > 0 and products[0].revenue > 0:
             top_prod = products[0].product_name
             exec_summary = (
-                f"{top_prod} generated the highest revenue (${products[0].revenue:,.2f}). "
+                f"{top_prod} generated the highest revenue (Rs. {products[0].revenue:,.2f}). "
                 f"ML models project a {forecast.projected_growth_percentage}% growth trajectory over the next {horizon_days} days."
             )
         else:
@@ -201,7 +201,7 @@ class SalesForecastingService:
         insights = [
             f"Machine learning model fitted with {r2 * 100:.1f}% statistical variance explained (R² = {r2}).",
             f"Projected {horizon_days}-day revenue trajectory shows {growth_pct:+}% projected growth.",
-            f"Next period expected revenue is estimated at ${next_predicted:,.2f}.",
+            f"Next period expected revenue is estimated at Rs. {next_predicted:,.2f}.",
         ]
 
         return SalesForecastResponse(
@@ -392,7 +392,7 @@ class SalesForecastingService:
             top_prod = products[0].product_name
             top_rev = products[0].revenue
             top_share = products[0].revenue_share_pct
-            insights.append(f"{top_prod} generated the highest revenue (${top_rev:,.2f}), driving {top_share}% of recorded product sales volume.")
+            insights.append(f"{top_prod} generated the highest revenue (Rs. {top_rev:,.2f}), driving {top_share}% of recorded product sales volume.")
 
         if monthly_growth and len(monthly_growth) > 1:
             last_item = monthly_growth[-1]
@@ -400,11 +400,11 @@ class SalesForecastingService:
             insights.append(f"Month-over-month revenue growth was {sign}{last_item.growth_pct}% in {last_item.month}.")
 
         if customer_trends.repeat_customers_count > 0:
-            insights.append(f"Customer trends reveal a {customer_trends.repeat_rate_pct}% repeat purchase rate with an Average Order Value of ${customer_trends.average_order_value:,.2f}.")
+            insights.append(f"Customer trends reveal a {customer_trends.repeat_rate_pct}% repeat purchase rate with an Average Order Value of Rs. {customer_trends.average_order_value:,.2f}.")
 
         if forecast.timeline and len(forecast.timeline) > 0:
             sign = "+" if forecast.projected_growth_percentage >= 0 else ""
-            insights.append(f"Forecasting regression models project a {sign}{forecast.projected_growth_percentage}% trajectory estimating ${forecast.projected_next_period_sales:,.2f} in next period sales.")
+            insights.append(f"Forecasting regression models project a {sign}{forecast.projected_growth_percentage}% trajectory estimating Rs. {forecast.projected_next_period_sales:,.2f} in next period sales.")
 
         if not insights:
             insights.append("Baseline operational data recorded. Increase transaction activity to expand predictive analysis.")

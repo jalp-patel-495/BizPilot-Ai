@@ -126,7 +126,7 @@ export const LandingPage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="p-3.5 rounded-[6px] bg-[#FAFAFA] border border-[#E5E5E5]">
                   <p className="text-[10px] text-[#666666] uppercase font-semibold">Monthly ARR</p>
-                  <p className="text-xl font-bold text-[#111111] mt-0.5">$128,450</p>
+                  <p className="text-xl font-bold text-[#111111] mt-0.5">Rs. 1,28,450</p>
                   <span className="text-[10px] text-emerald-600 font-medium">+18.4% YoY</span>
                 </div>
                 <div className="p-3.5 rounded-[6px] bg-[#FAFAFA] border border-[#E5E5E5]">

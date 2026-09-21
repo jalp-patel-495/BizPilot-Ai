@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  DollarSign,
+  IndianRupee,
   Users,
   Target,
   ShoppingBag,
@@ -150,11 +150,11 @@ export const BusinessAdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPICard
           label="Total Revenue"
-          value={widgets.total_revenue?.value ? (typeof widgets.total_revenue.value === 'number' ? `$${widgets.total_revenue.value.toLocaleString()}` : widgets.total_revenue.value) : '$0'}
+          value={widgets.total_revenue?.value ? (typeof widgets.total_revenue.value === 'number' ? `Rs. ${widgets.total_revenue.value.toLocaleString()}` : String(widgets.total_revenue.value).replace(/\$/g, 'Rs. ')) : 'Rs. 0'}
           change={widgets.total_revenue?.change ?? 0.0}
           trend={widgets.total_revenue?.trend || 'neutral'}
           subtext={widgets.total_revenue?.subtext || 'Gross business volume'}
-          icon={DollarSign}
+          icon={IndianRupee}
         />
         <KPICard
           label="Pending Invoices"
@@ -205,7 +205,7 @@ export const BusinessAdminDashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" vertical={false} />
                   <XAxis dataKey="period" stroke="#8A8A8A" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#8A8A8A" fontSize={11} tickLine={false} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <YAxis stroke="#8A8A8A" fontSize={11} tickLine={false} tickFormatter={(val) => `Rs. ${val / 1000}k`} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#FFFFFF',
@@ -213,7 +213,7 @@ export const BusinessAdminDashboard = () => {
                       borderRadius: '6px',
                       fontSize: '12px',
                     }}
-                    formatter={(val) => [`$${Number(val).toLocaleString()}`, '']}
+                    formatter={(val) => [`Rs. ${Number(val).toLocaleString()}`, '']}
                   />
                   <Area type="monotone" dataKey="revenue" name="Actual Revenue" stroke="#111111" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
                   <Area type="monotone" dataKey="target" name="Target Quota" stroke="#8A8A8A" strokeWidth={1.5} strokeDasharray="4 4" fill="none" />

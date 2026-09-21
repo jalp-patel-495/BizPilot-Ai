@@ -285,7 +285,7 @@ class DocumentProcessingService:
             "subtotal": subtotal,
             "tax_amount": tax_amount,
             "total_amount": total_amount,
-            "currency": "USD",
+            "currency": "INR",
             "items": items,
             "ocr_confidence": confidence,
             "raw_text": text,

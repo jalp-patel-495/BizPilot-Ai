@@ -98,15 +98,34 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)) -> Any:
                 default_org = db.query(Organization).first()
         org_id = default_org.id if default_org else None
 
-    # For self-service public registration, privilege escalation is prohibited.
-    # New self-registered accounts are assigned EMPLOYEE role by default.
+    # Validate role permissions for self-registration:
+    # Super Admin is a single dedicated admin account that logs in; only Business Admin and Employee can be created.
+    if user_in.role == UserRole.SUPER_ADMIN:
+        raise APIException("Super Admin account cannot be created via public registration. There is only one dedicated Super Admin.", status_code=400)
+
+    allowed_registration_roles = {UserRole.BUSINESS_ADMIN, UserRole.EMPLOYEE}
+    if user_in.role and user_in.role not in allowed_registration_roles:
+        raise APIException("Registration is only permitted for Business Admin and Employee roles.", status_code=400)
+
+    # Assign the role requested by user (or default to BUSINESS_ADMIN if none provided)
+    assigned_role = user_in.role.value if user_in.role else UserRole.BUSINESS_ADMIN.value
+    role_default_titles = {
+        UserRole.BUSINESS_ADMIN.value: "Business Administrator",
+        UserRole.EMPLOYEE.value: "Operations Specialist",
+    }
+    user_title = (
+        user_in.title.strip()
+        if user_in.title and user_in.title.strip()
+        else role_default_titles.get(assigned_role, "Operations Specialist")
+    )
+
     try:
         new_user = User(
             email=clean_email,
             hashed_password=get_password_hash(user_in.password),
             full_name=user_in.full_name.strip(),
-            role=UserRole.EMPLOYEE.value,
-            title=(user_in.title.strip() if user_in.title and user_in.title.strip() else "Operations Specialist"),
+            role=assigned_role,
+            title=user_title,
             organization_id=org_id,
             is_active=True,
         )

@@ -3,7 +3,7 @@ import {
   BarChart3,
   Calendar,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
   Target,
   Users,
   PieChart,
@@ -37,7 +37,7 @@ const REPORT_TABS = [
   { id: 'daily', label: 'Daily', icon: Calendar, cadence: '24h' },
   { id: 'weekly', label: 'Weekly', icon: BarChart3, cadence: '7d' },
   { id: 'monthly', label: 'Monthly', icon: TrendingUp, cadence: 'MTD' },
-  { id: 'sales', label: 'Sales', icon: DollarSign, cadence: 'Orders' },
+  { id: 'sales', label: 'Sales', icon: IndianRupee, cadence: 'Orders' },
   { id: 'lead', label: 'Lead', icon: Target, cadence: 'Funnel' },
   { id: 'customer', label: 'Customer', icon: Users, cadence: 'Accounts' },
   { id: 'revenue', label: 'Revenue', icon: PieChart, cadence: 'Finance' },
@@ -323,7 +323,7 @@ export const ReportsPage = () => {
               </span>
             </h2>
             <p className="text-xs text-[#8A8A8A] mt-0.5">
-              Compiled at {new Date(reportData.generated_at).toLocaleString()} • Continuous automated data sync
+              Compiled at {new Date(reportData.generated_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} • Continuous automated data sync
             </p>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-emerald-800 font-medium">
@@ -371,10 +371,12 @@ export const ReportsPage = () => {
                 </div>
 
                 <div className="text-2xl font-semibold text-[#111111] tracking-tight mb-1">
-                  {metric.value}
+                  {typeof metric.value === 'string' ? metric.value.replace(/\$/g, 'Rs. ') : metric.value}
                 </div>
 
-                <p className="text-[11px] text-[#8A8A8A] truncate">{metric.subtitle}</p>
+                <p className="text-[11px] text-[#8A8A8A] truncate">
+                  {typeof metric.subtitle === 'string' ? metric.subtitle.replace(/\$/g, 'Rs. ') : metric.subtitle}
+                </p>
               </div>
             );
           })}
@@ -427,7 +429,7 @@ export const ReportsPage = () => {
           </div>
         ) : (
           <div className="p-4 rounded-md bg-[#F9FAFB] border border-[#E5E5E5] text-[#111111] text-xs leading-relaxed">
-            {reportData?.ai_summary}
+            {reportData?.ai_summary ? reportData.ai_summary.replace(/\$/g, 'Rs. ') : ''}
           </div>
         )}
       </div>
@@ -470,7 +472,7 @@ export const ReportsPage = () => {
                     <span className="text-[10px] text-[#8A8A8A]">{change.timestamp}</span>
                   </div>
                   <h4 className="text-xs font-semibold text-[#111111] mb-0.5">{change.title}</h4>
-                  <p className="text-xs text-[#666666] leading-relaxed">{change.details}</p>
+                  <p className="text-xs text-[#666666] leading-relaxed">{change.details?.replace(/\$/g, 'Rs. ')}</p>
                 </div>
               );
             })}
@@ -496,7 +498,7 @@ export const ReportsPage = () => {
                 <span className="w-4 h-4 rounded bg-[#EAEAEA] text-[#111111] flex items-center justify-center font-medium text-[10px] flex-shrink-0 mt-0.5">
                   {idx + 1}
                 </span>
-                <p className="text-xs text-[#404040] leading-relaxed">{trend}</p>
+                <p className="text-xs text-[#404040] leading-relaxed">{trend.replace(/\$/g, 'Rs. ')}</p>
               </div>
             ))}
           </div>

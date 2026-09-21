@@ -5,7 +5,7 @@ import {
   BarChart3,
   Sparkles,
   Calendar,
-  DollarSign,
+  IndianRupee,
   Layers,
   Users,
   Target,
@@ -91,18 +91,18 @@ export const AnalyticsPage = () => {
           {dataPoint?.actual_sales !== null && dataPoint?.actual_sales !== undefined && (
             <div className="flex justify-between items-center text-[#111111]">
               <span className="text-[#666666]">Actual Sales:</span>
-              <span className="font-mono font-semibold">${dataPoint.actual_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              <span className="font-mono font-semibold">Rs. {dataPoint.actual_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
           )}
 
           <div className="flex justify-between items-center text-[#111111]">
             <span className="text-[#666666]">{dataPoint?.is_forecast ? 'Predicted Sales:' : 'Model Fit:'}</span>
-            <span className="font-mono font-semibold">${dataPoint.predicted_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span className="font-mono font-semibold">Rs. {dataPoint.predicted_sales?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
 
           <div className="flex justify-between items-center text-[#8a8a8a] pt-1 border-t border-[#e5e5e5] text-[10px]">
             <span>95% Range:</span>
-            <span className="font-mono">${dataPoint.lower_bound?.toLocaleString()} – ${dataPoint.upper_bound?.toLocaleString()}</span>
+            <span className="font-mono">Rs. {dataPoint.lower_bound?.toLocaleString()} – Rs. {dataPoint.upper_bound?.toLocaleString()}</span>
           </div>
         </div>
       );
@@ -173,14 +173,14 @@ export const AnalyticsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Current Monthly Run-Rate"
-          value={`$${(forecast?.current_monthly_run_rate || 128450).toLocaleString()}`}
-          icon={DollarSign}
+          value={`Rs. ${(forecast?.current_monthly_run_rate || 128450).toLocaleString()}`}
+          icon={IndianRupee}
           subtitle="September closed sales"
           trend="+11.7% MoM velocity"
         />
         <StatCard
           title="Projected Next Period Revenue"
-          value={`$${(forecast?.projected_next_period_sales || 146800).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+          value={`Rs. ${(forecast?.projected_next_period_sales || 146800).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           icon={TrendingUp}
           subtitle="scikit-learn ML model estimate"
           trend={`+${forecast?.projected_growth_percentage || 14.3}% Projected`}
@@ -189,7 +189,7 @@ export const AnalyticsPage = () => {
           title="Model Quality & Fit"
           value={`R² = ${forecast?.model_r2_score || 0.94}`}
           icon={Brain}
-          subtitle={`MAE ±$${(forecast?.model_mae || 3200).toLocaleString()}`}
+          subtitle={`MAE ±Rs. ${(forecast?.model_mae || 3200).toLocaleString()}`}
           trend="High confidence regression"
         />
         <StatCard
@@ -288,7 +288,7 @@ export const AnalyticsPage = () => {
               <YAxis
                 stroke="#8a8a8a"
                 tick={{ fill: '#666666', fontSize: 11 }}
-                tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                tickFormatter={(val) => `Rs. ${(val / 1000).toFixed(0)}k`}
                 tickLine={false}
                 axisLine={false}
                 domain={['auto', 'auto']}
@@ -359,12 +359,12 @@ export const AnalyticsPage = () => {
                 <YAxis
                   stroke="#8a8a8a"
                   tick={{ fill: '#666666', fontSize: 10 }}
-                  tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                  tickFormatter={(val) => `Rs. ${(val / 1000).toFixed(0)}k`}
                   tickLine={false}
                   axisLine={false}
                 />
                 <Tooltip
-                  formatter={(val) => [`$${val?.toLocaleString()}`, 'Revenue']}
+                  formatter={(val) => [`Rs. ${val?.toLocaleString()}`, 'Revenue']}
                   contentStyle={{
                     backgroundColor: '#FFFFFF',
                     borderColor: '#E5E5E5',
@@ -393,7 +393,7 @@ export const AnalyticsPage = () => {
                   <tr key={idx} className="hover:bg-[#f8f8f8] transition">
                     <td className="py-2.5 font-medium text-[#111111]">{prod.product_name}</td>
                     <td className="py-2.5 font-mono text-[#111111] font-semibold">
-                      ${prod.revenue?.toLocaleString()}
+                      Rs. {prod.revenue?.toLocaleString()}
                     </td>
                     <td className="py-2.5 text-[#666666]">{prod.revenue_share_pct}%</td>
                     <td className="py-2.5 text-right font-medium text-emerald-700">
@@ -426,7 +426,7 @@ export const AnalyticsPage = () => {
               <div>
                 <span className="text-[10px] uppercase font-semibold text-[#666666] block">New Customers</span>
                 <span className="text-base font-bold text-[#111111]">
-                  ${(customerTrends?.new_customers_revenue || 78450).toLocaleString()}
+                  Rs. {(customerTrends?.new_customers_revenue || 78450).toLocaleString()}
                 </span>
                 <span className="text-[10px] text-[#8a8a8a] block mt-0.5">18 new logos</span>
               </div>
@@ -434,7 +434,7 @@ export const AnalyticsPage = () => {
               <div className="text-right">
                 <span className="text-[10px] uppercase font-semibold text-[#666666] block">Repeat Customers</span>
                 <span className="text-base font-bold text-[#111111]">
-                  ${(customerTrends?.repeat_customers_revenue || 50000).toLocaleString()}
+                  Rs. {(customerTrends?.repeat_customers_revenue || 50000).toLocaleString()}
                 </span>
                 <span className="text-[10px] text-[#8a8a8a] block mt-0.5">12 expansions</span>
               </div>
@@ -463,7 +463,7 @@ export const AnalyticsPage = () => {
             <div className="p-3 rounded-md bg-[#fafafa] border border-[#e5e5e5]">
               <span className="text-[10px] font-semibold uppercase text-[#666666] block">Average Order Value</span>
               <span className="text-base font-bold text-[#111111] mt-0.5 block">
-                ${(customerTrends?.average_order_value || 14200).toLocaleString()}
+                Rs. {(customerTrends?.average_order_value || 14200).toLocaleString()}
               </span>
               <span className="text-[10px] text-emerald-700 font-medium">+18.5% deal size</span>
             </div>

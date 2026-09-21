@@ -154,7 +154,7 @@ class BusinessReportService:
             ReportMetric(
                 key="daily_revenue",
                 label="Daily Revenue",
-                value=f"${total_sales_amount:,.2f}",
+                value=f"Rs. {total_sales_amount:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if total_sales_amount > 0 else "NEUTRAL",
                 subtitle="past 24 hours recognized sales",
@@ -165,7 +165,7 @@ class BusinessReportService:
                 value=str(deals_count),
                 change_pct=0.0,
                 trend_direction="UP" if deals_count > 0 else "NEUTRAL",
-                subtitle=f"average deal: ${total_sales_amount / max(1, deals_count):,.2f}" if deals_count > 0 else "no deals closed",
+                subtitle=f"average deal: Rs. {total_sales_amount / max(1, deals_count):,.2f}" if deals_count > 0 else "no deals closed",
             ),
             ReportMetric(
                 key="new_leads",
@@ -199,12 +199,12 @@ class BusinessReportService:
                     title="Daily Transactions Recorded",
                     impact_type="POSITIVE",
                     timestamp="Past 24h",
-                    details=f"{deals_count} sales transactions completed totaling ${total_sales_amount:,.2f}.",
+                    details=f"{deals_count} sales transactions completed totaling Rs. {total_sales_amount:,.2f}.",
                 )
             )
 
         ai_summary = (
-            f"Operational briefing for the past 24 hours: {deals_count} transactions completed totaling ${total_sales_amount:,.2f}, "
+            f"Operational briefing for the past 24 hours: {deals_count} transactions completed totaling Rs. {total_sales_amount:,.2f}, "
             f"with {leads_count} new leads ingested and {invoices_processed} documents processed."
             if (deals_count > 0 or leads_count > 0)
             else "No sales or operational transactions recorded in the past 24 hours. Activity will appear as records are processed."
@@ -219,12 +219,12 @@ class BusinessReportService:
             chart_data=chart_data,
             chart_config=ReportChartConfig(
                 title="Hourly Intraday Revenue & Activity Velocity",
-                primary_label="Revenue ($)",
+                primary_label="Revenue (Rs.)",
                 secondary_label="Leads & Deals",
                 chart_type="area",
             ),
             trends=[
-                f"Recorded daily commercial sales: ${total_sales_amount:,.2f}.",
+                f"Recorded daily commercial sales: Rs. {total_sales_amount:,.2f}.",
                 f"Active pipeline intake: {leads_count} leads.",
             ],
             important_changes=changes,
@@ -253,7 +253,7 @@ class BusinessReportService:
             ReportMetric(
                 key="weekly_revenue",
                 label="Weekly Revenue",
-                value=f"${total_sales_amount:,.2f}",
+                value=f"Rs. {total_sales_amount:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if total_sales_amount > 0 else "NEUTRAL",
                 subtitle="last 7 days total volume",
@@ -277,7 +277,7 @@ class BusinessReportService:
             ReportMetric(
                 key="avg_deal_size",
                 label="Average Deal Size",
-                value=f"${avg_deal:,.2f}",
+                value=f"Rs. {avg_deal:,.2f}",
                 change_pct=0.0,
                 trend_direction="NEUTRAL",
                 subtitle="mean realized deal value",
@@ -296,7 +296,7 @@ class BusinessReportService:
             ]
 
         ai_summary = (
-            f"The past 7 days concluded with ${total_sales_amount:,.2f} in total bookings across {deals_count} transactions, "
+            f"The past 7 days concluded with Rs. {total_sales_amount:,.2f} in total bookings across {deals_count} transactions, "
             f"with {leads_count} inbound leads registered."
             if (deals_count > 0 or leads_count > 0)
             else "No sales or lead acquisitions recorded over the past 7 days."
@@ -311,13 +311,13 @@ class BusinessReportService:
             chart_data=chart_data,
             chart_config=ReportChartConfig(
                 title="Day-by-Day Revenue Run Rate",
-                primary_label="Revenue ($)",
+                primary_label="Revenue (Rs.)",
                 secondary_label="Deals",
                 chart_type="bar",
             ),
             trends=[
-                f"7-day total revenue: ${total_sales_amount:,.2f}.",
-                f"Average deal size: ${avg_deal:,.2f}.",
+                f"7-day total revenue: Rs. {total_sales_amount:,.2f}.",
+                f"Average deal size: Rs. {avg_deal:,.2f}.",
             ],
             important_changes=[],
             ai_summary=ai_summary,
@@ -346,7 +346,7 @@ class BusinessReportService:
             ReportMetric(
                 key="monthly_mrr",
                 label="Monthly Recurring Revenue",
-                value=f"${mrr:,.2f}",
+                value=f"Rs. {mrr:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if mrr > 0 else "NEUTRAL",
                 subtitle="active subscription run rate",
@@ -354,7 +354,7 @@ class BusinessReportService:
             ReportMetric(
                 key="monthly_sales",
                 label="Month-to-Date Sales",
-                value=f"${month_revenue:,.2f}",
+                value=f"Rs. {month_revenue:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if month_revenue > 0 else "NEUTRAL",
                 subtitle="actual booked volume",
@@ -384,7 +384,7 @@ class BusinessReportService:
             ]
 
         ai_summary = (
-            f"Monthly strategic review: Month-to-date sales reached ${month_revenue:,.2f} with ${mrr:,.2f} in active MRR "
+            f"Monthly strategic review: Month-to-date sales reached Rs. {month_revenue:,.2f} with Rs. {mrr:,.2f} in active MRR "
             f"supporting {active_customers} active client accounts."
             if (month_revenue > 0 or mrr > 0)
             else "No sales or subscriptions recorded for the current month."
@@ -399,13 +399,13 @@ class BusinessReportService:
             chart_data=chart_data,
             chart_config=ReportChartConfig(
                 title="Monthly Cumulative Revenue Growth",
-                primary_label="Bookings ($)",
+                primary_label="Bookings (Rs.)",
                 secondary_label="Transactions",
                 chart_type="line",
             ),
             trends=[
-                f"Current month gross sales: ${month_revenue:,.2f}.",
-                f"Platform subscription MRR: ${mrr:,.2f}.",
+                f"Current month gross sales: Rs. {month_revenue:,.2f}.",
+                f"Platform subscription MRR: Rs. {mrr:,.2f}.",
             ],
             important_changes=[],
             ai_summary=ai_summary,
@@ -434,7 +434,7 @@ class BusinessReportService:
             ReportMetric(
                 key="gross_sales",
                 label="Gross Sales Revenue",
-                value=f"${total_rev:,.2f}",
+                value=f"Rs. {total_rev:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if total_rev > 0 else "NEUTRAL",
                 subtitle=f"{tx_count} closed transactions",
@@ -442,7 +442,7 @@ class BusinessReportService:
             ReportMetric(
                 key="aov",
                 label="Average Order Value (AOV)",
-                value=f"${aov:,.2f}",
+                value=f"Rs. {aov:,.2f}",
                 change_pct=0.0,
                 trend_direction="NEUTRAL",
                 subtitle="mean transaction value",
@@ -478,7 +478,7 @@ class BusinessReportService:
             ]
 
         ai_summary = (
-            f"Sales velocity summary: Generated ${total_rev:,.2f} across {tx_count} completed orders, with an Average Order Value of ${aov:,.2f} and a {win_rate}% lead win rate."
+            f"Sales velocity summary: Generated Rs. {total_rev:,.2f} across {tx_count} completed orders, with an Average Order Value of Rs. {aov:,.2f} and a {win_rate}% lead win rate."
             if tx_count > 0
             else "No completed sales transactions found in the database. Transactions will automatically populate this performance report."
         )
@@ -492,12 +492,12 @@ class BusinessReportService:
             chart_data=chart_data,
             chart_config=ReportChartConfig(
                 title="Product Line Revenue Performance & Units Sold",
-                primary_label="Revenue ($)",
+                primary_label="Revenue (Rs.)",
                 secondary_label="Units Sold",
                 chart_type="bar",
             ),
             trends=[
-                f"Cumulative gross sales: ${total_rev:,.2f}.",
+                f"Cumulative gross sales: Rs. {total_rev:,.2f}.",
                 f"Total completed orders: {tx_count}.",
             ],
             important_changes=[],
@@ -618,7 +618,7 @@ class BusinessReportService:
             ReportMetric(
                 key="nrr",
                 label="Total Customer LTV",
-                value=f"${total_ltv:,.2f}",
+                value=f"Rs. {total_ltv:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if total_ltv > 0 else "NEUTRAL",
                 subtitle="aggregate account value",
@@ -626,7 +626,7 @@ class BusinessReportService:
             ReportMetric(
                 key="avg_ltv",
                 label="Average Customer LTV",
-                value=f"${avg_ltv:,.2f}",
+                value=f"Rs. {avg_ltv:,.2f}",
                 change_pct=0.0,
                 trend_direction="NEUTRAL",
                 subtitle="mean value per customer",
@@ -654,7 +654,7 @@ class BusinessReportService:
             ]
 
         ai_summary = (
-            f"Customer health report: Portfolio encompasses {total} registered accounts ({active_count} active) with an aggregate realized LTV of ${total_ltv:,.2f}."
+            f"Customer health report: Portfolio encompasses {total} registered accounts ({active_count} active) with an aggregate realized LTV of Rs. {total_ltv:,.2f}."
             if total > 0
             else "No customer accounts registered in directory. Add customers to monitor retention."
         )
@@ -667,14 +667,14 @@ class BusinessReportService:
             key_metrics=metrics,
             chart_data=chart_data,
             chart_config=ReportChartConfig(
-                title="Customer Segment Distribution & Contract Value ($)",
+                title="Customer Segment Distribution & Contract Value (Rs.)",
                 primary_label="Account Count",
-                secondary_label="Total LTV ($)",
+                secondary_label="Total LTV (Rs.)",
                 chart_type="bar",
             ),
             trends=[
                 f"Registered accounts: {total}.",
-                f"Aggregate customer LTV: ${total_ltv:,.2f}.",
+                f"Aggregate customer LTV: Rs. {total_ltv:,.2f}.",
             ],
             important_changes=[],
             ai_summary=ai_summary,
@@ -699,7 +699,7 @@ class BusinessReportService:
             ReportMetric(
                 key="net_recognized_rev",
                 label="Net Recognized Revenue",
-                value=f"${net_rev:,.2f}",
+                value=f"Rs. {net_rev:,.2f}",
                 change_pct=0.0,
                 trend_direction="UP" if net_rev > 0 else "NEUTRAL",
                 subtitle="completed sales receipts",
@@ -707,7 +707,7 @@ class BusinessReportService:
             ReportMetric(
                 key="accounts_receivable",
                 label="Accounts Receivable",
-                value=f"${ar_total:,.2f}",
+                value=f"Rs. {ar_total:,.2f}",
                 change_pct=0.0,
                 trend_direction="NEUTRAL",
                 subtitle=f"{len(invoices)} pending/unsettled invoices",
@@ -738,7 +738,7 @@ class BusinessReportService:
             ]
 
         ai_summary = (
-            f"Financial audit: Net recognized revenue is ${net_rev:,.2f} across {len(sales)} transactions, with ${ar_total:,.2f} currently in pending accounts receivable across {len(invoices)} invoices."
+            f"Financial audit: Net recognized revenue is Rs. {net_rev:,.2f} across {len(sales)} transactions, with Rs. {ar_total:,.2f} currently in pending accounts receivable across {len(invoices)} invoices."
             if (net_rev > 0 or ar_total > 0)
             else "No sales revenue or invoices recorded for financial audit."
         )
@@ -752,13 +752,13 @@ class BusinessReportService:
             chart_data=chart_data,
             chart_config=ReportChartConfig(
                 title="Revenue Breakdown vs Receivables",
-                primary_label="Amount ($)",
+                primary_label="Amount (Rs.)",
                 secondary_label="Count",
                 chart_type="bar",
             ),
             trends=[
-                f"Recognized revenue total: ${net_rev:,.2f}.",
-                f"Accounts receivable total: ${ar_total:,.2f}.",
+                f"Recognized revenue total: Rs. {net_rev:,.2f}.",
+                f"Accounts receivable total: Rs. {ar_total:,.2f}.",
             ],
             important_changes=[],
             ai_summary=ai_summary,

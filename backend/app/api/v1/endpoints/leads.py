@@ -328,7 +328,7 @@ def convert_lead_to_customer(
         organization_id=current_user.organization_id,
         activity_type="CONVERSION",
         title="Lead Converted to Customer",
-        description=f"Lead '{lead.company}' (${lead.deal_value:,.0f}) converted to customer by {current_user.full_name}.",
+        description=f"Lead '{lead.company}' (Rs. {lead.deal_value:,.0f}) converted to customer by {current_user.full_name}.",
         performed_by=current_user.full_name,
     )
     db.add(conversion_activity)

@@ -3,7 +3,7 @@ import {
   Target,
   Plus,
   Search,
-  DollarSign,
+  IndianRupee,
   Clock,
   Flame,
   Sun,
@@ -264,7 +264,7 @@ export const LeadsPage = () => {
       setSubmitting(true);
       await api.post(`/leads/${selectedLead.id}/convert`, {
         tier: 'Enterprise',
-        notes: `Converted from lead pipeline. Deal: $${selectedLead.deal_value?.toLocaleString()}`,
+        notes: `Converted from lead pipeline. Deal: Rs. ${selectedLead.deal_value?.toLocaleString()}`,
       });
       setShowConvertModal(false);
       if (showDetailDrawer) setShowDetailDrawer(false);
@@ -391,11 +391,11 @@ export const LeadsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total Pipeline Value"
-          value={`$${totalPipeline.toLocaleString()}`}
+          value={`Rs. ${totalPipeline.toLocaleString()}`}
           change={18.5}
           trend="up"
           subtext="estimated active ARR"
-          icon={DollarSign}
+          icon={IndianRupee}
         />
         <StatCard
           label="Hot Opportunities"
@@ -542,7 +542,7 @@ export const LeadsPage = () => {
                       <span className="text-xs font-medium text-[#8A8A8A]">({columnLeads.length})</span>
                     </div>
                     <span className="text-[11px] text-[#666666] font-medium">
-                      ${(colValue / 1000).toFixed(0)}k
+                      Rs. {(colValue / 1000).toFixed(0)}k
                     </span>
                   </div>
 
@@ -572,7 +572,7 @@ export const LeadsPage = () => {
                             <div className="flex items-center justify-between text-[10px] text-[#8A8A8A]">
                               <span>{lead.source || 'Website'}</span>
                               <span className="font-semibold text-[#111111] text-xs">
-                                ${(lead.deal_value || 0).toLocaleString()}
+                                Rs. {(lead.deal_value || 0).toLocaleString()}
                               </span>
                             </div>
                           </div>
@@ -686,7 +686,7 @@ export const LeadsPage = () => {
                         {lead.source || 'Website'}
                       </td>
                       <td className="px-5 py-3 font-semibold text-[#111111]">
-                        ${(lead.deal_value || 0).toLocaleString()}
+                        Rs. {(lead.deal_value || 0).toLocaleString()}
                       </td>
                       <td className="px-5 py-3 text-[#666666]">
                         {lead.follow_up_date ? (
@@ -815,7 +815,7 @@ export const LeadsPage = () => {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Deal Estimated Value</p>
-                  <p className="text-[#111111] font-semibold">${(selectedLead.deal_value || 0).toLocaleString()}</p>
+                  <p className="text-[#111111] font-semibold">Rs. {(selectedLead.deal_value || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Lead Source</p>
@@ -961,7 +961,7 @@ export const LeadsPage = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#111111] mb-1">Deal Value ($) *</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Deal Value (Rs.) *</label>
                   <input
                     type="number"
                     required
@@ -1150,8 +1150,8 @@ export const LeadsPage = () => {
                   <span>HOT Tier Conditions</span>
                 </div>
                 <ul className="list-disc list-inside text-rose-900 space-y-0.5 text-[11px]">
-                  <li>Estimated Deal Value &ge; ${activeRules?.hot_deal_value_min?.toLocaleString() || '20,000'}</li>
-                  <li>Status in Qualified / Proposal / Negotiation with Deal &ge; $10,000</li>
+                  <li>Estimated Deal Value &ge; Rs. {activeRules?.hot_deal_value_min?.toLocaleString() || '20,000'}</li>
+                  <li>Status in Qualified / Proposal / Negotiation with Deal &ge; Rs. 10,000</li>
                   <li>Referral, Partner, or Inbound Demo with AI Score &ge; 75</li>
                   <li>ML Conversion Probability &ge; {activeRules?.hot_ai_score_min || '85'}%</li>
                 </ul>
@@ -1164,7 +1164,7 @@ export const LeadsPage = () => {
                 </div>
                 <ul className="list-disc list-inside text-amber-900 space-y-0.5 text-[11px]">
                   <li>Scheduled follow-up outreach within {activeRules?.follow_up_window_days || '7'} days</li>
-                  <li>Deal Value between $5,000 and $20,000</li>
+                  <li>Deal Value between Rs. 5,000 and Rs. 20,000</li>
                   <li>Active pipeline stage (New, Contacted, Qualified, Proposal)</li>
                   <li>ML Conversion Probability &ge; 55%</li>
                 </ul>
@@ -1177,7 +1177,7 @@ export const LeadsPage = () => {
                 </div>
                 <ul className="list-disc list-inside text-neutral-700 space-y-0.5 text-[11px]">
                   <li>Opportunity status marked as Lost</li>
-                  <li>Deal Value &lt; $5,000 with no imminent follow-up outreach</li>
+                  <li>Deal Value &lt; Rs. 5,000 with no imminent follow-up outreach</li>
                   <li>Low engagement profile and score &lt; 55%</li>
                 </ul>
               </div>

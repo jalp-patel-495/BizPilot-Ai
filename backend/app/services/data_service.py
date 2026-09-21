@@ -196,7 +196,7 @@ class DataService:
             },
             "total_revenue": {
                 "label": "Revenue",
-                "value": f"${base_revenue:,.0f}",
+                "value": f"Rs. {base_revenue:,.0f}",
                 "numeric_value": round(base_revenue, 2),
                 "change": 0.0,
                 "trend": "neutral",
@@ -318,7 +318,7 @@ class DataService:
         else:
             top_prod_name = product_performance[0]["product"] if product_performance else "Core Services"
             ai_insights = [
-                f"Realized commercial revenue stands at ${base_revenue:,.0f} across {sales_count} completed orders in {date_label}.",
+                f"Realized commercial revenue stands at Rs. {base_revenue:,.0f} across {sales_count} completed orders in {date_label}.",
                 f"Lead conversion rate is {conversion_rate:.1f}% across {base_leads} registered pipeline leads.",
                 f"Leading revenue contributor is '{top_prod_name}' with verified customer accounts.",
                 f"Action Recommended: {pending_followups} leads currently pending follow-up in the sales pipeline.",
@@ -430,7 +430,7 @@ class DataService:
             "qualified_leads": {"label": "Qualified Leads", "value": f"{qualified_leads}", "numeric": qualified_leads, "change": 0.0, "trend": "neutral", "subtext": "Score >= 75 / HOT"},
             "converted_leads": {"label": "Converted Leads", "value": f"{converted_leads}", "numeric": converted_leads, "change": 0.0, "trend": "neutral", "subtext": "Closed deals"},
             "conversion_rate": {"label": "Conversion Rate", "value": f"{conversion_rate}%", "numeric": conversion_rate, "change": 0.0, "trend": "neutral", "subtext": "Lead-to-deal ratio"},
-            "sales_revenue": {"label": "Sales Revenue", "value": f"${sales_revenue:,.0f}", "numeric": sales_revenue, "change": 0.0, "trend": "neutral", "subtext": "Gross bookings"},
+            "sales_revenue": {"label": "Sales Revenue", "value": f"Rs. {sales_revenue:,.0f}", "numeric": sales_revenue, "change": 0.0, "trend": "neutral", "subtext": "Gross bookings"},
             "pending_followups": {"label": "Pending Follow-ups", "value": f"{pending_followups}", "numeric": pending_followups, "change": 0.0, "trend": "neutral", "subtext": "Scheduled tasks"},
             "team_members": {"label": "Team Reps", "value": f"{len(team_users)}", "numeric": len(team_users), "change": 0.0, "trend": "neutral", "subtext": "Active sales reps"},
         }
@@ -520,7 +520,7 @@ class DataService:
             "my_customers": {"label": "My Customers", "value": f"{my_customers_count}", "numeric": my_customers_count, "change": 0.0, "trend": "neutral", "subtext": "Direct client accounts"},
             "my_tasks": {"label": "My Tasks", "value": f"{my_tasks_count}", "numeric": my_tasks_count, "change": 0.0, "trend": "neutral", "subtext": "Pending action items"},
             "pending_followups": {"label": "Pending Follow-ups", "value": f"{pending_followups_count}", "numeric": pending_followups_count, "change": 0.0, "trend": "neutral", "subtext": "Scheduled outreach"},
-            "my_sales": {"label": "My Sales", "value": f"${my_sales_amount:,.0f}", "numeric": my_sales_amount, "change": 0.0, "trend": "neutral", "subtext": "Closed deals revenue"},
+            "my_sales": {"label": "My Sales", "value": f"Rs. {my_sales_amount:,.0f}", "numeric": my_sales_amount, "change": 0.0, "trend": "neutral", "subtext": "Closed deals revenue"},
             "open_support": {"label": "Open Support Items", "value": f"{support_count}", "numeric": support_count, "change": 0.0, "trend": "neutral", "subtext": "Assigned inquiries"},
             "personal_performance": {"label": "Personal Win Rate", "value": f"{my_win_rate}%", "numeric": my_win_rate, "change": 0.0, "trend": "neutral", "subtext": "Lead-to-win ratio"},
         }

@@ -126,26 +126,21 @@ export const UsersPage = () => {
       )}
 
       {/* Role Hierarchy Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] shadow-xs">
           <RoleBadge role="SUPER_ADMIN" />
-          <p className="text-xs text-[#111111] font-semibold mt-2">Platform Architect</p>
-          <p className="text-[11px] text-[#666666] mt-0.5">Cross-tenant controls, system health, and global infrastructure.</p>
+          <p className="text-xs text-[#111111] font-semibold mt-2">Platform Architect (Single Admin)</p>
+          <p className="text-[11px] text-[#666666] mt-0.5">Dedicated system administrator with global controls, tenant management, and infrastructure.</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] shadow-xs">
           <RoleBadge role="BUSINESS_ADMIN" />
           <p className="text-xs text-[#111111] font-semibold mt-2">Business Admin</p>
-          <p className="text-[11px] text-[#666666] mt-0.5">Team management, organization settings, billing, full analytics.</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] shadow-xs">
-          <RoleBadge role="SALES_MANAGER" />
-          <p className="text-xs text-[#111111] font-semibold mt-2">Sales Manager</p>
-          <p className="text-[11px] text-[#666666] mt-0.5">Lead pipelines, ML score insights, deal assignments, and forecasting.</p>
+          <p className="text-[11px] text-[#666666] mt-0.5">Team management, organization settings, billing, and complete business analytics.</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#e5e5e5] shadow-xs">
           <RoleBadge role="EMPLOYEE" />
           <p className="text-xs text-[#111111] font-semibold mt-2">Employee Specialist</p>
-          <p className="text-[11px] text-[#666666] mt-0.5">Assigned leads execution, support tickets, and invoice data entry.</p>
+          <p className="text-[11px] text-[#666666] mt-0.5">Assigned operational leads, customer support tickets, and sales activities.</p>
         </div>
       </div>
 
@@ -277,11 +272,7 @@ export const UsersPage = () => {
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full bg-white border border-[#d9d9d9] rounded-md px-2.5 py-2 text-xs text-[#111111] focus:outline-none focus:border-[#111111] transition"
               >
-                {currentUser?.role === 'SUPER_ADMIN' && (
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                )}
                 <option value="BUSINESS_ADMIN">Business Admin</option>
-                <option value="SALES_MANAGER">Sales Manager</option>
                 <option value="EMPLOYEE">Employee</option>
               </select>
             </div>

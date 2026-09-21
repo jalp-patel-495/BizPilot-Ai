@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Layers,
-  DollarSign,
+  IndianRupee,
   Plus,
   CheckCircle2,
   Package,
@@ -148,11 +148,11 @@ export const ProductsPage = () => {
         />
         <StatCard
           label="Gross Product Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={`Rs. ${totalRevenue.toLocaleString()}`}
           change={26.1}
           trend="up"
           subtext="all-time catalog yield"
-          icon={DollarSign}
+          icon={IndianRupee}
         />
         <StatCard
           label="Average Gross Margin"
@@ -211,10 +211,10 @@ export const ProductsPage = () => {
                         </span>
                       </td>
                       <td className="px-5 py-3 font-semibold text-[#111111]">
-                        ${p.price?.toLocaleString()}
+                        Rs. {p.price?.toLocaleString()}
                       </td>
                       <td className="px-5 py-3 text-[#666666]">
-                        ${p.cost?.toLocaleString()}
+                        Rs. {p.cost?.toLocaleString()}
                       </td>
                       <td className="px-5 py-3 font-medium text-emerald-800">
                         {marginPct}%
@@ -223,7 +223,7 @@ export const ProductsPage = () => {
                         {p.units_sold || 0}
                       </td>
                       <td className="px-5 py-3 font-semibold text-[#111111]">
-                        ${(p.revenue || (p.price * (p.units_sold || 1))).toLocaleString()}
+                        Rs. {(p.revenue || (p.price * (p.units_sold || 1))).toLocaleString()}
                       </td>
                       <td className="px-5 py-3">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
@@ -295,7 +295,7 @@ export const ProductsPage = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#111111] mb-1">Retail Price ($)</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Retail Price (Rs.)</label>
                   <input
                     type="number"
                     required
@@ -305,7 +305,7 @@ export const ProductsPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#111111] mb-1">Unit Cost ($)</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Unit Cost (Rs.)</label>
                   <input
                     type="number"
                     value={formData.cost}

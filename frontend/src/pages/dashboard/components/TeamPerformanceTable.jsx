@@ -51,7 +51,7 @@ export const TeamPerformanceTable = ({ team = [] }) => {
                   {rep.deals_won}
                 </td>
                 <td className="py-3 text-right font-medium text-[#111111]">
-                  ${(rep.pipeline_value || 0).toLocaleString()}
+                  Rs. {(rep.pipeline_value || 0).toLocaleString()}
                 </td>
                 <td className="py-3 text-right">
                   <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[11px] border border-emerald-200">

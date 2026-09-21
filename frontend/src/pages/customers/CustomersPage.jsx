@@ -5,7 +5,7 @@ import {
   Plus,
   Mail,
   Phone,
-  DollarSign,
+  IndianRupee,
   MapPin,
   Calendar,
   CheckCircle2,
@@ -294,11 +294,11 @@ export const CustomersPage = () => {
         />
         <StatCard
           label="Average LTV"
-          value={`$${avgLtv.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+          value={`Rs. ${avgLtv.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           change={9.5}
           trend="up"
           subtext="account lifetime ARR"
-          icon={DollarSign}
+          icon={IndianRupee}
         />
         <StatCard
           label="Industry Verticals"
@@ -456,7 +456,7 @@ export const CustomersPage = () => {
                       </div>
                     </td>
                     <td className="px-5 py-3 font-semibold text-[#111111]">
-                      ${(c.ltv || 0).toLocaleString()}
+                      Rs. ${(c.ltv || 0).toLocaleString()}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -546,7 +546,7 @@ export const CustomersPage = () => {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Lifetime Value</p>
-                  <p className="text-[#111111] font-semibold">${(customerDetail.ltv || 0).toLocaleString()}</p>
+                  <p className="text-[#111111] font-semibold">Rs. {(customerDetail.ltv || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-semibold text-[#8A8A8A]">Member Since</p>
@@ -793,7 +793,7 @@ export const CustomersPage = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#111111] mb-1">Lifetime Value (LTV $)</label>
+                <label className="block text-xs font-medium text-[#111111] mb-1">Lifetime Value (LTV Rs.)</label>
                 <input
                   type="number"
                   value={formData.ltv}

@@ -24,7 +24,7 @@ class Invoice(Base):
     subtotal = Column(Float, default=0.0)
     tax_amount = Column(Float, default=0.0)
     total_amount = Column(Float, default=0.0)
-    currency = Column(String(10), default="USD")
+    currency = Column(String(10), default="INR")
     
     # Line Items & Raw JSON
     items_json = Column(Text, nullable=True)  # JSON array of {description, quantity, unit_price, amount}

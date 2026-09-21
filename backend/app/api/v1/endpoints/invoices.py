@@ -50,7 +50,7 @@ def _format_invoice_response(inv: Invoice) -> InvoiceResponse:
         subtotal=inv.subtotal or 0.0,
         tax_amount=inv.tax_amount or 0.0,
         total_amount=inv.total_amount or 0.0,
-        currency=inv.currency or "USD",
+        currency=inv.currency or "INR",
         items=items,
         status=inv.status,
         ocr_confidence=inv.ocr_confidence or 98.5,

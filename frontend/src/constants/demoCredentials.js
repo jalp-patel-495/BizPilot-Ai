@@ -3,7 +3,7 @@ export const DEMO_CREDENTIALS = {
     email: 'superadmin@upteky.ai',
     password: 'Admin@12345',
     label: 'Super Admin',
-    desc: 'Platform Architect & Global Admin',
+    desc: 'Platform Architect (Single Admin)',
     role: 'SUPER_ADMIN',
   },
   BUSINESS_ADMIN: {
@@ -12,13 +12,6 @@ export const DEMO_CREDENTIALS = {
     label: 'Business Admin',
     desc: 'VP Operations & Org Manager',
     role: 'BUSINESS_ADMIN',
-  },
-  SALES_MANAGER: {
-    email: 'salesmanager@upteky.ai',
-    password: 'Sales@12345',
-    label: 'Sales Manager',
-    desc: 'Pipeline & Sales Director',
-    role: 'SALES_MANAGER',
   },
   EMPLOYEE: {
     email: 'employee@upteky.ai',

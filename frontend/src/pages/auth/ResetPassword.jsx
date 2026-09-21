@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, Lock, ArrowRight, CheckCircle2, AlertCircle, Check } from 'lucide-react';
+import { Sparkles, Lock, ArrowRight, CheckCircle2, AlertCircle, Check, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const ResetPassword = () => {
@@ -50,7 +50,7 @@ export const ResetPassword = () => {
   const hasNumberOrSymbol = /[\d!@#$%^&*]/.test(newPassword);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-[8px] bg-[#111111] text-white mb-1 shadow-sm">
@@ -62,7 +62,15 @@ export const ResetPassword = () => {
           </p>
         </div>
 
-        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)] relative">
+          <Link
+            to="/"
+            className="absolute top-4 right-4 p-2 text-[#8A8A8A] hover:text-[#111111] hover:bg-[#F5F5F5] rounded-full transition flex items-center justify-center"
+            title="Close and return to Home"
+            aria-label="Close and return to Home"
+          >
+            <X className="w-5 h-5" />
+          </Link>
           {error && (
             <div className="mb-4 p-3 rounded-[6px] bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />

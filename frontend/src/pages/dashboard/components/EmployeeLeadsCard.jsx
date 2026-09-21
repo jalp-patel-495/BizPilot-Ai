@@ -78,7 +78,7 @@ export const EmployeeLeadsCard = ({ leads = [] }) => {
 
                 <div className="text-right shrink-0">
                   <span className="text-xs font-bold text-[#111111]">
-                    ${(lead.deal_value || 0).toLocaleString()}
+                    Rs. {(lead.deal_value || 0).toLocaleString()}
                   </span>
                   <span className="block text-[10px] font-medium text-emerald-600">
                     AI Score: {lead.ai_score || 80}%

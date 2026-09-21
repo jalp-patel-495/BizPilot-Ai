@@ -140,7 +140,7 @@ export const SuperAdminDashboard = () => {
         />
         <KPICard
           label="Platform Revenue (MRR)"
-          value={`$${(data?.mrr ?? 0).toLocaleString()}`}
+          value={`Rs. ${(data?.mrr ?? 0).toLocaleString()}`}
           change={data?.mrr_growth ?? 0.0}
           trend={data?.mrr_growth >= 0 ? "up" : "down"}
           subtext="recurring subscription volume"

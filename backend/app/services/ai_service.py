@@ -69,7 +69,7 @@ class AIService:
 
         summary = (
             f"High-intent {industry} organization ({company}) with estimated ARR opportunity "
-            f"of ${deal_value:,.2f}. Decision maker demonstrates urgency for automation stack."
+            f"of Rs. {deal_value:,.2f}. Decision maker demonstrates urgency for automation stack."
         )
 
         recommended_actions = [
@@ -100,7 +100,7 @@ class AIService:
         conversion_rate = kpi_context.get("conversion_rate", 24.8)
 
         return [
-            f"Revenue velocity is pacing 18.4% ahead of Q3 targets at ${mrr:,.0f} MRR with strong B2B expansion.",
+            f"Revenue velocity is pacing 18.4% ahead of Q3 targets at Rs. {mrr:,.0f} MRR with strong B2B expansion.",
             f"Lead qualification speed improved by 34% after enabling the automated AI scoring agent.",
             f"Customer retention rate remains robust at 97.2%; recommend expanding automated invoice reconciliation to reduce late payments by 42%.",
         ]

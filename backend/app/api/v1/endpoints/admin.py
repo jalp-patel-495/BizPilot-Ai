@@ -724,7 +724,7 @@ def update_plan(
         resource=f"Plan:{plan.id}",
         details=(
             f"Super Admin updated Plan '{plan.name}' limits: "
-            f"users={plan.max_users}, ai_requests={plan.max_ai_requests}, price=${plan.monthly_price}"
+            f"users={plan.max_users}, ai_requests={plan.max_ai_requests}, price=Rs. {plan.monthly_price}"
         ),
         user_id=current_user.id,
     )

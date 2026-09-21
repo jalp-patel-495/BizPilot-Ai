@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ShoppingBag,
-  DollarSign,
+  IndianRupee,
   Plus,
   CheckCircle2,
   Clock,
@@ -127,11 +127,11 @@ export const SalesPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Gross Sales Volume"
-          value={`$${totalVolume.toLocaleString()}`}
+          value={`Rs. ${totalVolume.toLocaleString()}`}
           change={18.4}
           trend="up"
           subtext="total transaction volume"
-          icon={DollarSign}
+          icon={IndianRupee}
         />
         <StatCard
           label="Completed Orders"
@@ -143,7 +143,7 @@ export const SalesPage = () => {
         />
         <StatCard
           label="Average Deal Size"
-          value={`$${avgOrder.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+          value={`Rs. ${avgOrder.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           change={9.2}
           trend="up"
           subtext="per closed won deal"
@@ -234,7 +234,7 @@ export const SalesPage = () => {
                       </div>
                     </td>
                     <td className="px-5 py-3 font-semibold text-[#111111]">
-                      ${s.amount?.toLocaleString()}
+                      Rs. {s.amount?.toLocaleString()}
                     </td>
                     <td className="px-5 py-3">
                       <span
@@ -313,7 +313,7 @@ export const SalesPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#111111] mb-1">Amount ($)</label>
+                  <label className="block text-xs font-medium text-[#111111] mb-1">Amount (Rs.)</label>
                   <input
                     type="number"
                     required

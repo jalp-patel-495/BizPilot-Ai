@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, User, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Sparkles, User, Mail, Lock, ArrowRight, X, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const Register = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [title, setTitle] = useState('');
+  const [role, setRole] = useState('BUSINESS_ADMIN');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -24,7 +24,8 @@ export const Register = () => {
         full_name: fullName.trim(),
         email: email.trim(),
         password,
-        title: title.trim() || 'Operations Specialist',
+        role,
+        title: role === 'BUSINESS_ADMIN' ? 'Business Administrator' : 'Operations Specialist',
       });
 
       if (res.success) {
@@ -43,7 +44,7 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative">
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-[8px] bg-[#111111] text-white mb-1 shadow-sm">
@@ -55,7 +56,17 @@ export const Register = () => {
           </p>
         </div>
 
-        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)] relative">
+          {/* Direct Close Button to Home Page */}
+          <Link
+            to="/"
+            className="absolute top-4 right-4 p-2 text-[#8A8A8A] hover:text-[#111111] hover:bg-[#F5F5F5] rounded-full transition flex items-center justify-center"
+            title="Close and return to Home"
+            aria-label="Close and return to Home"
+          >
+            <X className="w-5 h-5" />
+          </Link>
+
           {error && (
             <div className="mb-4 p-3 rounded-[6px] bg-rose-50 border border-rose-200 text-xs text-rose-700">
               {error}
@@ -103,26 +114,69 @@ export const Register = () => {
               </div>
             </div>
 
+            {/* Role-Based Account Creation */}
             <div>
-              <label htmlFor="title" className="block text-xs font-semibold text-[#111111] mb-1">
-                Job Title
+              <label className="block text-xs font-semibold text-[#111111] mb-1.5">
+                Account Role
               </label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                autoComplete="organization-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Operations Specialist"
-                className="w-full bg-white border border-[#D9D9D9] rounded-[6px] px-3 py-2 text-sm text-[#111111] placeholder:text-[#8A8A8A] focus:outline-none focus:border-[#111111] focus:ring-1 focus:ring-[#111111] transition"
-              />
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setRole('BUSINESS_ADMIN')}
+                  className={`p-3 rounded-[6px] border text-left transition flex flex-col justify-between ${
+                    role === 'BUSINESS_ADMIN'
+                      ? 'border-[#111111] bg-[#FAFAFA] ring-1 ring-[#111111]'
+                      : 'border-[#D9D9D9] bg-white hover:border-[#8A8A8A]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-[#111111]">Business Admin</span>
+                    <span
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        role === 'BUSINESS_ADMIN' ? 'border-[#111111] bg-[#111111]' : 'border-[#CCCCCC]'
+                      }`}
+                    >
+                      {role === 'BUSINESS_ADMIN' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#666666] leading-snug">
+                    Organization administrator with access to team management, financial records, and operational settings.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('EMPLOYEE')}
+                  className={`p-3 rounded-[6px] border text-left transition flex flex-col justify-between ${
+                    role === 'EMPLOYEE'
+                      ? 'border-[#111111] bg-[#FAFAFA] ring-1 ring-[#111111]'
+                      : 'border-[#D9D9D9] bg-white hover:border-[#8A8A8A]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-[#111111]">Employee</span>
+                    <span
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        role === 'EMPLOYEE' ? 'border-[#111111] bg-[#111111]' : 'border-[#CCCCCC]'
+                      }`}
+                    >
+                      {role === 'EMPLOYEE' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#666666] leading-snug">
+                    Operational team specialist focused on assigned leads, pipeline tasks, and customer support.
+                  </p>
+                </button>
+              </div>
             </div>
 
-            <p className="text-[11px] text-[#8A8A8A] -mt-1">
-              New self-service accounts are created with <span className="font-semibold text-[#666666]">Employee</span> access.
-              An admin can upgrade your role later from the Users page.
-            </p>
+            {/* Super Admin Notice */}
+            <div className="p-2.5 rounded-[6px] bg-[#F7F7F7] border border-[#E5E5E5] text-[11px] text-[#666666] flex items-start gap-2">
+              <Shield className="w-4 h-4 text-[#111111] shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-[#111111]">Super Admin Notice:</strong> Super Admin is a single system administrator account that can only log in directly and cannot be registered.
+              </span>
+            </div>
 
             <div>
               <label htmlFor="password" className="block text-xs font-semibold text-[#111111] mb-1">

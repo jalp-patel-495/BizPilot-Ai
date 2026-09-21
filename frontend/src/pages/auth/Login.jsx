@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, Shield, ArrowRight, Lock, Mail } from 'lucide-react';
+import { Sparkles, Shield, ArrowRight, Lock, Mail, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { DEMO_CREDENTIALS } from '../../constants/demoCredentials';
 
@@ -38,7 +38,7 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative">
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
@@ -52,7 +52,17 @@ export const Login = () => {
         </div>
 
         {/* Main Card */}
-        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <div className="bg-white p-8 rounded-[8px] border border-[#E5E5E5] shadow-[0_1px_3px_rgba(0,0,0,0.06)] relative">
+          {/* Direct Close Button to Home Page */}
+          <Link
+            to="/"
+            className="absolute top-4 right-4 p-2 text-[#8A8A8A] hover:text-[#111111] hover:bg-[#F5F5F5] rounded-full transition flex items-center justify-center"
+            title="Close and return to Home"
+            aria-label="Close and return to Home"
+          >
+            <X className="w-5 h-5" />
+          </Link>
+
           {error && (
             <div className="mb-5 p-3 rounded-[6px] bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
@@ -125,9 +135,7 @@ export const Login = () => {
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {Object.entries(DEMO_CREDENTIALS)
-                .filter(([key]) => key !== 'SUPER_ADMIN')
-                .map(([key, cred]) => (
+              {Object.entries(DEMO_CREDENTIALS).map(([key, cred]) => (
                 <button
                   key={key}
                   type="button"

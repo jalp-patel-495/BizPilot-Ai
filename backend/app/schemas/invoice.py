@@ -22,7 +22,7 @@ class InvoiceBase(BaseModel):
     subtotal: float = 0.0
     tax_amount: float = 0.0
     total_amount: float = 0.0
-    currency: str = "USD"
+    currency: str = "INR"
     items: List[InvoiceItem] = []
 
 

@@ -45,7 +45,7 @@ def dispatch_new_lead(
     lead_id: Optional[str] = None,
 ) -> Notification:
     """Trigger notification for New Lead event."""
-    val_str = f" (${estimated_value:,.2f})" if estimated_value > 0 else ""
+    val_str = f" (Rs. {estimated_value:,.2f})" if estimated_value > 0 else ""
     return create_notification(
         db=db,
         org_id=org_id,
@@ -105,7 +105,7 @@ def dispatch_sales_change(
         org_id=org_id,
         notif_type="SALES_CHANGE",
         title="Important Sales Velocity Change",
-        message=f"{change_description}. Weekly volume shifted by +{growth_pct:.1f}% ($ {amount:,.2f} recorded).",
+        message=f"{change_description}. Weekly volume shifted by +{growth_pct:.1f}% (Rs. {amount:,.2f} recorded).",
         link_url="/sales",
     )
 
@@ -126,7 +126,7 @@ def dispatch_invoice_processed(
         org_id=org_id,
         notif_type="INVOICE_PROCESSED",
         title=f"Invoice Processed: {invoice_number}",
-        message=f"Document parsed for {customer_name}. Total: ${total_amount:,.2f} extracted{conf_str}.",
+        message=f"Document parsed for {customer_name}. Total: Rs. {total_amount:,.2f} extracted{conf_str}.",
         link_url=f"/invoices?invoice_id={invoice_id}" if invoice_id else "/invoices",
     )
 

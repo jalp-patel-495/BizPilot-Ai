@@ -94,7 +94,7 @@ class LeadAutomationService:
 
         # 4. Lead Summary
         summary = (
-            f"Opportunity at {lead.company} ({industry}) valued at ${deal_val:,.0f} via {source}. "
+            f"Opportunity at {lead.company} ({industry}) valued at Rs. {deal_val:,.0f} via {source}. "
             f"Evaluated as {category} with {priority} priority (Score: {score:.1f}/100). {reason}"
         )
 
@@ -210,7 +210,7 @@ class LeadAutomationService:
                 organization_id=lead.organization_id,
                 user_id=lead.assigned_to,
                 title=f"New {analysis['sales_priority']} Lead Ingested",
-                message=f"{lead.company} (${lead.deal_value:,.0f}) classified as {analysis['lead_category']}. Action: {analysis['recommended_next_action']}",
+                message=f"{lead.company} (Rs. {lead.deal_value:,.0f}) classified as {analysis['lead_category']}. Action: {analysis['recommended_next_action']}",
                 type="HIGH_PRIORITY_LEAD",
                 link_url="/automation",
             )
@@ -284,7 +284,7 @@ class LeadAutomationService:
                     organization_id=org_id,
                     user_id=ld.assigned_to,
                     title=f"Follow-up Due: {ld.company}",
-                    message=f"Scheduled outreach for {ld.contact_name} ({ld.company}) is now due. Deal value: ${ld.deal_value:,.0f}.",
+                    message=f"Scheduled outreach for {ld.contact_name} ({ld.company}) is now due. Deal value: Rs. {ld.deal_value:,.0f}.",
                     type="FOLLOW_UP_ALERT",
                     link_url="/leads",
                 )

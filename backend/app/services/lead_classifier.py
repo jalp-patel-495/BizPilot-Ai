@@ -71,13 +71,13 @@ class LeadClassifierService:
         if val >= self.rules["hot_deal_value_min"]:
             return {
                 "classification": "HOT",
-                "reason": f"High ARR opportunity (${val:,.0f} >= ${self.rules['hot_deal_value_min']:,.0f}).",
+                "reason": f"High ARR opportunity (Rs. {val:,.0f} >= Rs. {self.rules['hot_deal_value_min']:,.0f}).",
             }
 
         if status_upper in self.rules["hot_fast_track_statuses"] and val >= self.rules["hot_fast_track_deal_min"]:
             return {
                 "classification": "HOT",
-                "reason": f"Advanced pipeline stage ({status_upper}) with deal value ${val:,.0f}.",
+                "reason": f"Advanced pipeline stage ({status_upper}) with deal value Rs. {val:,.0f}.",
             }
 
         if any(s.lower() in source_name.lower() for s in self.rules["hot_high_intent_sources"]) and score >= 75.0:
@@ -110,7 +110,7 @@ class LeadClassifierService:
         if val >= self.rules["warm_deal_value_min"] or score >= self.rules["warm_ai_score_min"]:
             return {
                 "classification": "WARM",
-                "reason": f"Solid engagement profile with ${val:,.0f} deal value and {score:.0f} AI score.",
+                "reason": f"Solid engagement profile with Rs. {val:,.0f} deal value and {score:.0f} AI score.",
             }
 
         if status_upper in self.rules["warm_statuses"]:
@@ -122,7 +122,7 @@ class LeadClassifierService:
         # Default fallback to COLD
         return {
             "classification": "COLD",
-            "reason": f"Low velocity deal (${val:,.0f}) with no imminent follow-up outreach.",
+            "reason": f"Low velocity deal (Rs. {val:,.0f}) with no imminent follow-up outreach.",
         }
 
 

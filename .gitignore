@@ -27,6 +27,7 @@ htmlcov/
 venv/
 ENV/
 *.sqlite3
+*.sqlite
 *.db
 
 # Node / Frontend

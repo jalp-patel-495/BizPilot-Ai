@@ -5,7 +5,7 @@ import {
   UserPlus,
   CheckCircle2,
   Trophy,
-  DollarSign,
+  IndianRupee,
   Clock,
   Users,
   Layers,
@@ -157,11 +157,11 @@ export const SalesManagerDashboard = () => {
         />
         <KPICard
           label="Sales Revenue"
-          value={kpis.sales_revenue?.value ? (typeof kpis.sales_revenue.value === 'number' ? `$${kpis.sales_revenue.value.toLocaleString()}` : kpis.sales_revenue.value) : '$0'}
+          value={kpis.sales_revenue?.value ? (typeof kpis.sales_revenue.value === 'number' ? `Rs. ${kpis.sales_revenue.value.toLocaleString()}` : String(kpis.sales_revenue.value).replace(/\$/g, 'Rs. ')) : 'Rs. 0'}
           change={kpis.sales_revenue?.change ?? 0.0}
           trend={kpis.sales_revenue?.trend || 'neutral'}
           subtext="Booked deal volume"
-          icon={DollarSign}
+          icon={IndianRupee}
         />
         <KPICard
           label="Pending Follow-ups"
@@ -312,7 +312,7 @@ export const SalesManagerDashboard = () => {
                       {ld.recommended_action}
                     </td>
                     <td className="py-3 text-right font-bold text-[#111111]">
-                      ${(ld.deal_value || 0).toLocaleString()}
+                      Rs. {(ld.deal_value || 0).toLocaleString()}
                     </td>
                   </tr>
                 ))}

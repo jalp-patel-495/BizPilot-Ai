@@ -903,7 +903,7 @@ def test_registration_flow():
     user_data = data["data"]
     assert user_data["email"] == unique_email
     assert user_data["full_name"] == "Integration User"
-    assert user_data["role"] == "EMPLOYEE"  # Role security: self-registration defaults to EMPLOYEE
+    assert user_data["role"] == "BUSINESS_ADMIN"  # Selected role from registration payload is assigned
     assert user_data["title"] == "Director of Test"
 
     # 2. Attempt duplicate registration
@@ -924,7 +924,33 @@ def test_registration_flow():
     assert short_pw_resp.status_code == 400
     assert "password" in short_pw_resp.json().get("message", "").lower()
 
-    # 4. Login with newly registered user
+    # 4. Attempt registering as SUPER_ADMIN (must be forbidden)
+    super_resp = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Attempt Super Admin",
+            "email": f"super_try_{uuid.uuid4().hex[:6]}@example.com",
+            "password": "SecurePassword123!",
+            "role": "SUPER_ADMIN",
+        },
+    )
+    assert super_resp.status_code == 400
+    assert "super admin" in super_resp.json().get("message", "").lower()
+
+    # 5. Attempt registering as SALES_MANAGER (only Business Admin and Employee permitted)
+    sales_resp = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Attempt Sales Manager",
+            "email": f"sales_try_{uuid.uuid4().hex[:6]}@example.com",
+            "password": "SecurePassword123!",
+            "role": "SALES_MANAGER",
+        },
+    )
+    assert sales_resp.status_code == 400
+    assert "only permitted for business admin and employee" in sales_resp.json().get("message", "").lower()
+
+    # 6. Login with newly registered user
     login_resp = client.post(
         "/api/v1/auth/login",
         json={"email": unique_email, "password": "SecurePassword123!"},
