@@ -13,6 +13,13 @@ export const DEMO_CREDENTIALS = {
     desc: 'VP Operations & Org Manager',
     role: 'BUSINESS_ADMIN',
   },
+  SALES_MANAGER: {
+    email: 'salesmanager@upteky.ai',
+    password: 'Sales@12345',
+    label: 'Sales Manager',
+    desc: 'Pipeline & Performance Lead',
+    role: 'SALES_MANAGER',
+  },
   EMPLOYEE: {
     email: 'employee@upteky.ai',
     password: 'Emp@12345',

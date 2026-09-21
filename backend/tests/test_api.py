@@ -937,18 +937,20 @@ def test_registration_flow():
     assert super_resp.status_code == 400
     assert "super admin" in super_resp.json().get("message", "").lower()
 
-    # 5. Attempt registering as SALES_MANAGER (only Business Admin and Employee permitted)
+    # 5. Register as SALES_MANAGER (permitted alongside Business Admin and Employee)
+    sales_email = f"sales_mgr_{uuid.uuid4().hex[:6]}@example.com"
     sales_resp = client.post(
         "/api/v1/auth/register",
         json={
-            "full_name": "Attempt Sales Manager",
-            "email": f"sales_try_{uuid.uuid4().hex[:6]}@example.com",
+            "full_name": "New Sales Manager",
+            "email": sales_email,
             "password": "SecurePassword123!",
             "role": "SALES_MANAGER",
         },
     )
-    assert sales_resp.status_code == 400
-    assert "only permitted for business admin and employee" in sales_resp.json().get("message", "").lower()
+    assert sales_resp.status_code == 200
+    assert sales_resp.json()["data"]["role"] == "SALES_MANAGER"
+    assert sales_resp.json()["data"]["title"] == "Sales Manager"
 
     # 6. Login with newly registered user
     login_resp = client.post(

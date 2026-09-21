@@ -99,18 +99,19 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)) -> Any:
         org_id = default_org.id if default_org else None
 
     # Validate role permissions for self-registration:
-    # Super Admin is a single dedicated admin account that logs in; only Business Admin and Employee can be created.
+    # Super Admin is a single dedicated admin account that logs in; Business Admin, Sales Manager, and Employee can be created.
     if user_in.role == UserRole.SUPER_ADMIN:
         raise APIException("Super Admin account cannot be created via public registration. There is only one dedicated Super Admin.", status_code=400)
 
-    allowed_registration_roles = {UserRole.BUSINESS_ADMIN, UserRole.EMPLOYEE}
+    allowed_registration_roles = {UserRole.BUSINESS_ADMIN, UserRole.SALES_MANAGER, UserRole.EMPLOYEE}
     if user_in.role and user_in.role not in allowed_registration_roles:
-        raise APIException("Registration is only permitted for Business Admin and Employee roles.", status_code=400)
+        raise APIException("Registration is only permitted for Business Admin, Sales Manager, and Employee roles.", status_code=400)
 
     # Assign the role requested by user (or default to BUSINESS_ADMIN if none provided)
     assigned_role = user_in.role.value if user_in.role else UserRole.BUSINESS_ADMIN.value
     role_default_titles = {
         UserRole.BUSINESS_ADMIN.value: "Business Administrator",
+        UserRole.SALES_MANAGER.value: "Sales Manager",
         UserRole.EMPLOYEE.value: "Operations Specialist",
     }
     user_title = (

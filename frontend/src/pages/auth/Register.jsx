@@ -25,7 +25,12 @@ export const Register = () => {
         email: email.trim(),
         password,
         role,
-        title: role === 'BUSINESS_ADMIN' ? 'Business Administrator' : 'Operations Specialist',
+        title:
+          role === 'BUSINESS_ADMIN'
+            ? 'Business Administrator'
+            : role === 'SALES_MANAGER'
+            ? 'Sales Manager'
+            : 'Operations Specialist',
       });
 
       if (res.success) {
@@ -45,7 +50,7 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative">
-      <div className="w-full max-w-lg space-y-6">
+      <div className="w-full max-w-xl space-y-6">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-[8px] bg-[#111111] text-white mb-1 shadow-sm">
             <Sparkles className="w-6 h-6 text-white" />
@@ -117,9 +122,9 @@ export const Register = () => {
             {/* Role-Based Account Creation */}
             <div>
               <label className="block text-xs font-semibold text-[#111111] mb-1.5">
-                Account Role
+                Account Role (Select Role)
               </label>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <button
                   type="button"
                   onClick={() => setRole('BUSINESS_ADMIN')}
@@ -140,7 +145,31 @@ export const Register = () => {
                     </span>
                   </div>
                   <p className="text-[11px] text-[#666666] leading-snug">
-                    Organization administrator with access to team management, financial records, and operational settings.
+                    Full organization administration, finance, products, and operations.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('SALES_MANAGER')}
+                  className={`p-3 rounded-[6px] border text-left transition flex flex-col justify-between ${
+                    role === 'SALES_MANAGER'
+                      ? 'border-[#111111] bg-[#FAFAFA] ring-1 ring-[#111111]'
+                      : 'border-[#D9D9D9] bg-white hover:border-[#8A8A8A]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-[#111111]">Sales Manager</span>
+                    <span
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        role === 'SALES_MANAGER' ? 'border-[#111111] bg-[#111111]' : 'border-[#CCCCCC]'
+                      }`}
+                    >
+                      {role === 'SALES_MANAGER' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#666666] leading-snug">
+                    Sales pipeline, leads, team performance quotas, and deal analytics.
                   </p>
                 </button>
 
@@ -164,7 +193,7 @@ export const Register = () => {
                     </span>
                   </div>
                   <p className="text-[11px] text-[#666666] leading-snug">
-                    Operational team specialist focused on assigned leads, pipeline tasks, and customer support.
+                    Daily tasks, personal activity tracking, assigned leads, and notifications.
                   </p>
                 </button>
               </div>

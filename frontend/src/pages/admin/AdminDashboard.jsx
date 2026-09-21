@@ -49,11 +49,11 @@ import { adminService } from '../../services/adminService';
 import { useAuth } from '../../contexts/AuthContext';
 import { RoleBadge } from '../../components/common/Badge';
 
-export const AdminDashboard = () => {
+export const AdminDashboard = ({ initialTab = 'overview' }) => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabFromUrl || 'overview');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || initialTab);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -62,8 +62,10 @@ export const AdminDashboard = () => {
     const currentTabParam = searchParams.get('tab');
     if (currentTabParam && currentTabParam !== activeTab) {
       setActiveTab(currentTabParam);
+    } else if (!currentTabParam && initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
     }
-  }, [searchParams]);
+  }, [searchParams, initialTab]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);

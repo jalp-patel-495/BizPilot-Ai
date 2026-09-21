@@ -134,7 +134,7 @@ export const Login = () => {
                 Instant Demo Logins (Select Role)
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {Object.entries(DEMO_CREDENTIALS).map(([key, cred]) => (
                 <button
                   key={key}

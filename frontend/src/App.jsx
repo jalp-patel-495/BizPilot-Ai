@@ -29,6 +29,15 @@ import { InvoicesPage } from './pages/invoices/InvoicesPage';
 import { SupportPage } from './pages/support/SupportPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
+// Role-Specific Navigation Pages
+import { RolesPermissionsPage } from './pages/admin/RolesPermissionsPage';
+import { AIInsightsPage } from './pages/ai/AIInsightsPage';
+import { TeamPerformancePage } from './pages/sales/TeamPerformancePage';
+import { AISalesInsightsPage } from './pages/sales/AISalesInsightsPage';
+import { MyTasksPage } from './pages/tasks/MyTasksPage';
+import { MyActivitiesPage } from './pages/activities/MyActivitiesPage';
+import { NotificationsPage } from './pages/notifications/NotificationsPage';
+
 function App() {
   return (
     <BrowserRouter>
@@ -51,6 +60,9 @@ function App() {
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/leads" element={<LeadsPage />} />
               <Route path="/sales" element={<SalesPage />} />
+              <Route path="/tasks" element={<MyTasksPage />} />
+              <Route path="/activities" element={<MyActivitiesPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/automation" element={<AutomationPage />} />
               <Route path="/ai-assistant" element={<AIAssistantPage />} />
               <Route path="/support" element={<SupportPage />} />
@@ -61,11 +73,16 @@ function App() {
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/employees" element={<UsersPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/sales-analytics" element={<AnalyticsPage />} />
+                <Route path="/team-performance" element={<TeamPerformancePage />} />
+                <Route path="/ai-sales-insights" element={<AISalesInsightsPage />} />
               </Route>
 
               {/* Administrative Roles (Super Admin & Business Admin) */}
               <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'BUSINESS_ADMIN']} />}>
+                <Route path="/ai-insights" element={<AIInsightsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/invoices" element={<InvoicesPage />} />
               </Route>
@@ -73,6 +90,10 @@ function App() {
               {/* Super Admin Exclusive */}
               <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/businesses" element={<AdminDashboard initialTab="businesses" />} />
+                <Route path="/roles-permissions" element={<RolesPermissionsPage />} />
+                <Route path="/system-analytics" element={<AdminDashboard initialTab="system_usage" />} />
+                <Route path="/ai-monitoring" element={<AdminDashboard initialTab="ai_usage" />} />
               </Route>
             </Route>
           </Route>
